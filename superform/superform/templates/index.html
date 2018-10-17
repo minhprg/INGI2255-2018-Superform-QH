@@ -1,10 +1,10 @@
 {% extends "layout.html" %}
 {% block title %}Index{% endblock %}
 {% block content %}
+
     <h1>Index</h1>
 
     {% if session.logged_in %}
-
         <div class="row">
             <div class="col-md-12">
                 {% if user.is_mod %}
@@ -49,84 +49,208 @@
                                 </td>
                                 <td>
                                     <a href="{{ url_for('publishings.moderate_publishing',id=p.post_id,idc=p.channel_id) }}" class="btn btn-outline-primary" role="button">Moderate</a>
-
                                 </td>
                             </tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 {% endif %}
-                <h2>All my posts</h2>
-                <table class="table table-bordered">
-                    <thead>
-                    <tr>
-                        <th>
-                            #
-                        </th>
-                        <th>
-                            Subject
-                        </th>
-                        <th>
-                            Body
-                        </th>
-                        <th>
-                            Action
-                        </th>
-                    </tr>
-                    </thead>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h2>All my posts</h2>
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>
+                                    #
+                                </th>
+                                <th>
+                                    Subject
+                                </th>
+                                <th>
+                                    Action
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in posts %}
+                                <tr>
+                                    <td>
+                                        {{ item.id }}
+                                    </td>
+                                    <td>
+                                        {{ item.title }}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#viewModal"
+                                                data-title="{{ item.title }}"
+                                                data-channel="-"
+                                                data-author="{{ item.user_id }}"
+                                                data-content="{{ item.description }}"
+                                                data-link="{{ item.link_url }}"
+                                                data-image="{{ item.image_url }}"
+                                                data-from="{{ item.date_from }}"
+                                                data-until="{{ item.date_until }}">
+                                            Details
+                                        </button>
+                                        <a href="{{ url_for('posts.edit_new_post', post_id=item.id) }}" class="btn btn-outline-primary" role="button">Edit</a>
+                                        <a href="{{ url_for('posts.copy_new_post', post_id=item.id) }}" class="btn btn-outline-primary">Copy</a>
+                                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-name="{{ item.title }}" data-id="{{ item.id }}"><i class="fas fa-fw fa-trash"></i> Delete</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h2>All my publications</h2>
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>
+                                    #
+                                </th>
+                                <th>
+                                    Channel
+                                </th>
+                                <th>
+                                    Subject
+                                </th>
+                                <th>
+                                    Action
+                                </th>
+                            </tr>
+                            </thead>
 
-                    <tbody>
-                    {% for item in posts %}
-                        <tr>
-                            <td>
-                                {{ item.id }}
-                            </td>
-                            <td>
-                                {{ item.title }}
-                            </td>
-                            <td>
-                                <div class="row">
-                                    <div class="col">{{ item.description }}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <a href="{{ url_for('posts.edit_new_post', post_id=item.id) }}" class="btn btn-outline-primary" role="button">Edit</a>
-                                <a href="{{ url_for('posts.copy_new_post', post_id=item.id) }}" class="btn btn-outline-primary">Copy</a>
-                                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-name="{{ item.title }}" data-id="{{ item.id }}"><i class="fas fa-fw fa-trash"></i> Delete</button>                    </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                <form class="form-inline" method="post">
-                    <input type="hidden" name="@action" value="new">
-                    <label class="sr-only" for="inlineFormInputText">Username</label>
-                    <div class="input-group mr-sm-2">
-                </form>
-                <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <form method="post">
-                                <input type="hidden" name="@action" value="delete">
-                                <input id="post-id" type="hidden" name="id" value="">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Delete channel</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Are you sure to delete this post "<span id="post-name"></span>" ?</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
+                            <tbody>
+                            {% for item in published %}
+                                <tr>
+                                    <td>
+                                        {{ item.post_id }}
+                                    </td>
+                                    <td>
+                                        {{ item.channel_id }}
+                                    </td>
+                                    <td>
+                                        {{ item.title }}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#viewModal"
+                                                data-title="{{ item.title }}"
+                                                data-channel="{{ item.channel_id }}"
+                                                data-author="{{ item.get_author() }}"
+                                                data-content="{{ item.description }}"
+                                                data-link="{{ item.link_url }}"
+                                                data-image="{{ item.image_url }}"
+                                                data-from="{{ item.date_from }}"
+                                                data-until="{{ item.date_until }}">
+                                            Details
+                                        </button>
+                                        <a href="{{ url_for('posts.copy_new_post', post_id=item.post_id) }}" class="btn btn-outline-primary">Copy</a>
+                                        <a href="{{ url_for('publishings.archive_publishing', id=item.post_id, idc=item.channel_id) }}" class="btn btn-outline-warning">Archive</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
+
+        <form class="form-inline" method="post">
+            <input type="hidden" name="@action" value="new">
+            <label class="sr-only" for="inlineFormInputText">Username</label>
+            <div class="input-group mr-sm-2">
+        </form>
+
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="post">
+                        <input type="hidden" name="@action" value="delete">
+                        <input id="post-id" type="hidden" name="id" value="">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete channel</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure to delete this post "<span id="post-name"></span>" ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Content details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="titlepost">Title</label><br>
+                                <input type="text" name="post-title" id="post-title" class="form-control" readonly>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dateuntilpost">Channel</label><br>
+                                        <input type="text" name="post-channel" id="post-channel" class="form-control" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dateuntilpost">Author</label><br>
+                                        <input type="text" name="authorpost" id="post-author" class="form-control" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="descriptionpost">Description</label><br>
+                                <textarea class="form-control" rows="5" id="post-description" name="descriptionpost" readonly></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="linkurlpost">Link</label><br>
+                                <input type="text" name="linkurlpost" id="post-link" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="imagepost">Image</label><br>
+                                <input type="text" name="imagepost" id="post-image" class="form-control" readonly>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="datefrompost">Publication Date</label><br>
+                                        <input id="post-from" name="datefrompost" type="text" class="form-control" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dateuntilpost">Publication Until</label><br>
+                                        <input id="post-until" name="dateuntilpost" type="text" class="form-control" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     {% else %}
         <p>Your are not logged in.</p>
     {% endif %}
@@ -135,6 +259,17 @@
 {% endblock %}
 {% block scripts %}
     <script>
+        $('#viewModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            $(this).find('#post-title').val(button.data('title'));
+            $(this).find('#post-channel').val(button.data('channel'));
+            $(this).find('#post-author').val(button.data('author'));
+            $(this).find('#post-description').text(button.data('content'));
+            $(this).find('#post-link').val(button.data('link'));
+            $(this).find('#post-image').val(button.data('image'));
+            $(this).find('#post-from').val(button.data('from'));
+            $(this).find('#post-until').val(button.data('until'));
+        });
         $('#deleteModal').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget); // Button that triggered the modal
             $(this).find('#post-name').text(button.data('name'));

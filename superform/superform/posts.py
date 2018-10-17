@@ -120,11 +120,14 @@ def copy_new_post(post_id):
         return redirect(url_for('index'))
 
 
-@posts_page.route('/publish/<int:id>', methods=['POST'])
+@posts_page.route('/publish/<int:new>/<int:id>', methods=['POST'])
 @login_required()
-def publish_from_new_post(id):
-    # First create the post
-    p = create_a_post(request.form) if id == -1 else edit_a_post(request.form, id)
+def publish_from_new_post(new, id):
+    # First create the post if it doesn't exist
+    if new:
+        p = create_a_post(request.form)
+    else:
+        p = edit_a_post(request.form, id)
     # then treat the publish part
     if request.method == "POST":
         for elem in request.form:

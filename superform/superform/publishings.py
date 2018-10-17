@@ -22,7 +22,7 @@ def moderate_publishing(id, idc):
         pub.date_from = datetime_converter(request.form.get('datefrompost'))
         pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
         #state is shared & validated
-        pub.state = 2
+        pub.state = 1
         db.session.commit()
         #running the plugin here
         c=db.session.query(Channel).filter(Channel.name == pub.channel_id).first()
@@ -33,4 +33,15 @@ def moderate_publishing(id, idc):
         plugin.run(pub, c_conf)
 
         return redirect(url_for('index'))
+
+
+@pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])
+@login_required()
+def archive_publishing(id, idc):
+    # then treat the publish part
+    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
+    pub.update({Publishing.state: 2})
+    db.session.commit()
+    return redirect(url_for('index'))
+
 

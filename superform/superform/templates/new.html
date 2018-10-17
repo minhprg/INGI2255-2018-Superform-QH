@@ -150,7 +150,7 @@
             </div>
             <div align="right" style="margin-top: 1rem; ">
                 <button class="btn btn-primary" formaction="{% if new %}{{ url_for('posts.new_post')}}{% else %}{{ url_for('posts.edit_new_post', post_id=post.id) }}{% endif %}" formmethod="post" type="submit">Save as draft</button>
-                <button id="publish-button" class="btn btn-success" formaction="{% if new %}{{ url_for('posts.publish_from_new_post', id=-1)}}{% else %}{{ url_for('posts.publish_from_new_post', id=post.id) }}{% endif %}" formmethod="post" type="submit" disabled>Save & Publish</button>
+                <button id="publish-button" class="btn btn-success" formaction="{% if new %}{{ url_for('posts.publish_from_new_post', new=1, id=0)}}{% else %}{{ url_for('posts.publish_from_new_post', new=0, id=post.id) }}{% endif %}" formmethod="post" type="submit" disabled>Save & Publish</button>
                 <button class="btn btn-outline-primary" type="reset">Abort</button>
             </div>
 

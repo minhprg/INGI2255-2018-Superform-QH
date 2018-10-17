@@ -22,6 +22,21 @@ def create_a_post(form):
     return p
 
 
+def edit_a_post(form, post_id):
+    post = db.session.query(Post).filter(Post.id == post_id)
+    post.update({
+        Post.user_id : session.get("user_id", "") if session.get("logged_in", False) else -1,
+        Post.title : form.get('titlepost'),
+        Post.description : form.get('descriptionpost'),
+        Post.link_url : form.get('linkurlpost'),
+        Post.image_url : form.get('imagepost'),
+        Post.date_from : datetime_converter(form.get('datefrompost')),
+        Post.date_until : datetime_converter(form.get('dateuntilpost'))
+    })
+    db.session.commit()
+    return post.first()
+
+
 def create_a_publishing(post, chn, form):
     chan = str(chn.name)
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
@@ -50,21 +65,66 @@ def new_post():
     for elem in list_of_channels:
         m = elem.module
         clas = get_instance_from_module_path(m)
-        unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
-        setattr(elem, "unavailablefields", unaivalable_fields)
+        unavailable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
+        setattr(elem, "unavailablefields", unavailable_fields)
 
     if request.method == "GET":
-        return render_template('new.html', l_chan=list_of_channels)
+        return render_template('new.html', l_chan=list_of_channels, post=None, new=True)
     else:
         create_a_post(request.form)
         return redirect(url_for('index'))
 
 
-@posts_page.route('/publish', methods=['POST'])
+@posts_page.route('/edit/<int:post_id>', methods=['GET', 'POST'])
 @login_required()
-def publish_from_new_post():
+def edit_new_post(post_id):
+    user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
+    list_of_channels = channels_available_for_user(user_id)
+    for elem in list_of_channels:
+        m = elem.module
+        clas = get_instance_from_module_path(m)
+        unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
+        setattr(elem, "unavailablefields", unavailable_fields)
+
+    post = db.session.query(Post).filter(Post.id == post_id).first()
+    if request.method == "GET":
+        post.date_from = str_converter(post.date_from)
+        post.date_until = str_converter(post.date_until)
+        return render_template('new.html', l_chan=list_of_channels, post=post, new=False)
+    else:
+        edit_a_post(request.form, post_id)
+        return redirect(url_for('index'))
+
+
+@posts_page.route('/new/<int:post_id>', methods=['GET', 'POST'])
+@login_required()
+def copy_new_post(post_id):
+    user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
+    list_of_channels = channels_available_for_user(user_id)
+    for elem in list_of_channels:
+        m = elem.module
+        clas = get_instance_from_module_path(m)
+        unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
+        setattr(elem, "unavailablefields", unavailable_fields)
+
+    original_post= db.session.query(Post).filter(Post.id == post_id).first()
+    post = Post(user_id=user_id, title="Copy of " + original_post.title, description=original_post.description,
+                link_url=original_post.link_url, image_url=original_post.image_url, date_from=original_post.date_from,
+                date_until=original_post.date_until)
+    if request.method == "GET":
+        post.date_from = str_converter(post.date_from)
+        post.date_until = str_converter(post.date_until)
+        return render_template('new.html', l_chan=list_of_channels, post=post, new=True)
+    else:
+        create_a_post(request.form)
+        return redirect(url_for('index'))
+
+
+@posts_page.route('/publish/<int:id>', methods=['POST'])
+@login_required()
+def publish_from_new_post(id):
     # First create the post
-    p = create_a_post(request.form)
+    p = create_a_post(request.form) if id == -1 else edit_a_post(request.form, id)
     # then treat the publish part
     if request.method == "POST":
         for elem in request.form:
@@ -85,6 +145,8 @@ def publish_from_new_post():
 @posts_page.route('/records')
 @login_required()
 def records():
-    posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", ""))
-    records = [(p) for p in posts if p.is_a_record()]
+    #posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", ""))
+    #records = [(p) for p in posts if p.is_a_record()]
+    publishings = db.session.query(Publishing).filter(Publishing.state == 2)
+    records = [(p) for p in publishings]
     return render_template('records.html', records=records)

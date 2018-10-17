@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session
+from flask import Flask, render_template, session, request
 import pkgutil
 import importlib
 
@@ -32,7 +32,7 @@ app.config["PLUGINS"] = {
 }
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
     posts=[]
@@ -43,6 +43,12 @@ def index():
         chans = get_moderate_channels_for_user(user)
         pubs_per_chan = (db.session.query(Publishing).filter((Publishing.channel_id == c.name) & (Publishing.state == 0)) for c in chans)
         flattened_list_pubs = [y for x in pubs_per_chan for y in x]
+        if request.method == "POST" and request.form.get('@action', '') == "delete":
+            post_id = request.form.get("id")
+            post = Post.query.get(post_id)
+            if post:
+                db.session.delete(post)
+                db.session.commit()
 
     return render_template("index.html", user=user,posts=posts,publishings = flattened_list_pubs)
 

@@ -6,103 +6,139 @@
     {% if session.logged_in %}
 
         <div class="row">
-        <div class="col-md-12">
-            {% if user.is_mod %}
-                <h2>Unmoderated Publishings</h2>
+            <div class="col-md-12">
+                {% if user.is_mod %}
+                    <h2>Unmoderated Publishings</h2>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>
+                                Channel
+                            </th>
+                            <th>
+                                Subject
+                            </th>
+                            <th>
+                                Body
+                            </th>
+                            <th>
+                                Author
+                            </th>
+                            <th>
+                                Action
+                            </th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        {% for p in publishings %}
+                            <tr>
+                                <td>
+                                    {{ p.channel_id }}
+                                </td>
+                                <td>
+                                    {{ p.title }}
+                                </td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col">{{ p.description }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {{ p.get_author() }}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('publishings.moderate_publishing',id=p.post_id,idc=p.channel_id) }}" class="btn btn-outline-primary" role="button">Moderate</a>
+
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+                <h2>All my posts</h2>
                 <table class="table table-bordered">
-                <thead>
-                  <tr>
-                    <th>
-                      Channel
-                    </th>
-                    <th>
-                      Subject
-                    </th>
-                    <th>
-                      Body
-                    </th>
-                    <th>
-                        Author
-                    </th>
-                    <th>
-                        Action
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                {% for p in publishings %}
+                    <thead>
                     <tr>
-                        <td>
-                            {{ p.channel_id }}
-                        </td>
-                        <td>
-                            {{ p.title }}
-                        </td>
-                        <td>
-                            <div class="row">
-                                <div class="col">{{ p.description }}</div>
-                            </div>
-                        </td>
-                        <td>
-                            {{ p.get_author() }}
-                        </td>
-                        <td>
-                            <a href="{{ url_for('publishings.moderate_publishing',id=p.post_id,idc=p.channel_id) }}" class="btn btn-outline-primary" role="button">Moderate</a>
-
-                        </td>
+                        <th>
+                            #
+                        </th>
+                        <th>
+                            Subject
+                        </th>
+                        <th>
+                            Body
+                        </th>
+                        <th>
+                            Action
+                        </th>
                     </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-            {% endif %}
-            <h2>All my posts</h2>
-            <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>
-                  #
-                </th>
-                <th>
-                  Subject
-                </th>
-                <th>
-                  Body
-                </th>
-                <th>
-                    Action
-                </th>
-              </tr>
-            </thead>
+                    </thead>
 
-            <tbody>
-                {% for item in posts %}
-                <tr>
-                    <td>
-                        {{ item.id }}
-                    </td>
-                    <td>
-                        {{ item.title }}
-                    </td>
-                    <td>
-                        <div class="row">
-                            <div class="col">{{ item.description }}</div>
+                    <tbody>
+                    {% for item in posts %}
+                        <tr>
+                            <td>
+                                {{ item.id }}
+                            </td>
+                            <td>
+                                {{ item.title }}
+                            </td>
+                            <td>
+                                <div class="row">
+                                    <div class="col">{{ item.description }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('posts.edit_new_post', post_id=item.id) }}" class="btn btn-outline-primary" role="button">Edit</a>
+                                <a href="{{ url_for('posts.copy_new_post', post_id=item.id) }}" class="btn btn-outline-primary">Copy</a>
+                                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-name="{{ item.title }}" data-id="{{ item.id }}"><i class="fas fa-fw fa-trash"></i> Delete</button>                    </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <form class="form-inline" method="post">
+                    <input type="hidden" name="@action" value="new">
+                    <label class="sr-only" for="inlineFormInputText">Username</label>
+                    <div class="input-group mr-sm-2">
+                </form>
+                <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <form method="post">
+                                <input type="hidden" name="@action" value="delete">
+                                <input id="post-id" type="hidden" name="id" value="">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Delete channel</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure to delete this post "<span id="post-name"></span>" ?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                </div>
+                            </form>
                         </div>
-                    </td>
-                    <td>
-                        <a href="#" class="btn btn-outline-primary" role="button">Edit</a>
-                        <a href="#" class="btn btn-outline-primary">Copy</a>
-                        <a href="#" class="btn btn-outline-warning" role="button">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            </table>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     {% else %}
         <p>Your are not logged in.</p>
     {% endif %}
 
 
+{% endblock %}
+{% block scripts %}
+    <script>
+        $('#deleteModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            $(this).find('#post-name').text(button.data('name'));
+            $(this).find('#post-id').val(button.data('id'));
+        });
+    </script>
 {% endblock %}

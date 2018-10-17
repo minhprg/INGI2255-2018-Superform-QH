@@ -1,6 +1,7 @@
 import facebook
+import json
 
-FIELDS_UNAVAILABLE = ['Description','Link']
+FIELDS_UNAVAILABLE = ['Title']
 
 CONFIG_FIELDS = ["access_token"]
 

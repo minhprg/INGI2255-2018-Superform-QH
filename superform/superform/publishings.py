@@ -38,19 +38,17 @@ def moderate_publishing(id, idc):
 @pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
 def archive_publishing(id, idc):
+    """
+    This method is just a simple helper to quickly archive a publishing from the index page, it could be unnecessary to
+    keep it later in the project development
+    :param id: the id of the post
+    :param idc: the id of the channel
+    :return: redirect to the index page
+    """
     # then treat the publish part
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
     pub.update({Publishing.state: 2})
     db.session.commit()
     return redirect(url_for('index'))
-
-
-@pub_page.route('/archive/<int:id>/<string:idc>/delete', methods=["GET"])
-@login_required(admin_required=True)
-def delete_publishing(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
-    pub.delete()
-    db.session.commit()
-    return redirect(url_for('records'))
 
 

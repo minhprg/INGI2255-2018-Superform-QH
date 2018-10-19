@@ -100,6 +100,12 @@ def edit_new_post(post_id):
 @posts_page.route('/new/<int:post_id>', methods=['GET', 'POST'])
 @login_required()
 def copy_new_post(post_id):
+    """
+    This method copy the content of a post (defined by his post_id) and open the new post tab with all the informations
+    of the original post copied in it (and with the title modified)
+    :param post_id: id of the original post to be copied
+    :return:
+    """
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
     for elem in list_of_channels:
@@ -152,19 +158,24 @@ def records():
     """
     This methods is called for the creation of the Records page
     """
-    if request.method == "POST" and request.form.get('@action', '') == "delete":
-        id = request.form.get("id")
-        idc = request.form.get("idc")
-        pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
-        pub.delete()
-        db.session.commit()
-
     # Check if a user is an admin
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     user = db.session.query(User).filter(User.id == user_id)
     admin = False
     if user:
         admin = user.first().admin
+
+    # Check if a post has been send to delete an archive
+    if request.method == "POST" and request.form.get('@action', '') == "delete":
+        if admin:
+            id = request.form.get("id")
+            idc = request.form.get("idc")
+            pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
+            pub.delete()
+            db.session.commit()
+        else:
+            # TODO, it seems like we have some cheater here
+            pass
 
     # Check if there is any publishing to pass as archived
     publishings = db.session.query(Publishing).filter(Publishing.state == 1)\

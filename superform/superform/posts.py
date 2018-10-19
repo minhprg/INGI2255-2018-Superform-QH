@@ -2,7 +2,8 @@ from flask import Blueprint, url_for, request, redirect, session, render_templat
 
 from superform.users import channels_available_for_user
 from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path
-from superform.models import db, Post, Publishing, Channel
+from superform.models import db, Post, Publishing, Channel, User
+import datetime
 
 posts_page = Blueprint('posts', __name__)
 
@@ -145,11 +146,34 @@ def publish_from_new_post(new, id):
     return redirect(url_for('index'))
 
 
-@posts_page.route('/records')
+@posts_page.route('/records', methods=["GET", "POST"])
 @login_required()
 def records():
-    #posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", ""))
-    #records = [(p) for p in posts if p.is_a_record()]
-    publishings = db.session.query(Publishing).filter(Publishing.state == 2)
-    records = [(p) for p in publishings]
-    return render_template('records.html', records=records)
+    """
+    This methods is called for the creation of the Records page
+    """
+    if request.method == "POST" and request.form.get('@action', '') == "delete":
+        id = request.form.get("id")
+        idc = request.form.get("idc")
+        pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
+        pub.delete()
+        db.session.commit()
+
+    # Check if a user is an admin
+    user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
+    user = db.session.query(User).filter(User.id == user_id)
+    admin = False
+    if user:
+        admin = user.first().admin
+
+    # Check if there is any publishing to pass as archived
+    publishings = db.session.query(Publishing).filter(Publishing.state == 1)\
+        .filter(Publishing.date_until <= datetime.datetime.now())
+    publishings.update({Publishing.state: 2})
+    db.session.commit()
+
+    # Query all the archived publishings
+    archives = db.session.query(Publishing).filter(Publishing.state == 2)
+    records = [(p) for p in archives]
+
+    return render_template('records.html', records=records, admin=admin)

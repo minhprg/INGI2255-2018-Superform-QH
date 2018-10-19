@@ -1,6 +1,7 @@
 from datetime import datetime
 from functools import wraps
 from flask import render_template, session, current_app
+import os
 
 from superform.models import Authorization, Channel
 
@@ -24,7 +25,8 @@ def str_converter(datet):
     return datetime.strftime(datet,"%Y-%m-%d")
 
 def get_instance_from_module_path(module_p):
-    module_p=module_p.replace(".","/")
+    #module_p=str(os.getcwd())+"/superform/"+module_p.replace(".","/")
+    module_p="superform/"+module_p.replace(".", "/")
     import importlib.util
     spec = importlib.util.spec_from_file_location("module.name", module_p+".py")
     foo = importlib.util.module_from_spec(spec)

@@ -71,12 +71,36 @@
                                 Details
                             </button>
                             <a href="{{ url_for('posts.copy_new_post', post_id=rec.post_id) }}" class="btn btn-outline-primary">Copy</a>
-                            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-name="{{ rec.title }}" data-id="{{ rec.post_id }}"><i class="fas fa-fw fa-trash"></i> Delete</button>                    </td>
+                            {% if admin %}<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-title="{{ rec.title }}" data-id="{{ rec.post_id }}" data-channel="{{ rec.channel_id }}"><i class="fas fa-fw fa-trash"></i> Delete</button>{% endif %}
                         </td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
+            <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form method="post">
+                            <input type="hidden" name="@action" value="delete">
+                            <input type="hidden" id="id" name="id" value="">
+                            <input type="hidden" id="idc" name="idc" value="">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Delete Publishing</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure to delete Publishing with title "<span id="publishing-title"></span>" and channel "<span id="publishing-channel"></span>" ?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
             <div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -145,6 +169,13 @@
 {% endblock %}
 {% block scripts %}
     <script>
+        $('#deleteModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            $(this).find('#publishing-title').text(button.data('title'));
+            $(this).find('#publishing-channel').text(button.data('channel'));
+            $(this).find('#id').val(button.data('id'));
+            $(this).find('#idc').val(button.data('channel'));
+        });
         $('#viewModal').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget); // Button that triggered the modal
             $(this).find('#post-title').val(button.data('title'));

@@ -45,3 +45,12 @@ def archive_publishing(id, idc):
     return redirect(url_for('index'))
 
 
+@pub_page.route('/archive/<int:id>/<string:idc>/delete', methods=["GET"])
+@login_required(admin_required=True)
+def delete_publishing(id, idc):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
+    pub.delete()
+    db.session.commit()
+    return redirect(url_for('records'))
+
+

@@ -1,9 +1,21 @@
 import facebook
 import json
 
+from superform.utils import login_required
+from flask import Blueprint, url_for, app
+
 FIELDS_UNAVAILABLE = ['Title']
 
 CONFIG_FIELDS = ["access_token"]
+
+
+def get_url_for_token(id_channel):
+    app_id = "1672680826169132"
+    canvas_url = "https://127.0.0.1/callback_fb"
+    perms = ["manage_pages", "publish_pages"]
+    graph = facebook.GraphAPI()
+    url = graph.get_auth_url(app_id, canvas_url, perms)
+    return url + "&state=" + str(id_channel)
 
 
 def run(publishing,channel_config):

@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, current_app, url_for, request, make_response, redirect, session, render_template
 
 from superform.utils import login_required, get_instance_from_module_path, get_modules_names, get_module_full_name
@@ -49,7 +51,10 @@ def configure_channel(id):
         if (c.config is not ""):
             d = ast.literal_eval(c.config)
             setattr(c, "config_dict", d)
-        return render_template("channel_configure.html", channel=c, config_fields=config_fields)
+        if m == 'superform.plugins.facebook':
+            return render_template("channel_configure_facebook.html", channel=c, config_fields=config_fields, url_token=clas.get_url_for_token(id))
+        else:
+            return render_template("channel_configure.html", channel=c, config_fields=config_fields)
     str_conf = "{"
     cfield = 0
     for field in config_fields:
@@ -61,3 +66,19 @@ def configure_channel(id):
     c.config = str_conf
     db.session.commit()
     return redirect(url_for('channels.channel_list'))
+
+@channels_page.route("/callback_fb", methods=['GET', 'POST'])
+@login_required(admin_required=True)
+def callback_fb():
+
+    id_channel = request.args.get('state')
+    access_token = "123"
+    # TODO get access token from token and code and save it to db
+    channel = Channel.query.get(id_channel)
+    channel.config = "{\"access_token\": \"" + str(access_token) + "\"}"
+    # TODO proceed insert with json
+    # json_data = json.loads(channel.config)
+    # json_data['access_token'] = access_token
+
+    db.session.commit()
+    return redirect(url_for("channels.configure_channel", id=id_channel))

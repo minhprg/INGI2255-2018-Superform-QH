@@ -14,6 +14,7 @@
                                     <input type="text" name="{{ field }}" id="{{ field }}" class="form-control" value="{{ channel.config_dict.get(field) }}">
                                 </div>
                             {% endfor %}
+                            {% block form_content %}{% endblock %}
                         </div>
                     </div>
                 </div>

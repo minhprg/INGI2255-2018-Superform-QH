@@ -10,6 +10,27 @@
 {% block content %}
     <h1>My Records</h1>
     <div class="row">
+        <div class="col-sm-12 col-sm-offset-3">
+            <form method="post">
+                <div id="imaginary_container">
+                    <div class="input-group stylish-input-group">
+                        <input type="hidden" name="@action" value="search">
+                        <input type="text" name="search-field" class="form-control"  placeholder="{% if search %}{{ search_txt }}{% else %}Search a subject{% endif %}" >
+                        <span class="input-group-addon">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            {% if search %}
+                                <a href="{{ url_for('posts.records')}}" class="btn btn-outline-secondary" role="button"><i class="fa fa-times"></i> Cancel</a>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <h2> </h2>
+    <div class="row">
         <div class="col-md-12">
             <table class="table table-bordered">
                 <thead>

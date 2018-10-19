@@ -185,6 +185,15 @@ def records():
 
     # Query all the archived publishings
     archives = db.session.query(Publishing).filter(Publishing.state == 2)
+
+    # Check if a post has been send for a search request
+    search = False
+    search_field = ""
+    if request.method == "POST" and request.form.get('@action') == "search":
+        search = True
+        search_field = request.form.get("search-field")
+        archives = archives.filter(Publishing.title.like('%' + search_field + '%'))
+
     records = [(p) for p in archives]
 
-    return render_template('records.html', records=records, admin=admin)
+    return render_template('records.html', records=records, admin=admin, search=search, search_txt=search_field)

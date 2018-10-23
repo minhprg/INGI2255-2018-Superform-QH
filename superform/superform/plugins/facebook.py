@@ -29,9 +29,11 @@ def run(publishing,channel_config):
         message="This is a great website. Everyone should visit it.",
         link="link=publishing.link_url")
 
-def get_page(channel_config):
-    json_data = json.loads(channel_config)
-    acc_tok = json_data['access_token']
-    graph = facebook.GraphAPI(access_token=acc_tok)
-    pages = graph.get_connections(id='me', connection_name='pages')
-    return pages
+
+def get_page(acc_tok):
+    try:
+        graph = facebook.GraphAPI(access_token=acc_tok)
+        pages = graph.get_object('me/accounts')#graph.get_connections(id='me', connection_name='pages')
+        return pages['data']
+    except facebook.GraphAPIError:
+        return ["error"]

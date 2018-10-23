@@ -53,7 +53,9 @@ def configure_channel(id):
             d = ast.literal_eval(c.config)
             setattr(c, "config_dict", d)
         if m == 'superform.plugins.facebook':
-            return render_template("channel_configure_facebook.html", channel=c, config_fields=config_fields, url_token=clas.get_url_for_token(id))
+            return render_template("channel_configure_facebook.html", channel=c, config_fields=config_fields,
+                                   url_token=clas.get_url_for_token(id),
+                                   pages=clas.get_page(c.config_dict.get("access_token")))
         else:
             return render_template("channel_configure.html", channel=c, config_fields=config_fields)
     str_conf = "{"
@@ -78,7 +80,7 @@ def callback_fb():
     app_id = "1672680826169132"
     canvas_url = "https://127.0.0.1:5000/callback_fb"
     graph = facebook.GraphAPI()
-    res = graph.get_access_token_from_code(code, canvas_url, app_id, "")
+    res = graph.get_access_token_from_code(code, canvas_url, app_id, "152bd148cea3d9c7cacaa6cc234546ff")
 
     access_token = res['access_token']
     # TODO get access token from token and code and save it to db
@@ -90,3 +92,4 @@ def callback_fb():
 
     db.session.commit()
     return redirect(url_for("channels.configure_channel", id=id_channel))
+

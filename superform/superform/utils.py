@@ -24,7 +24,6 @@ def str_converter(datet):
     return datetime.strftime(datet,"%Y-%m-%d")
 
 def get_instance_from_module_path(module_p):
-    module_p = module_p[10:] # remove the "superform." because we already are in the superform folder
     import os
     module_p = module_p.replace(".", os.sep) # use the os file path separator
     import importlib.util

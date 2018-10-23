@@ -57,4 +57,4 @@ def notfound(error):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(ssl_context='adhoc')

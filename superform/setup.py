@@ -9,6 +9,7 @@ setup(
         'python3-saml',
         'sqlalchemy',
         'flask_sqlalchemy',
-        'facebook-sdk'
+        'facebook-sdk',
+        'pyopenssl'
     ],
 )

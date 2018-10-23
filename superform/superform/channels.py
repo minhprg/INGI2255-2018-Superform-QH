@@ -5,6 +5,7 @@ from flask import Blueprint, current_app, url_for, request, make_response, redir
 from superform.utils import login_required, get_instance_from_module_path, get_modules_names, get_module_full_name
 from superform.models import db, Channel
 import ast
+import facebook
 
 channels_page = Blueprint('channels', __name__)
 
@@ -72,7 +73,14 @@ def configure_channel(id):
 def callback_fb():
 
     id_channel = request.args.get('state')
-    access_token = "123"
+    code = request.args.get('code')
+
+    app_id = "1672680826169132"
+    canvas_url = "https://127.0.0.1:5000/callback_fb"
+    graph = facebook.GraphAPI()
+    res = graph.get_access_token_from_code(code, canvas_url, app_id, "")
+
+    access_token = res['access_token']
     # TODO get access token from token and code and save it to db
     channel = Channel.query.get(id_channel)
     channel.config = "{\"access_token\": \"" + str(access_token) + "\"}"

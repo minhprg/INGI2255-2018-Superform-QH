@@ -8,7 +8,6 @@ setup(
         'flask',
         'python3-saml',
         'sqlalchemy',
-        'flask-sqlalchemy',
-        'pytest'
+        'flask-sqlalchemy'
     ],
 )

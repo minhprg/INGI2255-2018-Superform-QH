@@ -1,9 +1,6 @@
 from datetime import datetime
 from functools import wraps
 from flask import render_template, session, current_app
-import os
-
-from superform.models import Authorization, Channel
 
 
 def login_required(admin_required=False):
@@ -48,6 +45,11 @@ def get_module_full_name(module_name):
 
 
 def get_date_ago(datet):
+    """
+    This method simply convert a datetime into the number of days that has passed from this datetime until today
+    :param datet: a valid datetime
+    :return: a number of day
+    """
     today = datetime.now()
     delta = today - datet
     return delta.days

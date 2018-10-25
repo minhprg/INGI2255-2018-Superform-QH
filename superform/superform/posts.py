@@ -112,7 +112,8 @@ def copy_new_post(post_id):
         unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
         setattr(elem, "unavailablefields", unavailable_fields)
 
-    original_post= db.session.query(Post).filter(Post.id == post_id).first()
+    # Query the data from the original post
+    original_post = db.session.query(Post).filter(Post.id == post_id).first()
     post = Post(user_id=user_id, title="Copy of " + original_post.title, description=original_post.description,
                 link_url=original_post.link_url, image_url=original_post.image_url, date_from=original_post.date_from,
                 date_until=original_post.date_until)

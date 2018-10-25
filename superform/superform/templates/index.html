@@ -80,7 +80,7 @@
                                         {{ item.title }}
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#viewModal"
+                                        <!--button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#viewModal"
                                                 data-title="{{ item.title }}"
                                                 data-channel="-"
                                                 data-author="{{ item.user_id }}"
@@ -90,10 +90,10 @@
                                                 data-from="{{ item.date_from }}"
                                                 data-until="{{ item.date_until }}">
                                             Details
-                                        </button>
-                                        <a href="{{ url_for('posts.edit_new_post', post_id=item.id) }}" class="btn btn-outline-primary" role="button">Edit</a>
+                                        </button-->
+                                        <!--a href="{{ url_for('posts.edit_new_post', post_id=item.id) }}" class="btn btn-outline-primary" role="button">Edit</a-->
                                         <a href="{{ url_for('posts.copy_new_post', post_id=item.id) }}" class="btn btn-outline-primary">Copy</a>
-                                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-name="{{ item.title }}" data-id="{{ item.id }}"><i class="fas fa-fw fa-trash"></i> Delete</button>
+                                        <!--button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-name="{{ item.title }}" data-id="{{ item.id }}"><i class="fas fa-fw fa-trash"></i> Delete</button-->
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -133,7 +133,7 @@
                                         {{ item.title }}
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#viewModal"
+                                        <!--button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#viewModal"
                                                 data-title="{{ item.title }}"
                                                 data-channel="{{ item.channel_id }}"
                                                 data-author="{{ item.get_author() }}"
@@ -143,7 +143,7 @@
                                                 data-from="{{ item.date_from }}"
                                                 data-until="{{ item.date_until }}">
                                             Details
-                                        </button>
+                                        </button-->
                                         <a href="{{ url_for('posts.copy_new_post', post_id=item.post_id) }}" class="btn btn-outline-primary">Copy</a>
                                         <a href="{{ url_for('publishings.archive_publishing', id=item.post_id, idc=item.channel_id) }}" class="btn btn-outline-warning">Archive</a>
                                     </td>
@@ -162,7 +162,7 @@
             <div class="input-group mr-sm-2">
         </form>
 
-        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <!--div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <form method="post">
@@ -184,8 +184,8 @@
                     </form>
                 </div>
             </div>
-        </div>
-        <div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        </div-->
+        <!--div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -247,7 +247,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div-->
 
     {% else %}
         <p>Your are not logged in.</p>
@@ -256,7 +256,7 @@
 
 {% endblock %}
 {% block scripts %}
-    <script>
+    <!--script>
         $('#viewModal').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget); // Button that triggered the modal
             $(this).find('#post-title').val(button.data('title'));
@@ -273,5 +273,5 @@
             $(this).find('#post-name').text(button.data('name'));
             $(this).find('#post-id').val(button.data('id'));
         });
-    </script>
+    </script-->
 {% endblock %}

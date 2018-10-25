@@ -94,8 +94,3 @@ def callback_fb():
     db.session.commit()
     return redirect(url_for("channels.configure_channel", id=id_channel))
 
-
-def select_page():
-    id_channel = request.args.get('state')
-    channel = Channel.query.get(id_channel)
-    return redirect(url_for("channels.configure_channel", id=id_channel))

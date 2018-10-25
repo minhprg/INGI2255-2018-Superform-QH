@@ -1,16 +1,43 @@
-{% extends "channel_configure.html" %}
-{% block form_content %}
-    <div class="form-group">
-        <a type="button" class="btn btn-outline-primary" href="{{ url_token }}">Get Access-Token</a>
-        <select name="Page" size = "1" id="page" onChange="SelectPage(pages)">
-            {% for page in pages %}
-                <option>{{ page['name'] }}
-            {% endfor %}
-        </select>
-    </div>
+{% extends "layout.html" %}
+{% block title %}Configure Channel{% endblock %}
+{% block content %}
+    <h1>Configuration</h1>
+    {% if session.logged_in %}
+        <form method="POST" action="">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="{{ config_fields[0] }}">{{ config_fields[0] }}</label><br>
+                                    <input type="text" name="{{ config_fields[0] }}" id="{{ config_fields[0] }}" class="form-control" value="{{ channel.config_dict.get(config_fields[0]) }}">
+                                </div>
+                                <!--div class="form-group">
+                                    <label for="{{ config_fields[1] }}">{{ config_fields[1] }}</label><br>
+                                    <input type="text" name="{{ config_fields[1] }}" id="{{ config_fields[1] }}" class="form-control" value="{{ channel.config_dict.get(config_fields[1]) }}">
+                                </div>-->
+                                <div class="form-control">
+                                    <label for="page">page</label><br>
+                                    <select name="page" size = "1" id="page" class="form-control" onChange="{{ select_page }}">
+                                        {% for page in pages %}
+                                            <option value={{ page['access_token'] }}>{{ page['name'] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            {% block form_content %}{% endblock %}
+                            <div class="form-group">
+                                <a type="button" class="btn btn-outline-primary" href="{{ url_token }}">Get Access-Token</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-success" type="submit">Save Configuration</button>
+            <a type="button" class="btn btn-outline-primary" href="{{ url_for('channels.channel_list') }}">Abort</a>
+        </form>
+    {% else %}
+        Your are not logged in.
+    {% endif %}
+
 {% endblock %}
-<script>
-    function SelectPage(pages) {
-        document.form.set("page",pages[document.getElementById("page").selectedIndex])
-    }
-</script>
+

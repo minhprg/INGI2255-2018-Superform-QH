@@ -60,11 +60,15 @@ def configure_channel(id):
             return render_template("channel_configure.html", channel=c, config_fields=config_fields)
     str_conf = "{"
     cfield = 0
-    for field in config_fields:
-        if cfield > 0:
-            str_conf += ","
-        str_conf += "\"" + field + "\" : \"" + request.form.get(field) + "\""
-        cfield += 1
+    if m == 'superform.plugins.facebook':
+        str_conf += "\"access_token\" : \"" + request.form.get("access_token") + "\""
+        str_conf += ",\"page\" : \"" + request.form.get("page") + "\""
+    else:
+        for field in config_fields:
+            if cfield > 0:
+                str_conf += ","
+            str_conf += "\"" + field + "\" : \"" + request.form.get(field) + "\""
+            cfield += 1
     str_conf += "}"
     c.config = str_conf
     db.session.commit()
@@ -93,3 +97,8 @@ def callback_fb():
     db.session.commit()
     return redirect(url_for("channels.configure_channel", id=id_channel))
 
+
+def select_page():
+    id_channel = request.args.get('state')
+    channel = Channel.query.get(id_channel)
+    return redirect(url_for("channels.configure_channel", id=id_channel))

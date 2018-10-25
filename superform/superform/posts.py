@@ -8,6 +8,7 @@ import datetime
 posts_page = Blueprint('posts', __name__)
 
 
+
 def create_a_post(form):
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     title_post = form.get('titlepost')
@@ -23,21 +24,6 @@ def create_a_post(form):
     return p
 
 
-def edit_a_post(form, post_id):
-    post = db.session.query(Post).filter(Post.id == post_id)
-    post.update({
-        Post.user_id : session.get("user_id", "") if session.get("logged_in", False) else -1,
-        Post.title : form.get('titlepost'),
-        Post.description : form.get('descriptionpost'),
-        Post.link_url : form.get('linkurlpost'),
-        Post.image_url : form.get('imagepost'),
-        Post.date_from : datetime_converter(form.get('datefrompost')),
-        Post.date_until : datetime_converter(form.get('dateuntilpost'))
-    })
-    db.session.commit()
-    return post.first()
-
-
 def create_a_publishing(post, chn, form):
     chan = str(chn.name)
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
@@ -45,8 +31,10 @@ def create_a_publishing(post, chn, form):
         chan + '_descriptionpost') is not None else post.description
     link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
-    date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
-    date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
+    date_from = datetime_converter(form.get(chan + '_datefrompost')) if datetime_converter(
+        form.get(chan + '_datefrompost')) is not None else post.date_from
+    date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if datetime_converter(
+        form.get(chan + '_dateuntilpost')) is not None else post.date_until
     pub = Publishing(post_id=post.id, channel_id=chan, state=0, title=title_post, description=descr_post,
                      link_url=link_post, image_url=image_post,
                      date_from=date_from, date_until=date_until)
@@ -64,35 +52,14 @@ def new_post():
     for elem in list_of_channels:
         m = elem.module
         clas = get_instance_from_module_path(m)
-        unavailable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
-        setattr(elem, "unavailablefields", unavailable_fields)
+        unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
+        setattr(elem, "unavailablefields", unaivalable_fields)
 
     if request.method == "GET":
-        return render_template('new.html', l_chan=list_of_channels, post=None, new=True)
+        return render_template('new.html', l_chan=list_of_channels)
     else:
         create_a_post(request.form)
-        return redirect(url_for('index'))
-
-
-@posts_page.route('/edit/<int:post_id>', methods=['GET', 'POST'])
-@login_required()
-def edit_new_post(post_id):
-    user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
-    list_of_channels = channels_available_for_user(user_id)
-    for elem in list_of_channels:
-        m = elem.module
-        clas = get_instance_from_module_path(m)
-        unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
-        setattr(elem, "unavailablefields", unavailable_fields)
-
-    post = db.session.query(Post).filter(Post.id == post_id).first()
-    if request.method == "GET":
-        post.date_from = str_converter(post.date_from)
-        post.date_until = str_converter(post.date_until)
-        return render_template('new.html', l_chan=list_of_channels, post=post, new=False)
-    else:
-        edit_a_post(request.form, post_id)
-        return redirect(url_for('index'))
+    return redirect(url_for('index'))
 
 
 @posts_page.route('/new/<int:post_id>', methods=['GET', 'POST'])
@@ -126,14 +93,11 @@ def copy_new_post(post_id):
         return redirect(url_for('index'))
 
 
-@posts_page.route('/publish/<int:new>/<int:id>', methods=['POST'])
+@posts_page.route('/publish', methods=['POST'])
 @login_required()
-def publish_from_new_post(new, id):
-    # First create the post if it doesn't exist
-    if new:
-        p = create_a_post(request.form)
-    else:
-        p = edit_a_post(request.form, id)
+def publish_from_new_post():
+    # First create the post
+    p = create_a_post(request.form)
     # then treat the publish part
     if request.method == "POST":
         for elem in request.form:
@@ -141,7 +105,6 @@ def publish_from_new_post(new, id):
                 def substr(elem):
                     import re
                     return re.sub('^chan\_option\_', '', elem)
-
 
                 c = Channel.query.get(substr(elem))
                 # for each selected channel options

@@ -74,11 +74,9 @@ def run(publishing, channel_config):
                 pubDate=pubDate)
 
     rss.items.insert(0, item)
-    '''   
     for post in rss.items:
         if post.pubDate + datetime.timedelta(365) < pubDate:
             rss.items.remove(post) 
-    '''
     file = open(destination, "w+")
     rss.write_xml(file)
     file.close()

@@ -1,7 +1,7 @@
 from flask import Blueprint, url_for, request, redirect, session, render_template
 
 from superform.users import channels_available_for_user
-from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path
+from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path, get_date_ago
 from superform.models import db, Post, Publishing, Channel, User
 import datetime
 
@@ -157,18 +157,18 @@ def records():
     """
     This methods is called for the creation of the Records page
     """
+    # Check if there is any publishing to pass as archived
+    publishings = db.session.query(Publishing).filter(Publishing.state == 1)\
+        .filter(Publishing.date_until <= datetime.datetime.now())
+    publishings.update({Publishing.state: 2})
+    db.session.commit()
+
     # Check if a user is an admin
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     user = db.session.query(User).filter(User.id == user_id)
     admin = False
     if user:
         admin = user.first().admin
-
-    # Check if there is any publishing to pass as archived
-    publishings = db.session.query(Publishing).filter(Publishing.state == 1)\
-        .filter(Publishing.date_until <= datetime.datetime.now())
-    publishings.update({Publishing.state: 2})
-    db.session.commit()
 
     # Check if a post has been send to delete an archive
     if request.method == "POST" and request.form.get('@action', '') == "delete":
@@ -182,19 +182,16 @@ def records():
             # TODO, it seems like we have some cheater here
             pass
 
-
-
     # Query all the archived publishings
     archives = db.session.query(Publishing).filter(Publishing.state == 2)
 
-    # Check if a post has been send for a search request
-    search = False
-    search_field = ""
-    if request.method == "POST" and request.form.get('@action') == "search":
-        search = True
-        search_field = request.form.get("search-field")
-        archives = archives.filter(Publishing.title.like('%' + search_field + '%'))
+    # Take all archives and format the dates entries
+    records = []
+    for a in archives:
+        ago_from = get_date_ago(a.date_from)
+        ago_until = get_date_ago(a.date_until)
+        date_from = str_converter(a.date_from)
+        date_until = str_converter(a.date_until)
+        records.append((a, ago_from, ago_until, date_from, date_until))
 
-    records = [(p) for p in archives]
-
-    return render_template('records.html', records=records, admin=admin, search=search, search_txt=search_field)
+    return render_template('records.html', records=records, admin=admin)

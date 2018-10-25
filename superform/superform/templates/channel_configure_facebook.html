@@ -11,12 +11,9 @@
                                 <div class="form-group">
                                     <label for="{{ config_fields[0] }}">{{ config_fields[0] }}</label><br>
                                     <input type="text" name="{{ config_fields[0] }}" id="{{ config_fields[0] }}" class="form-control" value="{{ channel.config_dict.get(config_fields[0]) }}">
+                                    <a type="button" class="btn btn-outline-primary" href="{{ url_token }}" style="margin-top:10px">Get Access-Token</a>
                                 </div>
-                                <!--div class="form-group">
-                                    <label for="{{ config_fields[1] }}">{{ config_fields[1] }}</label><br>
-                                    <input type="text" name="{{ config_fields[1] }}" id="{{ config_fields[1] }}" class="form-control" value="{{ channel.config_dict.get(config_fields[1]) }}">
-                                </div>-->
-                                <div class="form-control">
+                                <div class="form-group">
                                     <label for="page">page</label><br>
                                     <select name="page" size = "1" id="page" class="form-control" onChange="{{ select_page }}">
                                         {% for page in pages %}
@@ -28,10 +25,6 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-                            {% block form_content %}{% endblock %}
-                            <div class="form-group">
-                                <a type="button" class="btn btn-outline-primary" href="{{ url_token }}">Get Access-Token</a>
-                            </div>
                         </div>
                     </div>
                 </div>

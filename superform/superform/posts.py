@@ -45,10 +45,8 @@ def create_a_publishing(post, chn, form):
         chan + '_descriptionpost') is not None else post.description
     link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
-    date_from = datetime_converter(form.get(chan + '_datefrompost')) if datetime_converter(
-        form.get(chan + '_datefrompost')) is not None else post.date_from
-    date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if datetime_converter(
-        form.get(chan + '_dateuntilpost')) is not None else post.date_until
+    date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
+    date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
     pub = Publishing(post_id=post.id, channel_id=chan, state=0, title=title_post, description=descr_post,
                      link_url=link_post, image_url=image_post,
                      date_from=date_from, date_until=date_until)
@@ -143,6 +141,7 @@ def publish_from_new_post(new, id):
                     import re
                     return re.sub('^chan\_option\_', '', elem)
 
+
                 c = Channel.query.get(substr(elem))
                 # for each selected channel options
                 # create the publication
@@ -165,6 +164,12 @@ def records():
     if user:
         admin = user.first().admin
 
+    # Check if there is any publishing to pass as archived
+    publishings = db.session.query(Publishing).filter(Publishing.state == 1)\
+        .filter(Publishing.date_until <= datetime.datetime.now())
+    publishings.update({Publishing.state: 2})
+    db.session.commit()
+
     # Check if a post has been send to delete an archive
     if request.method == "POST" and request.form.get('@action', '') == "delete":
         if admin:
@@ -177,11 +182,7 @@ def records():
             # TODO, it seems like we have some cheater here
             pass
 
-    # Check if there is any publishing to pass as archived
-    publishings = db.session.query(Publishing).filter(Publishing.state == 1)\
-        .filter(Publishing.date_until <= datetime.datetime.now())
-    publishings.update({Publishing.state: 2})
-    db.session.commit()
+
 
     # Query all the archived publishings
     archives = db.session.query(Publishing).filter(Publishing.state == 2)

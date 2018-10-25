@@ -128,11 +128,7 @@ def records():
     db.session.commit()
 
     # Check if a user is an admin
-    user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
-    user = db.session.query(User).filter(User.id == user_id)
-    admin = False
-    if user:
-        admin = user.first().admin
+    admin = session.get("admin", False) if session.get("logged_in", False) else False
 
     # Check if a post has been send to delete an archive
     if request.method == "POST" and request.form.get('@action', '') == "delete":

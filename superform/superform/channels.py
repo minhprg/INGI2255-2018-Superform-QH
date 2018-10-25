@@ -87,12 +87,9 @@ def callback_fb():
     res = graph.get_access_token_from_code(code, canvas_url, app_id, "152bd148cea3d9c7cacaa6cc234546ff")
 
     access_token = res['access_token']
-    # TODO get access token from token and code and save it to db
     channel = Channel.query.get(id_channel)
+    # reset config and add new access_token
     channel.config = "{\"access_token\": \"" + str(access_token) + "\"}"
-    # TODO proceed insert with json
-    # json_data = json.loads(channel.config)
-    # json_data['access_token'] = access_token
 
     db.session.commit()
     return redirect(url_for("channels.configure_channel", id=id_channel))

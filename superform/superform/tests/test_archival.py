@@ -41,11 +41,16 @@ def login(client, login):
 
 def test_new_records(client):
     login(client,"myself")
+
+    # create a test channel
+    client.post("/channels", data={'@action': 'new', 'name': 'test_channel', 'module': 'mail'})
+    chan_id = db.session.query(Channel).all()[-1].id
+
     #publish a not yet expired post
     d  = datetime.date.today()
     d += datetime.timedelta(1)
-    client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish/1/0', data=dict(chan_option_8 = "chan_option_8",titlepost='A test_new_record publishing', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
+    client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
+    client.post('/publish/1/0', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_new_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
 
     #accept last publication
     post = db.session.query(Post).filter().all()
@@ -68,7 +73,7 @@ def test_new_records(client):
     db.session.query(Post).filter(Post.id == last_add.id).delete()
     d -= datetime.timedelta(3)
     client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish/1/0', data=dict(chan_option_8 = "chan_option_8",titlepost='A test_new_record publishing', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
+    client.post('/publish/1/0', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_new_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
     # accept last publication
     post = db.session.query(Post).filter().all()
     last_add = post[-1]
@@ -87,14 +92,20 @@ def test_new_records(client):
     db.session.commit()
     db.session.query(Post).filter(Post.title == 'A test_new_record publishing').delete()
     db.session.commit()
+    client.post("/channels",data ={'@action':'delete','id':chan_id})
 
 def test_delete_record(client):
     login(client,"myself")
 
+    #create a test channel
+    client.post("/channels",data ={'@action':'new','name':'test_channel','module':'mail'})
+    chan_id = db.session.query(Channel).all()[-1].id
+
+
     d  = datetime.date.today()
     d -= datetime.timedelta(1)
     client.post('/new', data=dict(titlepost='A test_delete_record post', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish/1/0', data=dict(chan_option_8 = "chan_option_8",titlepost='A test_delete_record publishing', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
+    client.post('/publish/1/0', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_delete_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
 
     # accept last publication
     post = db.session.query(Post).filter().all()
@@ -116,3 +127,4 @@ def test_delete_record(client):
     db.session.commit()
     db.session.query(Post).filter(Post.title == 'A test_delete_record publishing').delete()
     db.session.commit()
+    client.post("/channels",data ={'@action':'delete','id':chan_id})

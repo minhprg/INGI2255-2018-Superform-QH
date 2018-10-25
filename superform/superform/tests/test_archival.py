@@ -50,7 +50,7 @@ def test_new_records(client):
     d  = datetime.date.today()
     d += datetime.timedelta(1)
     client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish/1/0', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_new_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
+    client.post('/publish', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_new_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
 
     #accept last publication
     post = db.session.query(Post).filter().all()
@@ -73,7 +73,7 @@ def test_new_records(client):
     db.session.query(Post).filter(Post.id == last_add.id).delete()
     d -= datetime.timedelta(3)
     client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish/1/0', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_new_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
+    client.post('/publish', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_new_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
     # accept last publication
     post = db.session.query(Post).filter().all()
     last_add = post[-1]
@@ -105,7 +105,7 @@ def test_delete_record(client):
     d  = datetime.date.today()
     d -= datetime.timedelta(1)
     client.post('/new', data=dict(titlepost='A test_delete_record post', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish/1/0', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_delete_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
+    client.post('/publish', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_delete_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
 
     # accept last publication
     post = db.session.query(Post).filter().all()

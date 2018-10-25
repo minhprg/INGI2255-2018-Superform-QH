@@ -20,7 +20,11 @@
                                     <label for="page">page</label><br>
                                     <select name="page" size = "1" id="page" class="form-control" onChange="{{ select_page }}">
                                         {% for page in pages %}
-                                            <option value={{ page['access_token'] }}>{{ page['name'] }}</option>
+                                            {% if page['id'] == channel.config_dict.get(config_fields[1]) %}
+                                                <option selected value={{ page['id'] }}>{{ page['name'] }}</option>
+                                            {% else %}
+                                                <option value={{ page['id'] }}>{{ page['name'] }}</option>
+                                            {% endif %}
                                         {% endfor %}
                                     </select>
                                 </div>

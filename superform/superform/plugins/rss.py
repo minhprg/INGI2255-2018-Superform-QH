@@ -54,16 +54,16 @@ def run(publishing, channel_config):
                 description.append(attrib.text)
 
             for attrib in tree.xpath("/rss/channel/item/pubDate"):
-                pubDate.append(datetime.strptime(attrib.text, "%a, %d %b %Y %X %Z"))
+                pubDate.append(datetime.datetime.strptime(attrib.text, "%a, %d %b %Y %X GMT"))
 
-            for i in range(0, len(title) - 1):
+            for i in range(0, len(title)):
                 item = PyRSS2Gen.RSSItem(
                     title=title[i],
                     link=link[i],
                     description=description[i],
                     pubDate=pubDate[i]
                 )
-                rss.items.insert(0, item)
+                rss.items.append(item)
 
     pubDate = datetime.datetime.now()
 

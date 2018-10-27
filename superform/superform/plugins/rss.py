@@ -54,7 +54,7 @@ def run(publishing, channel_config):
                 description.append(attrib.text)
 
             for attrib in tree.xpath("/rss/channel/item/pubDate"):
-                pubDate.append(attrib.text)
+                pubDate.append(datetime.strptime(attrib.text, "%a, %d %b %Y %X %Z"))
 
             for i in range(0, len(title) - 1):
                 item = PyRSS2Gen.RSSItem(
@@ -76,7 +76,7 @@ def run(publishing, channel_config):
     rss.items.insert(0, item)
     for post in rss.items:
         if post.pubDate + datetime.timedelta(365) < pubDate:
-            rss.items.remove(post) 
+            rss.items.remove(post)
     file = open(destination, "w+")
     rss.write_xml(file)
     file.close()

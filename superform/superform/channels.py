@@ -1,5 +1,3 @@
-import json
-
 from flask import Blueprint, current_app, url_for, request, make_response, redirect, session, render_template
 
 from superform.utils import login_required, get_instance_from_module_path, get_modules_names, get_module_full_name
@@ -55,7 +53,7 @@ def configure_channel(id):
         if m == 'superform.plugins.facebook':
             return render_template("channel_configure_facebook.html", channel=c, config_fields=config_fields,
                                    url_token=clas.get_url_for_token(id),
-                                   pages=clas.get_page(c.config_dict.get("access_token")))
+                                   pages=clas.get_list_user_pages(c.config_dict.get("access_token")))
         else:
             return render_template("channel_configure.html", channel=c, config_fields=config_fields)
     str_conf = "{"
@@ -74,23 +72,30 @@ def configure_channel(id):
     db.session.commit()
     return redirect(url_for('channels.channel_list'))
 
+
 @channels_page.route("/callback_fb", methods=['GET', 'POST'])
 @login_required(admin_required=True)
 def callback_fb():
-
+    """Page where Facebook returns the code to get the access token.
+        Generate the access token from the code and save it to the DB."""
     id_channel = request.args.get('state')
     code = request.args.get('code')
+    if id_channel is None:
+        return redirect(url_for("channels.channel_list"))
 
-    app_id = "1672680826169132"
-    canvas_url = "https://127.0.0.1:5000/callback_fb"
+    app_id = current_app.config["FACEBOOK_APP_ID"]
+    app_secret = current_app.config["FACEBOOK_APP_SECRET"]
+    canvas_url = url_for('channels.callback_fb', _external=True)
     graph = facebook.GraphAPI()
-    res = graph.get_access_token_from_code(code, canvas_url, app_id, "152bd148cea3d9c7cacaa6cc234546ff")
+    try:
+        res = graph.get_access_token_from_code(code, canvas_url, app_id, app_secret)
+        access_token = res['access_token']
+    except facebook.GraphAPIError:
+        access_token = 'Unable to generate access_token'
 
-    access_token = res['access_token']
     channel = Channel.query.get(id_channel)
     # reset config and add new access_token
     channel.config = "{\"access_token\": \"" + str(access_token) + "\"}"
 
     db.session.commit()
     return redirect(url_for("channels.configure_channel", id=id_channel))
-

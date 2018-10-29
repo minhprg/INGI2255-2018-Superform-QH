@@ -12,6 +12,10 @@ def run(publishing, channel_config):
     """Publish the post on the selected page on Facebook"""
     json_data = json.loads(channel_config)
     acc_tok = json_data['access_token']
+    if 'page' not in json_data:
+        print("Invalid page")
+        # TODO should add log here
+        return
     page_id = json_data['page']
     page = get_page_from_id(acc_tok, page_id)
     if page is None:

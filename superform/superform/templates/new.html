@@ -3,155 +3,155 @@
 {% block content %}
     <h1>New Post</h1>
     <ul class="nav nav-tabs">
-      <li class="nav-item">
-        <a class="nav-link active" data-toggle="tab" href="#home">General</a>
-      </li>
-      {% for chan in l_chan %}
-          <li class="nav-item" id="li_{{ chan.name }}" style="display:none;">
-            <a class="nav-link" data-toggle="tab" href="#menu{{ chan.id }}">{{ chan.name }}</a>
-          </li>
-     {% endfor %}
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#home">General</a>
+        </li>
+        {% for chan in l_chan %}
+            <li class="nav-item" id="li_{{ chan.name }}" style="display:none;">
+                <a class="nav-link" data-toggle="tab" href="#menu{{ chan.id }}">{{ chan.name }}</a>
+            </li>
+        {% endfor %}
     </ul>
     {% if session.logged_in %}
         <p>{{ user }}</p>
         <form method="POST" action="">
             <div class="tab-content">
-              <div class="tab-pane container-fluid active" id="home">
-
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label for="titlepost">Title</label><br>
-                                    <input type="text" name="titlepost" id="titlepost" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="descriptionpost">Description</label><br>
-                                    <textarea class="form-control" rows="5" id="descriptionpost" name="descriptionpost"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label for="linkurlpost">Link</label><br>
-                                    <input type="text" name="linkurlpost" id="linkurlpost" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="imagepost">Image</label><br>
-                                    <input type="file" name="imagepost" id="imagepost" class="form-control">
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="datefrompost">Publication Date</label><br>
-                                            <input id="datefrompost" name="datefrompost" type="date" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="dateuntilpost">Publication Until</label><br>
-                                            <input id="dateuntilpost" name="dateuntilpost" type="date" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                         <div class="form-group">
-                             <label for="publishpost">Publish</label>
-                             {% if l_chan|length == 0 %}
-                                 <p>No channel available for this user</p>
-                             {% else %}
-                                 {% for chan in l_chan %}
-                                     <div class="form-check">
-                                      <label class="form-check-label">
-                                        <input id="chan_option_{{ chan.id }}" data-namechan="{{ chan.name }}" data-unavailablefields="{{ chan.unavailablefields }}" name="chan_option_{{ chan.id }}" type="checkbox" class="form-check-input checkbox" value="{{ chan.id }}">{{ chan.name }}
-                                      </label>
-                                    </div>
-                                 {% endfor %}
-                             {% endif %}
-                         </div>
-
-                         <div class="card">
-                          <div class="card-header">Status</div>
-                          <div class="card-body">Content</div>
-                         </div>
-
-
-                    </div>
-
-                </div>
-
-              </div>
-              {% for chan in l_chan %}
-                  <div class="tab-pane container-fluid fade" id="menu{{ chan.id }}">
+                <div class="tab-pane container-fluid active" id="home">
 
                     <div class="row">
-                    <div class="col-md-8">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label for="{{ chan.name }}_titlepost">Title</label><br>
-                                    <input type="text" name="{{ chan.name }}_titlepost" id="{{ chan.name }}_titlepost" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="{{ chan.name }}_descriptionpost">Description</label><br>
-                                    <textarea class="form-control" rows="5" id="{{ chan.name }}_descriptionpost" name="{{ chan.name }}_descriptionpost"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label for="{{ chan.name }}_linkurlpost">Link</label><br>
-                                    <input type="text" name="{{ chan.name }}_linkurlpost" id="{{ chan.name }}_linkurlpost" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="{{ chan.name }}_imagepost">Image</label><br>
-                                    <input type="file" name="{{ chan.name }}_imagepost" id="{{ chan.name }}_imagepost" class="form-control">
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_datefrompost">Publication Date</label><br>
-                                            <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="date" class="form-control">
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="titlepost">Title</label><br>
+                                        <input type="text" name="titlepost" id="titlepost" class="form-control" value="{% if post %}{{ post.title }}{% endif %}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="descriptionpost">Description</label><br>
+                                        <textarea class="form-control" rows="5" id="descriptionpost" name="descriptionpost">{% if post %}{{ post.description }}{% endif %}</textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="linkurlpost">Link</label><br>
+                                        <input type="text" name="linkurlpost" id="linkurlpost" class="form-control" value="{% if post %}{{ post.link_url }}{% endif %}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="imagepost">Image</label><br>
+                                        <input type="file" name="imagepost" id="imagepost" class="form-control" value="{% if post %}{{ post.image_url }}{% endif %}">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="datefrompost">Publication Date</label><br>
+                                                <input id="datefrompost" name="datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="dateuntilpost">Publication Until</label><br>
+                                                <input id="dateuntilpost" name="dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_dateuntilpost">Publication Until</label><br>
-                                            <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="date" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
 
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                         <div class="form-group">
-                             <label for="publishpost">Publish</label>
-                             <div>
-                              <label class="form-check-label">
-                               {{ chan.name }}
-                              </label>
-                             </div>
-                         </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="publishpost">Publish</label>
+                                {% if l_chan|length == 0 %}
+                                    <p>No channel available for this user</p>
+                                {% else %}
+                                    {% for chan in l_chan %}
+                                        <div class="form-check">
+                                            <label class="form-check-label">
+                                                <input id="chan_option_{{ chan.id }}" data-namechan="{{ chan.name }}" data-unavailablefields="{{ chan.unavailablefields }}" name="chan_option_{{ chan.id }}" type="checkbox" class="form-check-input checkbox" value="{{ chan.id }}">{{ chan.name }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
 
-                         <div class="card">
-                          <div class="card-header">Status</div>
-                          <div class="card-body">Content</div>
-                         </div>
+                            <div class="card">
+                                <div class="card-header">Status</div>
+                                <div class="card-body">Content</div>
+                            </div>
 
+
+                        </div>
 
                     </div>
 
                 </div>
+                {% for chan in l_chan %}
+                    <div class="tab-pane container-fluid fade" id="menu{{ chan.id }}">
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="{{ chan.name }}_titlepost">Title</label><br>
+                                            <input type="text" name="{{ chan.name }}_titlepost" id="{{ chan.name }}_titlepost" class="form-control" value="{% if post %}{{ post.title }}{% endif %}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="{{ chan.name }}_descriptionpost">Description</label><br>
+                                            <textarea class="form-control" rows="5" id="{{ chan.name }}_descriptionpost" name="{{ chan.name }}_descriptionpost">{% if post %}{{ post.description }}{% endif %}</textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="{{ chan.name }}_linkurlpost">Link</label><br>
+                                            <input type="text" name="{{ chan.name }}_linkurlpost" id="{{ chan.name }}_linkurlpost" class="form-control" value="{% if post %}{{ post.link_url }}{% endif %}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="{{ chan.name }}_imagepost">Image</label><br>
+                                            <input type="file" name="{{ chan.name }}_imagepost" id="{{ chan.name }}_imagepost" class="form-control" value="{% if post %}{{ post.image_url }}{% endif %}">
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ chan.name }}_datefrompost">Publication Date</label><br>
+                                                    <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="{{ chan.name }}_dateuntilpost">Publication Until</label><br>
+                                                    <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="publishpost">Publish</label>
+                                    <div>
+                                        <label class="form-check-label">
+                                            {{ chan.name }}
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-header">Status</div>
+                                    <div class="card-body">Content</div>
+                                </div>
 
 
-                  </div>
-              {% endfor %}
+                            </div>
+
+                        </div>
+
+
+                    </div>
+                {% endfor %}
             </div>
             <div align="right" style="margin-top: 1rem; ">
-               <button class="btn btn-primary" formaction="{{ url_for('posts.new_post')}}" formmethod="post" type="submit">Save as draft</button>
-               <button id="publish-button" class="btn btn-success" formaction="{{ url_for('posts.publish_from_new_post')}}" formmethod="post" type="submit" disabled>Save & Publish</button>
-               <button class="btn btn-outline-primary" type="reset">Abort</button>
+                <button class="btn btn-primary" formaction="{{ url_for('posts.new_post')}}" formmethod="post" type="submit">Save as draft</button>
+                <button id="publish-button" class="btn btn-success" formaction="{{ url_for('posts.publish_from_new_post')}}" formmethod="post" type="submit" disabled>Save & Publish</button>
+                <button class="btn btn-outline-primary" type="reset">Abort</button>
             </div>
 
         </form>
@@ -170,9 +170,9 @@
         $('input.checkbox').change(function () {
             var nbselected = $('input.checkbox:checked').length;
             if(nbselected ==0){
-               $("#publish-button").prop('disabled', true);
+                $("#publish-button").prop('disabled', true);
             }else{
-               $("#publish-button").prop('disabled', false);
+                $("#publish-button").prop('disabled', false);
             }
             nameC=$(this).attr('data-namechan');
             fields = $(this).attr('data-unavailablefields');

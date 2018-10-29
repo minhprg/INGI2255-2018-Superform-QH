@@ -1,6 +1,7 @@
 import json
 import requests
 import datetime
+from utils import build_ictv_server_request_args
 
 FIELDS_UNAVAILABLE = []
 
@@ -9,7 +10,15 @@ CONFIG_FIELDS = ["ictv_server_fqdn", "ictv_channel_id", "ictv_api_key"]
 
 def generate_slide(pub):
     content = {'title-1': {'text': pub.title}, 'subtitle-1': {'text': ''}, 'text-1':  {'text': pub.description}}
-    slide = {'content': content, 'template': 'template-text-center', 'duration': -1}
+    slide = {'content': content, 'template': 'template-text-image', 'duration': -1}
+
+    url = pub.link_url.split(':::')
+    if len(url) > 0:
+        if url[0] != 'url':
+            content[url[0] + '-1'] = {'src': url[1]}
+        else:
+            pass
+
     return slide
 
 
@@ -29,13 +38,8 @@ def generate_capsule(pub):
     return capsule
 
 
-def send_slide():
-    return
-
 def run(pub, chan_conf):
     json_data = json.loads(chan_conf)
-    print(json_data)
-    print(pub.__dict__)
 
     """ Check channel config """
     for i in json_data:
@@ -49,18 +53,23 @@ def run(pub, chan_conf):
     print(capsule)
 
     """ Create new capsule on ICTV server on given channel """
-    base_url = 'http://' + json_data['ictv_server_fqdn'] + '/channels/' + json_data['ictv_channel_id'] + '/api/capsules'
-    headers = {'accept': 'application/json', 'Content-Type': 'application/json',
-               'X-ICTV-editor-API-Key': json_data['ictv_api_key']}
+    #base_url = 'http://' + json_data['ictv_server_fqdn'] + '/channels/' + json_data['ictv_channel_id'] + '/api/capsules'
+    #headers = {'accept': 'application/json', 'Content-Type': 'application/json',
+    #           'X-ICTV-editor-API-Key': json_data['ictv_api_key']}
 
-    capsule_request = requests.post(base_url, json=capsule, headers=headers)
+    #capsule_request = requests.post(base_url, json=capsule, headers=headers)
+    request_args = build_ictv_server_request_args(chan_conf, 'POST')
+    capsules_url = request_args['url'] + '/capsules'
+    # TODO : catch errors on request
+    capsule_request = requests.post(capsules_url, json=capsule, headers=request_args['headers'])
 
     """ Check if the capsule has been created, if true : send the slide, else : prompt popup """
     if capsule_request.status_code == 201:
         capsule_id = capsule_request.headers['Location'].split('/')
         capsule_id = capsule_id[len(capsule_id) - 1]
-        slide_url = base_url + '/' + str(capsule_id) + '/slides'
-        slide_request = requests.post(slide_url, json=slide, headers=headers)
+        slide_url = capsules_url + '/' + str(capsule_id) + '/slides'
+        # TODO : catch errors on request
+        slide_request = requests.post(slide_url, json=slide, headers=request_args['headers'])
         if slide_request.status_code == 201:
             # TODO : display popup
             print('Slide created')

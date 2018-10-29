@@ -90,6 +90,19 @@
                     <div class="col-md-8">
                         <div class="row">
                             <div class="col-md-12">
+
+                                {%  if chan.module == 'superform.plugins.ictv' %}
+                                    <div class="form-group">
+                                        <label>Slide Type</label>
+                                            {%  for i in ictv_templates %}
+                                                <div class="form-check" >
+                                                    <input class="form-check-input" type="radio" name="{{ chan.name }}_ictv_slide_type" id="ictv_slide_type_{{ i }}" value="{{ i }}" {% if loop.index0 == 0 %} checked {% endif %}>
+                                                    <label class="form-check-label" for="ictv_slide_type_{{ i }}">{{ i }}</label>
+                                                </div>
+                                            {% endfor %}
+                                    </div>
+                                {%  endif %}
+
                                 <div class="form-group">
                                     <label for="{{ chan.name }}_titlepost">Title</label><br>
                                     <input type="text" name="{{ chan.name }}_titlepost" id="{{ chan.name }}_titlepost" class="form-control">
@@ -102,6 +115,30 @@
                                     <label for="{{ chan.name }}_linkurlpost">Link</label><br>
                                     <input type="text" name="{{ chan.name }}_linkurlpost" id="{{ chan.name }}_linkurlpost" class="form-control">
                                 </div>
+
+                                 {%  if chan.module  == 'superform.plugins.ictv' %}
+                                     <!-- TODO : give list of link type via jinja2 list + for loop -->
+                                     <div class="form-group">
+                                        <label>Link Type</label>
+                                         <div class="form-check" >
+                                            <input class="form-check-input" type="radio" name="{{ chan.name }}_ictv_url_type" id="ictv_link_type_url" value="url" checked>
+                                            <label class="form-check-label" for="ictv_link_type_url">Url</label>
+                                         </div>
+                                         <div class="form-check" >
+                                            <input class="form-check-input" type="radio" name="{{ chan.name }}_ictv_url_type" id="ictv_link_type_logo" value="logo">
+                                            <label class="form-check-label" for="ictv_link_type_logo">Logo</label>
+                                         </div>
+                                         <div class="form-check" >
+                                            <input class="form-check-input" type="radio" name="{{ chan.name }}_ictv_url_type" id="ictv_link_type_image" value="image">
+                                            <label class="form-check-label" for="ictv_link_type_image">Image</label>
+                                         </div>
+                                         <div class="form-check" >
+                                            <input class="form-check-input" type="radio" name="{{ chan.name }}_ictv_url_type" id="ictv_link_type_bg" value="background">
+                                            <label class="form-check-label" for="ictv_link_type_bg">Background</label>
+                                         </div>
+                                     </div>
+                                {% endif %}
+
                                 <div class="form-group">
                                     <label for="{{ chan.name }}_imagepost">Image</label><br>
                                     <input type="file" name="{{ chan.name }}_imagepost" id="{{ chan.name }}_imagepost" class="form-control">
@@ -159,11 +196,11 @@
         Your are not logged in.
     {% endif %}
 
-
 {% endblock %}
 
 {% block scripts %}
     <script>
+
         // This manage if a channel is selected or not:
         //  it hides/shows a tab for a channel
         //  it adds an information bullet to unavailable fields for each channel
@@ -251,14 +288,12 @@
         $('#datefrompost').one("change",function(event){
             text = ($(this).val());
             //This is a subselect of input that match with the regex .*datefrompost
-            $('input')
+            console.log($('input')
                 .filter(function() {
                     return this.id.match(/.*datefrompost/);
                 })
-                .val(text);
+                .val(text));
         });
-
-
 
     </script>
 

@@ -57,4 +57,6 @@ def notfound(error):
 
 
 if __name__ == '__main__':
-    app.run()
+    # To use Flask over HTTPS we need to generate a certificate (cert.pem) and a key (key.pem)
+    # and pass this option to Flask : --cert cert.pem --key key.pem
+    app.run(ssl_context='adhoc')

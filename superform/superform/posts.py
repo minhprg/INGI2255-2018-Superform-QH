@@ -179,14 +179,23 @@ def records():
             # TODO, it seems like we have some cheater here
             pass
 
+    user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
+    list_of_channels = channels_available_for_user(user_id)
+
     # Query all the archived publishings
     archives = db.session.query(Publishing).filter(Publishing.state == 2)
 
     # Take all archives and format the dates entries
     records = []
     for a in archives:
-        date_from = str_converter(a.date_from)
-        date_until = str_converter(a.date_until)
-        records.append((a, date_from, date_until))
+        allowed = False
+        for channel in list_of_channels:
+            if channel.name == a.channel_id:
+                allowed = True
+
+        if allowed:
+            date_from = str_converter(a.date_from)
+            date_until = str_converter(a.date_until)
+            records.append((a, date_from, date_until))
 
     return render_template('records.html', records=records, admin=admin)

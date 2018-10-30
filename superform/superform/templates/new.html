@@ -164,16 +164,64 @@
 
 {% block scripts %}
     <script>
+        dateuntil = $('#dateuntilpost').val();
+        datefrom = $('#datefrompost').val();
+
+        function checkIfPublishable() {
+            var publishable = true;
+            if (datefrom.localeCompare("") == 0) {
+                console.log("Datefrom = " + datefrom + " is invalid");
+                publishable = false;
+                $("label[for=\"datefrompost\"]").append(
+                    '<a href="#" data-toggle="popover" title="Invalid field" data-content="A date is required here">' +
+                    '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
+                );
+            }
+            if (dateuntil.localeCompare("") == 0) {
+                console.log("Dateuntil = " + dateuntil + " is invalid");
+                publishable = false;
+                $("label[for=\"dateuntilpost\"]").append(
+                    '<a href="#" data-toggle="popover" title="Invalid field" data-content="A date is required here">' +
+                    '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
+                );
+            }
+            if (datefrom.localeCompare(dateuntil) > 0) {
+                console.log("Datefrom is later than dateuntil (" + datefrom + " > " + dateuntil + ")");
+                publishable = false;
+                $("label[for=\"dateuntilpost\"]").append(
+                    '<a href="#" data-toggle="popover" title="Invalid field" data-content="This date schould be later than the previous one">' +
+                    '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
+                );
+                $("label[for=\"datefrompost\"]").append(
+                    '<a href="#" data-toggle="popover" title="Invalid field" data-content="This date should be sooner than the next one">' +
+                    '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
+                );
+            } else {
+                $("a", "label[for=\"dateuntilpost\"]").empty().remove();
+                $("a", "label[for=\"datefrompost\"]").empty().remove();
+            }
+            $('[data-toggle="popover"]').popover();
+
+            var nbselected = $('input.checkbox:checked').length;
+            if (nbselected == 0) {
+                console.log("No channel is currently selected");
+                publishable = false;
+            }
+
+            if (publishable) {
+                console.log("The post is publishable");
+                $("#publish-button").prop('disabled', false);
+            } else {
+                console.log("The post isn't publishable");
+                $("#publish-button").prop('disabled', true);
+            }
+        }
+
         // This manage if a channel is selected or not:
         //  it hides/shows a tab for a channel
         //  it adds an information bullet to unavailable fields for each channel
         $('input.checkbox').change(function () {
-            var nbselected = $('input.checkbox:checked').length;
-            if(nbselected ==0){
-                $("#publish-button").prop('disabled', true);
-            }else{
-                $("#publish-button").prop('disabled', false);
-            }
+            checkIfPublishable();
 
             nameC=$(this).attr('data-namechan');
             fields = $(this).attr('data-unavailablefields');
@@ -184,9 +232,11 @@
                 for(var i = 0; i < split.length; i++) {
                     $("input[id='"+nameC+"_"+ $('#'+split[i].toLowerCase()+'post').attr('id') + "']").prop('disabled', true);
                     $("textarea[id='"+nameC+"_"+ $('#'+split[i].toLowerCase()+'post').attr('id') + "']").prop('disabled', true);
-
-                    $("label[for='"+nameC+"_"+ $('#'+split[i].toLowerCase()+'post').attr('id') + "']").append('<a href="#" data-toggle="popover" title="Unavailable field" data-content="This field is unavailable for channel ' + nameC +'"><i class="fas fa-exclamation-circle" style="color:orange"></i></a>');
-
+                    $("label[for='"+nameC+"_"+ $('#'+split[i].toLowerCase()+'post').attr('id') + "']").append(
+                        '<a href="#" data-toggle="popover" title="Unavailable field" data-content="This field is unavailable for channel '
+                        + nameC
+                        + '"><i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
+                    );
                 }
                 $('[data-toggle="popover"]').popover();
                 $('#li_'+nameC).show();
@@ -239,23 +289,27 @@
                 })
                 .val(text);
         });
-        $('#dateuntilpost').one("change",function(event){
+        $('#dateuntilpost').change(function(event){
             text = ($(this).val());
+            dateuntil = text;
             //This is a subselect of input that match with the regex .*dateuntilpost
             $('input')
                 .filter(function() {
                     return this.id.match(/.*dateuntilpost/);
                 })
                 .val(text);
+            checkIfPublishable();
         });
-        $('#datefrompost').one("change",function(event){
+        $('#datefrompost').change(function(event){
             text = ($(this).val());
+            datefrom = text;
             //This is a subselect of input that match with the regex .*datefrompost
             $('input')
                 .filter(function() {
                     return this.id.match(/.*datefrompost/);
                 })
                 .val(text);
+            checkIfPublishable();
         });
 
 

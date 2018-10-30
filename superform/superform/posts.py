@@ -192,6 +192,7 @@ def records():
         for channel in list_of_channels:
             if channel.name == a.channel_id:
                 allowed = True
+                break
 
         if allowed:
             date_from = str_converter(a.date_from)

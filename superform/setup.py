@@ -9,6 +9,6 @@ setup(
         'python3-saml',
         'sqlalchemy',
         'flask-sqlalchemy',
-        'PyRSS2Gen', 'lxml'
+        'PyRSS2Gen', 'lxml', 'pytest'
     ],
 )

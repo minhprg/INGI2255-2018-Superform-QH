@@ -12,14 +12,13 @@ local_feed_url = 'rss.xml'
 
 def test_create_feed_if_none_exist():
     pub = Publishing(title="This is a test feed", description="This is a test description feed", link_url="www.facebook.com")
-    os.system("rm ../plugins/rssfeeds/rss.xml")
+    os.system("rm ../plugins/rssfeeds/" + local_feed_url)
 
-    print(str(Path('.').absolute()))
     conf = "{\"local_feed_url\": \"" + str(local_feed_url) + "\", \"feed_url\": \"-\", \"feed_title\": \"-\", \"feed_description\": \"-\"}"
 
     rss.run(pub, conf)
 
-    file = Path('../plugins/rssfeeds/rss.xml')
+    file = Path('../plugins/rssfeeds/' + local_feed_url)
 
     assert file.exists() == True
 
@@ -30,7 +29,7 @@ def test_publish_post():
 
     rss.run(pub, conf)
 
-    tree = ET.parse("../plugins/rssfeeds/rss.xml")
+    tree = ET.parse("../plugins/rssfeeds/" + local_feed_url)
     root = tree.getroot()
 
     count1 = 0
@@ -40,7 +39,7 @@ def test_publish_post():
 
     rss.run(pub, conf)
 
-    tree1 = ET.parse("../plugins/rssfeeds/rss.xml")
+    tree1 = ET.parse("../plugins/rssfeeds/" + local_feed_url)
     root1 = tree1.getroot()
 
     count2 = 0

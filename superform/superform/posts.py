@@ -1,7 +1,7 @@
 from flask import Blueprint, url_for, request, redirect, session, render_template
 
 from superform.users import channels_available_for_user
-from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path, get_date_ago
+from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path
 from superform.models import db, Post, Publishing, Channel, User
 import datetime
 
@@ -185,10 +185,8 @@ def records():
     # Take all archives and format the dates entries
     records = []
     for a in archives:
-        ago_from = get_date_ago(a.date_from)
-        ago_until = get_date_ago(a.date_until)
         date_from = str_converter(a.date_from)
         date_until = str_converter(a.date_until)
-        records.append((a, ago_from, ago_until, date_from, date_until))
+        records.append((a, date_from, date_until))
 
     return render_template('records.html', records=records, admin=admin)

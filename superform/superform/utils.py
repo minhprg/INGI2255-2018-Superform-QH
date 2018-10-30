@@ -42,14 +42,3 @@ def get_module_full_name(module_name):
     for m in current_app.config["PLUGINS"].keys():
         if(m.split('.')[2] == module_name):
             return m
-
-
-def get_date_ago(datet):
-    """
-    This method simply convert a datetime into the number of days that has passed from this datetime until today
-    :param datet: a valid datetime
-    :return: a number of day
-    """
-    today = datetime.now()
-    delta = today - datet
-    return delta.days

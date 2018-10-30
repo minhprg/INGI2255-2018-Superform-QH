@@ -33,7 +33,7 @@
         </tr>
         </thead>
         <tbody>
-        {% for (rec, ago_from, ago_until, date_from, date_until) in records %}
+        {% for (rec, date_from, date_until) in records %}
             <tr>
                 <td>
                     {{ rec.post_id }}
@@ -48,10 +48,10 @@
                     {{ rec.channel_id }}
                 </td>
                 <td>
-                    {{ ago_from }} day(s) ago
+                    {{ date_from }}
                 </td>
                 <td >
-                    {{ ago_until }} day(s) ago
+                    {{ date_until }}
                 </td>
                 <td>
                     <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#viewModal"

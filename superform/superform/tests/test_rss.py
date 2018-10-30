@@ -7,11 +7,11 @@ from superform import *
 from superform.plugins import rss
 
 
-local_feed_url = 'rss.xml'
+local_feed_url = '1.xml'
 
 
 def test_create_feed_if_none_exist():
-    pub = Publishing(title="This is a test feed", description="This is a test description feed", link_url="www.facebook.com")
+    pub = Publishing(title="This is a test feed", description="This is a test description feed", link_url="www.facebook.com", channel_id=1)
     os.system("rm ../plugins/rssfeeds/" + local_feed_url)
 
     conf = "{\"local_feed_url\": \"" + str(local_feed_url) + "\", \"feed_url\": \"-\", \"feed_title\": \"-\", \"feed_description\": \"-\"}"
@@ -24,7 +24,7 @@ def test_create_feed_if_none_exist():
 
 
 def test_publish_post():
-    pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25")
+    pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25", channel_id=1)
     conf = "{\"local_feed_url\": \"" + local_feed_url + "\", \"feed_url\": \"-\", \"feed_title\": \"-\", \"feed_description\": \"-\"}"
 
     rss.run(pub, conf)

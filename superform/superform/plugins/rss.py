@@ -8,7 +8,7 @@ from lxml import etree
 
 
 FIELDS_UNAVAILABLE = ["date_from", "date_until", "image"]
-CONFIG_FIELDS = ["feed_title", "feed_description", "feed_url", "local_feed_url"]
+CONFIG_FIELDS = ["feed_title", "feed_description"]
 SERVER_URL = "localhost:5000/rss/"
 rss_feeds = {}
 

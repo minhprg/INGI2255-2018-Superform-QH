@@ -1,7 +1,6 @@
-import xml.etree.ElementTree as ET
 import os
+import xml.etree.ElementTree as ET
 from pathlib import Path
-
 
 from superform import *
 from superform.plugins import rss
@@ -19,7 +18,7 @@ def count(element):
 def del_file(path):
     for item in path:
         if Path(item).exists():
-            os.system("rm " + item)
+            os.remove(item)
 
 
 def test_create_feed_if_none_exist():

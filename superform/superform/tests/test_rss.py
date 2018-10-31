@@ -65,20 +65,20 @@ def test_different_channels():
 
 
 def test_publish_post():
-    pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25", channel_id=-1)
+    pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25", channel_id=-4)
     conf = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
 
     rss.run(pub, conf)
 
-    tree = ET.parse("../plugins/rssfeeds/-1.xml")
+    tree = ET.parse("../plugins/rssfeeds/-4.xml")
     root = tree.getroot()
 
     rss.run(pub, conf)
 
-    tree1 = ET.parse("../plugins/rssfeeds/-1.xml")
+    tree1 = ET.parse("../plugins/rssfeeds/-4.xml")
     root1 = tree1.getroot()
 
     assert (count(root) < count(root1))
 
-    del_file(["../plugins/rssfeeds/-1.xml"])
+    del_file(["../plugins/rssfeeds/-4.xml"])
 

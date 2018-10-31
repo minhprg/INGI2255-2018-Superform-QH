@@ -166,41 +166,63 @@
     <script>
         dateuntil = $('#dateuntilpost').val();
         datefrom = $('#datefrompost').val();
+        today = getTodayDate();
+
+        function getTodayDate() {
+            var todayDate = new Date();
+            var dd = todayDate.getDate();
+            var mm = todayDate.getMonth();
+            var yyyy = todayDate.getFullYear();
+
+            if (dd < 10) dd = "0" + dd;
+            if (mm < 10) mm = "0" + mm;
+
+            return yyyy + "-" + mm + "-" + dd;
+        }
 
         function checkIfPublishable() {
             var publishable = true;
+            $("a", "label[for=\"dateuntilpost\"]").empty().remove();
+            $("a", "label[for=\"datefrompost\"]").empty().remove();
+
             if (datefrom.localeCompare("") == 0) {
                 console.log("Datefrom = " + datefrom + " is invalid");
                 publishable = false;
                 $("label[for=\"datefrompost\"]").append(
-                    '<a href="#" data-toggle="popover" title="Invalid field" data-content="A date is required here">' +
+                    '<a href="#" data-toggle="tooltip" title="A date is required here">' +
                     '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
                 );
             }
-            if (dateuntil.localeCompare("") == 0) {
+            else if (today.localeCompare(datefrom) > 0) {
+                console.log("Today date is later than datefrom (" + today + " > " + datefrom + ")");
+                publishable = false;
+                $("label[for=\"datefrompost\"]").append(
+                    '<a href="#" data-toggle="tooltip" title="This date has already passed">' +
+                    '<i class="fas fa-exclamation-circle" style="color:red"></i></a>'
+                );
+            }
+            else if (dateuntil.localeCompare("") == 0) {
                 console.log("Dateuntil = " + dateuntil + " is invalid");
                 publishable = false;
                 $("label[for=\"dateuntilpost\"]").append(
-                    '<a href="#" data-toggle="popover" title="Invalid field" data-content="A date is required here">' +
-                    '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
+                    '<a href="#" data-toggle="tooltip" title="A date is required here">' +
+                    '<i class="fas fa-exclamation-circle" style="color:red"></i></a>'
                 );
             }
-            if (datefrom.localeCompare(dateuntil) > 0) {
+            else if (datefrom.localeCompare(dateuntil) > 0) {
                 console.log("Datefrom is later than dateuntil (" + datefrom + " > " + dateuntil + ")");
                 publishable = false;
                 $("label[for=\"dateuntilpost\"]").append(
-                    '<a href="#" data-toggle="popover" title="Invalid field" data-content="This date schould be later than the previous one">' +
-                    '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
+                    '<a href="#" data-toggle="tooltip" title="This date schould be later than the previous one">' +
+                    '<i class="fas fa-exclamation-circle" style="color:red"></i></a>'
                 );
                 $("label[for=\"datefrompost\"]").append(
-                    '<a href="#" data-toggle="popover" title="Invalid field" data-content="This date should be sooner than the next one">' +
-                    '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
+                    '<a href="#" data-toggle="tooltip" title="This date should be sooner than the next one">' +
+                    '<i class="fas fa-exclamation-circle" style="color:red"></i></a>'
                 );
-            } else {
-                $("a", "label[for=\"dateuntilpost\"]").empty().remove();
-                $("a", "label[for=\"datefrompost\"]").empty().remove();
             }
-            $('[data-toggle="popover"]').popover();
+
+            $('[data-toggle="tooltip"]').tooltip();
 
             var nbselected = $('input.checkbox:checked').length;
             if (nbselected == 0) {

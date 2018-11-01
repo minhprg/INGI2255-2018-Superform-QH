@@ -9,6 +9,7 @@ from superform.authentication import authentication_page
 from superform.authorizations import authorizations_page
 from superform.channels import channels_page
 from superform.posts import posts_page
+from superform.rssfeed import feed_viewer_page
 from superform.users import get_moderate_channels_for_user, is_moderator
 
 app = Flask(__name__)
@@ -20,6 +21,7 @@ app.register_blueprint(authorizations_page)
 app.register_blueprint(channels_page)
 app.register_blueprint(posts_page)
 app.register_blueprint(pub_page)
+app.register_blueprint(feed_viewer_page)
 
 # Init dbs
 db.init_app(app)
@@ -70,4 +72,6 @@ def notfound(error):
 
 
 if __name__ == '__main__':
-    app.run()
+    # To use Flask over HTTPS we need to generate a certificate (cert.pem) and a key (key.pem)
+    # and pass this option to Flask : --cert cert.pem --key key.pem
+    app.run(ssl_context='adhoc')

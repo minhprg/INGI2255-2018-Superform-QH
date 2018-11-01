@@ -2,8 +2,11 @@ import os
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import PyRSS2Gen
+
 from superform import *
 from superform.plugins import rss
+from superform.utils import datetime_converter
 
 
 def check_post(pub, path):
@@ -105,6 +108,34 @@ def test_publish_post():
 
     assert (count1 < count(path))
     assert check_post(pub, path)
+
+    del_file([path])
+
+
+def test_delete_old_post():
+    """
+    Test that if an old post (older than 1 year) is still in the feed it will be deleted
+    """
+    pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25", channel_id=-5)
+    conf = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
+
+    path = "../plugins/rssfeeds/-4.xml"
+    new_rss = rss.create_initial_feed(path)
+    item = PyRSS2Gen.RSSItem(
+                title=pub.title,
+                link=pub.link_url,
+                description=pub.description,
+                pubDate=datetime_converter('2016-01-01'))
+
+    new_rss.items.insert(0, item)
+
+    with open(path, "w+") as file:
+        new_rss.write_xml(file)
+
+    assert count(path) == 1  # Check that the post has been added
+
+    rss.run(pub, conf)
+    assert count(path) == 1
 
     del_file([path])
 

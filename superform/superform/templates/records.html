@@ -1,67 +1,219 @@
 {% extends "layout.html" %}
-{% block title %}Superform - Records{% endblock %}
+{% block title %}Records{% endblock %}
 {% block styles %}
-    {{super()}}
-    <link rel="stylesheet"
-          href="{{url_for('static', filename='css/style.css')}}">
-    {% endblock %}
-    {% block scripts %}
-    <!--<script src="{{url_for('static', filename='js/script.js')}}"></script>-->
-    {{super()}}
-    {% endblock %}
-
-
-
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" crossorigin="anonymous">
+{% endblock %}
 
 {% block content %}
-  <h1>My Records</h1>
-  <div class="row">
-    <div class="col-md-12">
-      <table class="table table-bordered">
+    <h1>My Records</h1>
+    <table id="archive-table" class="table table-bordered table-striped" style="width: 100%">
         <thead>
-          <tr>
+        <tr>
             <th>
-              #
+                #
             </th>
             <th>
-              Subject
+                Author
             </th>
             <th>
-              Body
+                Subject
             </th>
             <th>
-              Channel
+                Channel
             </th>
-                        <th>
-                            Action
-                        </th>
-          </tr>
+            <th>
+                Date of publication
+            </th>
+            <th>
+                Published until
+            </th>
+            <th>
+                Action
+            </th>
+        </tr>
         </thead>
         <tbody>
-          {% for rec in records %}
-              <tr>
-            <td>
-              {{ rec[0] }}
-            </td>
-            <td>
-              {{ rec[1] }}
-            </td>
-            <td>
-              {{ rec[2] }}
-            </td>
-            <td>
-              {{ rec[3] }}
-            </td>
-                        <td>
-                            <button type="button" class="btn btn-outline-primary" contenteditable="true">Edit</button>
-                            <button type="button" class="btn btn-outline-primary" contenteditable="true">Copy</button>
-                            <button type="button" class="btn btn-outline-primary" contenteditable="true">Delete</button>
-                        </td>
-          </tr>
-          {% endfor %}
+        {% for (rec, date_from, date_until) in records %}
+            <tr>
+                <td>
+                    {{ rec.post_id }}
+                </td>
+                <td>
+                    {{ rec.get_author() }}
+                </td>
+                <td>
+                    {{ rec.title }}
+                </td>
+                <td>
+                    {{ rec.channel_id }}
+                </td>
+                <td>
+                    {{ date_from }}
+                </td>
+                <td >
+                    {{ date_until }}
+                </td>
+                <td>
+                    <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#viewModal"
+                            data-title="{{ rec.title }}"
+                            data-channel="{{ rec.channel_id }}"
+                            data-author="{{ rec.get_author() }}"
+                            data-content="{{ rec.description }}"
+                            data-link="{{ rec.link_url }}"
+                            data-image="{{ rec.image_url }}"
+                            data-from="{{ date_from }}"
+                            data-until="{{ date_until }}">
+                        Details
+                    </button>
+                    <a href="{{ url_for('posts.copy_new_post', post_id=rec.post_id) }}" class="btn btn-outline-primary">Copy</a>
+                    {% if admin %}<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-title="{{ rec.title }}" data-id="{{ rec.post_id }}" data-channel="{{ rec.channel_id }}"><i class="fas fa-fw fa-trash"></i> Delete</button>{% endif %}
+                </td>
+            </tr>
+        {% endfor %}
         </tbody>
-      </table>
+        <tfoot>
+        <tr>
+            <th>
+                #
+            </th>
+            <th>
+                Author
+            </th>
+            <th>
+                Subject
+            </th>
+            <th>
+                Channel
+            </th>
+            <th>
+                Date of publication
+            </th>
+            <th>
+                Published until
+            </th>
+            <th>
+                Action
+            </th>
+        </tr>
+        </tfoot>
+    </table>
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post">
+                    <input type="hidden" name="@action" value="delete">
+                    <input type="hidden" id="id" name="id" value="">
+                    <input type="hidden" id="idc" name="idc" value="">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Delete Publishing</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure to delete Publishing with title "<span id="publishing-title"></span>" and channel "<span id="publishing-channel"></span>" ?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
+    <div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Content details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="titlepost">Title</label><br>
+                            <input type="text" name="post-title" id="post-title" class="form-control" readonly>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="dateuntilpost">Channel</label><br>
+                                    <input type="text" name="post-channel" id="post-channel" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="dateuntilpost">Author</label><br>
+                                    <input type="text" name="authorpost" id="post-author" class="form-control" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="descriptionpost">Description</label><br>
+                            <textarea class="form-control" rows="5" id="post-description" name="descriptionpost" readonly></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="linkurlpost">Link</label><br>
+                            <input type="text" name="linkurlpost" id="post-link" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="imagepost">Image</label><br>
+                            <input type="text" name="imagepost" id="post-image" class="form-control" readonly>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="datefrompost">Publication Date</label><br>
+                                    <input id="post-from" name="datefrompost" type="text" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="dateuntilpost">Publication Until</label><br>
+                                    <input id="post-until" name="dateuntilpost" type="text" class="form-control" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap4.min.js') }}" crossorigin="anonymous"></script>
+    <script type="text/javascript" class="init">
+        $(document).ready(function() {
+            $('#archive-table').DataTable();
+        } );
+    </script>
+    <script>
+        $('#deleteModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            $(this).find('#publishing-title').text(button.data('title'));
+            $(this).find('#publishing-channel').text(button.data('channel'));
+            $(this).find('#id').val(button.data('id'));
+            $(this).find('#idc').val(button.data('channel'));
+        });
+        $('#viewModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            $(this).find('#post-title').val(button.data('title'));
+            $(this).find('#post-channel').val(button.data('channel'));
+            $(this).find('#post-author').val(button.data('author'));
+            $(this).find('#post-description').text(button.data('content'));
+            $(this).find('#post-link').val(button.data('link'));
+            $(this).find('#post-image').val(button.data('image'));
+            $(this).find('#post-from').val(button.data('from'));
+            $(this).find('#post-until').val(button.data('until'));
+        });
+    </script>
+    <!--<script src="{{url_for('static', filename='js/script.js')}}"></script>-->
+    {{super()}}
 {% endblock %}

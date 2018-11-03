@@ -14,5 +14,7 @@ setup(
         'pyopenssl',
         'PyRSS2Gen',
         'pytest',
+        'google-api-python-client',
+        'oauth2client'
     ],
 )

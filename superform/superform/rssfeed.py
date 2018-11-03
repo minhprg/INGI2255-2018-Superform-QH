@@ -10,8 +10,8 @@ def tester():
 
 @feed_viewer_page.route('/rss/<string:feed_url>', methods=["GET"])
 def get_rss_feed(feed_url):
-    full_path = "./superform/plugins/rssfeeds/" + feed_url
-    folder = Path("./superform/plugins/rssfeeds/")
+    full_path = "./../plugins/rssfeeds/" + feed_url
+    folder = Path("./../plugins/rssfeeds/")
     print(str(folder.exists()) + " " + str(folder.absolute()))
     file = Path(full_path)
     resp = None

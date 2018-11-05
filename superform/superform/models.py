@@ -77,7 +77,7 @@ class Channel(db.Model):
     module = db.Column(db.String(100), nullable=False)
     config = db.Column(db.Text, nullable=False)
 
-    publishings = db.relationship("Publishing", backref="channel", lazy=True)
+    publishings = db.relationship("Publishing", cascade="all, delete-orphan", backref="channel", lazy=True)
     authorizations = db.relationship("Authorization", cascade="all, delete", backref="channel", lazy=True)
 
     __table_args__ = ({"sqlite_autoincrement": True},)
@@ -104,5 +104,7 @@ class Permission(Enum):
 
 
 class State(Enum):
-    WAITING = 1
+    INCOMPLETE = -1
+    NOTVALIDATED = 0
+    VALIDATED = 1
     PUBLISHED = 2

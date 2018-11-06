@@ -42,13 +42,13 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="datefrompost">Publication Date</label><br>
-                                                <input id="datefrompost" name="datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                                <input id="datefrompost" name="datefrompost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="dateuntilpost">Publication Until</label><br>
-                                                <input id="dateuntilpost" name="dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                                <input id="dateuntilpost" name="dateuntilpost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
                                             </div>
                                         </div>
                                     </div>
@@ -110,13 +110,13 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="{{ chan.name }}_datefrompost">Publication Date</label><br>
-                                                    <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                                    <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="{{ chan.name }}_dateuntilpost">Publication Until</label><br>
-                                                    <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                                    <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
                                                 </div>
                                             </div>
                                         </div>

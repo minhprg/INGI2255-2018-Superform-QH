@@ -44,5 +44,4 @@ def run(publishing,channel_config):
         event = service.events().insert(calendarId='primary', body=event).execute()
         print('Event created: %s' % (event.get('htmlLink')))
     except Exception as e:
-        #TODO should add log here
         print(e)

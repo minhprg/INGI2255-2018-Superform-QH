@@ -10,6 +10,7 @@ FIELDS_UNAVAILABLE = []
 
 CONFIG_FIELDS = ["sender","receiver"]
 
+
 def run(publishing,channel_config):
     json_data = json.loads(channel_config)
     sender = json_data['sender']

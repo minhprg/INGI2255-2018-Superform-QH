@@ -1,4 +1,5 @@
 from flask import Blueprint, current_app, url_for, request, make_response, redirect, session, render_template
+from linkedin_v2 import linkedin
 
 from superform.utils import login_required, get_instance_from_module_path, get_modules_names, get_module_full_name
 from superform.models import db, Channel
@@ -99,3 +100,34 @@ def callback_fb():
 
     db.session.commit()
     return redirect(url_for("channels.configure_channel", id=id_channel))
+
+@channels_page.route("/callback_In", methods=['GET', 'POST'])
+@login_required(admin_required=True)
+def callback_In():
+    """Page where LinkedIn returns the code to get the access token.
+            Generate the access token from the code and save it to the DB."""
+    app_key = current_app.config["LINKEDIN_API_KEY"]
+    app_secret = current_app.config["LINKEDIN_API_SECRET"]
+    canvas_url = url_for('channels.callback_In', _external=True)
+    authentication = linkedin.LinkedInAuthentication(app_key, app_secret, canvas_url)
+    application = linkedin.LinkedInApplication(authentication)
+    print(request.args.get('code'))
+    authentication.authorization_code = request.args.get('code')
+    token = authentication.get_access_token()
+    application = linkedin.LinkedInApplication(token=token)
+    print(token)
+    #authentication.authorization_code = code
+    return 0
+
+
+@channels_page.route("/test", methods=['GET', 'POST'])
+@login_required(admin_required=True)
+def test():
+    """Page where LinkedIn returns the code to get the access token.
+            Generate the access token from the code and save it to the DB."""
+
+    app_key = current_app.config["LINKEDIN_API_KEY"]
+    app_secret = current_app.config["LINKEDIN_API_SECRET"]
+    canvas_url = url_for('channels.callback_In', _external=True)
+    authentication = linkedin.LinkedInAuthentication(app_key, app_secret, canvas_url)
+    return redirect(authentication.authorization_url)

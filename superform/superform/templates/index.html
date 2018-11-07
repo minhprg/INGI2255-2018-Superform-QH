@@ -32,6 +32,7 @@
 
                 <tbody>
                 {% for p in publishings %}
+                    {% if p.state == 0 %}
                     <tr>
                         <td>
                             {{ p.channel.name }}
@@ -52,6 +53,7 @@
 
                         </td>
                     </tr>
+                    {% endif %}
                 {% endfor %}
                 </tbody>
                 </table>

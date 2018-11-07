@@ -79,8 +79,8 @@
             </thead>
 
                 <tbody>
-                    {% for item in publishings %}
-                        {% if item.state == -1 %}
+                    {% for item in my_publishings %}
+                        {% if item.state == 3 %}
                         <tr>
                             <td>
                                 {{ item.channel.name }}
@@ -123,7 +123,7 @@
             </thead>
 
                 <tbody>
-                    {% for item in publishings %}
+                    {% for item in my_publishings %}
                         {% if item.state == 1 %}
                         <tr>
                             <td>

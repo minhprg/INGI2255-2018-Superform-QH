@@ -33,16 +33,16 @@ def import_xml_to_rss_feed(rss_feed, xml_path):
     description = list()
     pub_date = list()
 
-    for attrib in tree.xpath("/rss_feeds/channel/item/title"):
+    for attrib in tree.xpath("/rss/channel/item/title"):
         title.append(attrib.text)
 
-    for attrib in tree.xpath("/rss_feeds/channel/item/link"):
+    for attrib in tree.xpath("/rss/channel/item/link"):
         link.append(attrib.text)
 
-    for attrib in tree.xpath("/rss_feeds/channel/item/description"):
+    for attrib in tree.xpath("/rss/channel/item/description"):
         description.append(attrib.text)
 
-    for attrib in tree.xpath("/rss_feeds/channel/item/pubDate"):
+    for attrib in tree.xpath("/rss/channel/item/pubDate"):
         pub_date.append(datetime.datetime.strptime(attrib.text, "%a, %d %b %Y %X GMT"))
 
     for i in range(0, len(title)):

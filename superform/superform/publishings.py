@@ -26,15 +26,35 @@ def create_a_publishing(post, chn, form):
     return pub
 
 
-@pub_page.route('/moderate/<int:id>/<string:idc>',methods=["GET","POST"])
+@pub_page.route('/moderate/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
 def moderate_publishing(id,idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id==id,Publishing.channel_id==idc).first()
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
-    if request.method=="GET":
+    if request.method == "GET":
         return render_template('moderate_post.html', pub=pub)
-    else:
+
+
+@pub_page.route('/moderate/<int:id>/<string:idc>/refuse_post', methods=["POST"])
+@login_required()
+def refuse_post(id, idc):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+
+    #state is shared & refused
+    pub.state = 3
+    db.session.commit()
+
+    return redirect(url_for('index'))
+
+
+@pub_page.route('/moderate/<int:id>/<string:idc>/validate_post', methods=["POST"])
+@login_required()
+def validate_post(id, idc):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+    pub.date_from = str_converter(pub.date_from)
+    pub.date_until = str_converter(pub.date_until)
+    if request.method == "POST":
         pub.title = request.form.get('titlepost')
         pub.description = request.form.get('descrpost')
         pub.link_url = request.form.get('linkurlpost')
@@ -50,7 +70,6 @@ def moderate_publishing(id,idc):
         c_conf = c.config
         from importlib import import_module
         plugin = import_module(plugin_name)
-        plugin.run(pub,c_conf)
+        plugin.run(pub, c_conf)
 
         return redirect(url_for('index'))
-

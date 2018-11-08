@@ -143,3 +143,26 @@ def test_delete_old_post():
 
     del_file([path])
 
+
+def test_server_reboot():
+    """
+    Test that when de server reboots it restore the rss feeds with the xml files already existing and add the new item
+    to the corresponding feed. Make sure it don't erase the already existing xml file.
+    """
+
+    pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25", channel_id=-6)
+    conf = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
+
+    path = root + "-6.xml"
+    rss.run(pub, conf)
+
+    assert count(path) == 1  # Check that the post has been added
+    assert check_post(pub, path)
+
+    rss.rss_feeds = {}  # simulate a server reboot by setting the list of rss feeds to none
+    rss.run(pub, conf)
+
+    assert count(path) == 2
+    assert check_post(pub, path)
+
+    del_file([path])

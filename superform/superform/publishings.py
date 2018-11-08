@@ -60,8 +60,6 @@ def moderate_publishing(id, idc):
             # running the plugin here
             plugin.run(pub, c_conf)
         else:
-            pub.state = 1
-            db.session.commit()
             return render_template('moderate_post.html', pub=pub, conf=True)
 
         return redirect(url_for('index'))

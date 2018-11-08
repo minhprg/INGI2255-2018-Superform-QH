@@ -9,6 +9,10 @@ from superform.plugins import rss
 from superform.utils import datetime_converter
 
 
+root, current_dir = os.path.split(os.path.dirname(__file__))
+root = root + "/plugins/rssfeeds/"
+
+
 def check_post(pub, path):
     tree = ET.parse(path)
     channel = tree.getroot().find('channel')
@@ -20,10 +24,10 @@ def check_post(pub, path):
 
 def count(path):
     tree = ET.parse(path)
-    root = tree.getroot()
+    root1 = tree.getroot()
     count1 = 0
 
-    for _ in root.iter('item'):
+    for _ in root1.iter('item'):
         count1 += 1
 
     return count1
@@ -43,7 +47,7 @@ def test_create_feed_if_none_exist():
 
     pub = Publishing(title="This is a test feed", description="This is a test description feed", link_url="www.facebook.com", channel_id=-1)
 
-    path = "../plugins/rssfeeds/-1.xml"
+    path = root + "-1.xml"
 
     del_file([path])
 
@@ -71,8 +75,8 @@ def test_different_channels():
     conf1 = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
     conf2 = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
 
-    path1 = '../plugins/rssfeeds/-2.xml'
-    path2 = '../plugins/rssfeeds/-3.xml'
+    path1 = root + '-2.xml'
+    path2 = root + '-3.xml'
 
     del_file([path1, path2])
 
@@ -88,7 +92,7 @@ def test_different_channels():
     assert check_post(pub1, path1)
     assert check_post(pub2, path2)
 
-    del_file(['../plugins/rssfeeds/-2.xml', '../plugins/rssfeeds/-3.xml'])
+    del_file([path1, path2])
 
 
 def test_publish_post():
@@ -99,7 +103,7 @@ def test_publish_post():
     pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25", channel_id=-4)
     conf = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
 
-    path = "../plugins/rssfeeds/-4.xml"
+    path = root + "-4.xml"
     rss.run(pub, conf)
 
     count1 = count(path)
@@ -119,7 +123,7 @@ def test_delete_old_post():
     pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25", channel_id=-5)
     conf = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
 
-    path = "../plugins/rssfeeds/-4.xml"
+    path = root + "-5.xml"
     new_rss = rss.create_initial_feed(path)
     item = PyRSS2Gen.RSSItem(
                 title=pub.title,

@@ -3,7 +3,7 @@
 {% block content %}
     <h1>Moderate this publication</h1>
     {% if session.logged_in %}
-        {% if conf %}
+        {% if notconf %}
             <div class="alert alert-danger" role="alert">
                 This channel is not yet configured
             </div>
@@ -43,7 +43,7 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-success" {% if conf %} disabled {% endif %}>Publish</button>
+            <button class="btn btn-success" {% if notconf %} disabled {% endif %}>Publish</button>
         </form>
     {% else %}
         Your are not logged in.

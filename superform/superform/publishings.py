@@ -42,9 +42,9 @@ def moderate_publishing(id, idc):
 
     if request.method == "GET":
         if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-            return render_template('moderate_post.html', pub=pub)
+            return render_template('moderate_post.html', pub=pub, notconf=False)
         else:
-            return render_template('moderate_post.html', pub=pub, conf=True)
+            return render_template('moderate_post.html', pub=pub, notconf=True)
     else:
         pub.title = request.form.get('titlepost')
         pub.description = request.form.get('descrpost')
@@ -60,7 +60,7 @@ def moderate_publishing(id, idc):
             # running the plugin here
             plugin.run(pub, c_conf)
         else:
-            return render_template('moderate_post.html', pub=pub, conf=True)
+            return render_template('moderate_post.html', pub=pub, notconf=True)
 
         return redirect(url_for('index'))
 

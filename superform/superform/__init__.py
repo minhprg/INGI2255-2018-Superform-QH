@@ -4,7 +4,7 @@ import importlib
 
 import superform.plugins
 from superform.publishings import pub_page
-from superform.models import db, Channel, Post,Publishing, User
+from superform.models import db, Channel, Post, Publishing, User
 from superform.authentication import authentication_page
 from superform.authorizations import authorizations_page
 from superform.channels import channels_page
@@ -37,24 +37,27 @@ app.config["PLUGINS"] = {
 @app.route('/')
 def index():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
-    posts=[]
-    flattened_list_moderable_pubs =[]
+    user_posts = []
+    flattened_list_moderable_pubs = []
     # flattened_my_list_pubs = []
     my_pubs = []
     if user is not None:
-        setattr(user,'is_mod',is_moderator(user))
-        posts = db.session.query(Post).filter(Post.user_id==session.get("user_id", ""))
+        setattr(user, 'is_mod', is_moderator(user))
+        user_posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", ""))
         channels_moderable = get_moderate_channels_for_user(user)
-        moderable_pubs_per_chan = (db.session.query(Publishing).filter((Publishing.channel_id == c.id) & Publishing.state == 0) for c in channels_moderable)
+        moderable_pubs_per_chan = (db.session.query(Publishing)
+                                   .filter(Publishing.channel_id == c.id)
+                                   .filter(Publishing.state == 0)
+                                   .all() for c in channels_moderable)
         flattened_list_moderable_pubs = [y for x in moderable_pubs_per_chan for y in x]
-        my_pubs = [pub for _, _, pub in db.session.query(Channel, Post, Publishing).\
-            filter(Channel.id == Publishing.channel_id).\
-            filter(Publishing.post_id == Post.id).\
-            filter(Post.user_id == user.id)]
-        # SELECT publishing.title, publishing.description, publishing.state, channel.name FROM channel, publishing, post WHERE channel.id = publishing.id AND publishing.post_id = post.id AND post.user_id = user_id AND
-        # flattened_my_list_pubs = [y for x in my_pubs for y in x]
+        my_pubs = [pub for _, _, pub in db.session.query(Channel, Post, Publishing)
+                   .filter(Channel.id == Publishing.channel_id)
+                   .filter(Publishing.post_id == Post.id)
+                   .filter(Post.user_id == user.id)]
 
-    return render_template("index.html", user=user, posts=posts, publishings=flattened_list_moderable_pubs, my_publishings=my_pubs)
+    return render_template("index.html", user=user, posts=user_posts, publishings=flattened_list_moderable_pubs,
+                           my_publishings=my_pubs)
+
 
 @app.errorhandler(403)
 def forbidden(error):

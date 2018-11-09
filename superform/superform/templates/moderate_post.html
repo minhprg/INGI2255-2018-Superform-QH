@@ -39,8 +39,8 @@
 
                 </div>
             </div>
-            <button class="btn btn-danger" formaction="{{ url_for('publishings.refuse_post',id=pub.post_id,idc=pub.channel_id)}}" formmethod="post" type="submit">Refuse</button>
-            <button class="btn btn-success" formaction="{{ url_for('publishings.validate_post',id=pub.post_id,idc=pub.channel_id)}}" formmethod="post" type="submit">Publish</button>
+            <button class="btn btn-danger" formaction="{{ url_for('publishings.refuse_publishing',id=pub.post_id,idc=pub.channel_id)}}" formmethod="post" type="submit">Refuse</button>
+            <button class="btn btn-success" formaction="{{ url_for('publishings.validate_publishing',id=pub.post_id,idc=pub.channel_id)}}" formmethod="post" type="submit">Publish</button>
         </form>
     {% else %}
         Your are not logged in.

@@ -36,9 +36,9 @@ def moderate_publishing(id,idc):
         return render_template('moderate_post.html', pub=pub)
 
 
-@pub_page.route('/moderate/<int:id>/<string:idc>/refuse_post', methods=["POST"])
+@pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
 @login_required()
-def refuse_post(id, idc):
+def refuse_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     #state is shared & refused
@@ -48,9 +48,9 @@ def refuse_post(id, idc):
     return redirect(url_for('index'))
 
 
-@pub_page.route('/moderate/<int:id>/<string:idc>/validate_post', methods=["POST"])
+@pub_page.route('/moderate/<int:id>/<string:idc>/validate_publishing', methods=["POST"])
 @login_required()
-def validate_post(id, idc):
+def validate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)

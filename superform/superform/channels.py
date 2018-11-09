@@ -116,15 +116,12 @@ def callback_In():
     token = authentication.get_access_token()
     application = linkedin.LinkedInApplication(token=token)
     print(token)
-    #authentication.authorization_code = code
     return 0
-
 
 @channels_page.route("/test", methods=['GET', 'POST'])
 @login_required(admin_required=True)
-def test():
-    """Page where LinkedIn returns the code to get the access token.
-            Generate the access token from the code and save it to the DB."""
+def linkedInAuth():
+    """Page where LinkedIn is called to get the code to have the access token."""
 
     app_key = current_app.config["LINKEDIN_API_KEY"]
     app_secret = current_app.config["LINKEDIN_API_SECRET"]

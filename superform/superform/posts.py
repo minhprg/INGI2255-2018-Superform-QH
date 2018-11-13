@@ -28,12 +28,15 @@ def create_a_post(form):
 
 
 def create_a_publishing(post, chn, form):
+
     chan = str(chn.name)
     if chn.module == 'superform.plugins.ictv':
         link_post = form.get(chan + '_ictv_url_type') + ':::' + post.link_url
         print(link_post)
     else:
         link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+
+    slide_typeform.get(chan + '_ictv_slide_type')
 
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
@@ -75,8 +78,10 @@ def new_post():
             # base_url = 'http://localhost:8000/channels/1/api/templates'
             # headers = {'accept': 'application/json', 'X-ICTV-editor-API-Key': 'azertyuiop'}
             # TODO : catch errors on request
+            # TODO : check if API is enabled on ICTV and that API keys match
             ictv_slides_templates = requests.get(request_args['url'] + '/templates', headers=request_args['headers']).json()
-            templates_request = [sub('^template\-', '', i) for i in ictv_slides_templates]
+            #templates_request = [sub('^template\-', '', i) for i in ictv_slides_templates]
+            templates_request = {sub('^template\-', '', i):ictv_slides_templates[i] for i in ictv_slides_templates}
         return render_template('new.html', l_chan=list_of_channels, ictv_templates=templates_request)
     else:
         create_a_post(request.form)

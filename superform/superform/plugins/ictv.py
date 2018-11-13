@@ -38,7 +38,7 @@ def generate_capsule(pub):
     return capsule
 
 
-def run(pub, chan_conf):
+def run(pub, chan_conf, **kwargs):
     json_data = json.loads(chan_conf)
 
     """ Check channel config """
@@ -48,9 +48,9 @@ def run(pub, chan_conf):
             # TODO : popup with error
 
     slide = generate_slide(pub)
-    print(slide)
+    # print(slide)
     capsule = generate_capsule(pub)
-    print(capsule)
+    # print(capsule)
 
     """ Create new capsule on ICTV server on given channel """
     #base_url = 'http://' + json_data['ictv_server_fqdn'] + '/channels/' + json_data['ictv_channel_id'] + '/api/capsules'

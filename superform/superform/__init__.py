@@ -11,6 +11,7 @@ from superform.channels import channels_page
 from superform.posts import posts_page
 from superform.rssfeed import feed_viewer_page
 from superform.users import get_moderate_channels_for_user, is_moderator
+from superform.plugins.facebook_callback import facebook_page
 
 app = Flask(__name__)
 app.config.from_json("config.json")
@@ -22,6 +23,7 @@ app.register_blueprint(channels_page)
 app.register_blueprint(posts_page)
 app.register_blueprint(pub_page)
 app.register_blueprint(feed_viewer_page)
+app.register_blueprint(facebook_page)
 
 # Init dbs
 db.init_app(app)

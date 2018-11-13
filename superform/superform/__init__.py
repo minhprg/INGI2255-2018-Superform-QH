@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, request
+from flask import Flask, render_template, session, request, redirect, url_for
 import pkgutil
 import importlib
 
@@ -75,3 +75,13 @@ if __name__ == '__main__':
     # To use Flask over HTTPS we need to generate a certificate (cert.pem) and a key (key.pem)
     # and pass this option to Flask : --cert cert.pem --key key.pem
     app.run(ssl_context='adhoc')
+
+
+@app.route('/return_gcal', methods=['GET'])
+def return_gcal():
+    code = request.args.get('code')
+    from importlib import import_module
+    plugin = import_module('superform.plugins.gcal')
+    plugin.confirm(code)
+
+    return redirect(url_for('index'))

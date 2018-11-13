@@ -42,13 +42,13 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="datefrompost">Publication Date</label><br>
-                                                <input id="datefrompost" name="datefrompost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                                <input id="datefrompost" name="datefrompost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}" required>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="dateuntilpost">Publication Until</label><br>
-                                                <input id="dateuntilpost" name="dateuntilpost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                                <input id="dateuntilpost" name="dateuntilpost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}"  pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}" required>
                                             </div>
                                         </div>
                                     </div>
@@ -110,13 +110,13 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="{{ chan.name }}_datefrompost">Publication Date</label><br>
-                                                    <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                                    <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}"  pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}" required>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="{{ chan.name }}_dateuntilpost">Publication Until</label><br>
-                                                    <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                                    <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="datetime-local" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}"  pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}" required>
                                                 </div>
                                             </div>
                                         </div>
@@ -167,6 +167,15 @@
         dateuntil = $('#dateuntilpost').val();
         datefrom = $('#datefrompost').val();
         today = getTodayDate();
+
+
+        var today = new Date();
+        today = new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+        var datefrompost = document.querySelector('input[id="datefrompost"]');
+        datefrompost.value = today.toISOString().substr(0, 16);
+        var dateuntilpost = document.querySelector('input[id="dateuntilpost"]');
+        dateuntilpost.value = today.toISOString().substr(0, 16);
+
 
         function getTodayDate() {
             var todayDate = new Date();

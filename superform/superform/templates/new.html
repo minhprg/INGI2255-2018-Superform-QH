@@ -192,7 +192,7 @@
                 synchronize_fields(nameC);
                 for (var i = 0; i < split.length; i++) {
                     var field_id = $('#'+split[i].toLowerCase()+'post').attr('id');
-                    $("input[id='" + nameC + "_" +  + "']").prop('disabled', true);
+                    $("input[id='" + nameC + "_" + field_id + "']").prop('disabled', true);
                     $("textarea[id='" + nameC + "_" + field_id + "']").prop('disabled', true);
 
                     $("label[for='" + nameC + "_" + field_id + "']").append('<a href="#" data-toggle="popover" title="Unavailable field" data-content="This field is unavailable for channel ' + nameC +'"><i class="fas fa-exclamation-circle" style="color:orange"></i></a>');

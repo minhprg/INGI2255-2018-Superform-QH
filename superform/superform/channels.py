@@ -1,12 +1,11 @@
 from flask import Blueprint, current_app, url_for, request, make_response, redirect, session, render_template
-from linkedin_v2 import linkedin
+
 import requests
 import json
 
 from superform.utils import login_required, get_instance_from_module_path, get_modules_names, get_module_full_name
 from superform.models import db, Channel
 import ast
-import facebook
 
 channels_page = Blueprint('channels', __name__)
 

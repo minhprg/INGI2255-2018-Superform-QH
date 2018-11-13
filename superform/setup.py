@@ -14,7 +14,6 @@ setup(
         'sqlalchemy',
         'flask_sqlalchemy',
         'facebook-sdk',
-	    'python-linkedin-v2',
         'pyopenssl'
     ],
 )

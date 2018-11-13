@@ -24,7 +24,7 @@ def str_converter(datet):
 
 def get_instance_from_module_path(module_p):
     import os
-    module_p = module_p.replace(".", os.sep) # use the os file path separator
+    module_p = "superform/" + module_p.replace(".", os.sep) # use the os file path separator
     import importlib.util
     spec = importlib.util.spec_from_file_location("module.name", module_p+".py")
     foo = importlib.util.module_from_spec(spec)

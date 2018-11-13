@@ -52,23 +52,17 @@ def configure_channel(id):
         if (c.config is not ""):
             d = ast.literal_eval(c.config)
             setattr(c, "config_dict", d)
-        if m == 'superform.plugins.facebook':
-            return render_template("channel_configure_facebook.html", channel=c, config_fields=config_fields,
-                                   url_token=clas.get_url_for_token(id),
-                                   pages=clas.get_list_user_pages(c.config_dict.get("access_token")))
-        else:
+        try:
+            return clas.render_specific_config_page(c, config_fields)
+        except AttributeError:
             return render_template("channel_configure.html", channel=c, config_fields=config_fields)
     str_conf = "{"
     cfield = 0
-    if m == 'superform.plugins.facebook':
-        str_conf += "\"access_token\" : \"" + request.form.get("access_token") + "\""
-        str_conf += ",\"page\" : \"" + request.form.get("page") + "\""
-    else:
-        for field in config_fields:
-            if cfield > 0:
-                str_conf += ","
-            str_conf += "\"" + field + "\" : \"" + request.form.get(field) + "\""
-            cfield += 1
+    for field in config_fields:
+        if cfield > 0:
+            str_conf += ","
+        str_conf += "\"" + field + "\" : \"" + request.form.get(field) + "\""
+        cfield += 1
     str_conf += "}"
     c.config = str_conf
     db.session.commit()

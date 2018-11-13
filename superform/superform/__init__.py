@@ -3,6 +3,7 @@ import pkgutil
 import importlib
 
 import superform.plugins
+from superform.lists import lists_page
 from superform.publishings import pub_page
 from superform.models import db, Channel, Post, Publishing, User
 from superform.authentication import authentication_page
@@ -21,6 +22,7 @@ app.register_blueprint(authorizations_page)
 app.register_blueprint(channels_page)
 app.register_blueprint(posts_page)
 app.register_blueprint(pub_page)
+app.register_blueprint(lists_page)
 app.register_blueprint(feed_viewer_page)
 
 # Init dbs
@@ -39,24 +41,32 @@ def index():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
     user_posts = []
     flattened_list_moderable_pubs = []
-    # flattened_my_list_pubs = []
-    my_pubs = []
+    my_accepted_pubs = []
+    my_refused_pubs = []
     if user is not None:
         setattr(user, 'is_mod', is_moderator(user))
-        user_posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", ""))
+        from sqlalchemy import desc
+
+        user_posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", "")).order_by(desc(Post.id)).limit(5).all()
         channels_moderable = get_moderate_channels_for_user(user)
         moderable_pubs_per_chan = (db.session.query(Publishing)
                                    .filter(Publishing.channel_id == c.id)
-                                   .filter(Publishing.state == 0)
+                                   .filter(Publishing.state == 0).order_by(desc(Publishing.post_id)).limit(5)
                                    .all() for c in channels_moderable)
         flattened_list_moderable_pubs = [y for x in moderable_pubs_per_chan for y in x]
-        my_pubs = [pub for _, _, pub in db.session.query(Channel, Post, Publishing)
+        my_refused_pubs = [pub for _, _, pub in db.session.query(Channel, Post, Publishing)
                    .filter(Channel.id == Publishing.channel_id)
                    .filter(Publishing.post_id == Post.id)
-                   .filter(Post.user_id == user.id)]
+                   .filter(Publishing.state == 3)
+                   .filter(Post.user_id == user.id).order_by(desc(Post.id)).limit(5).all()]
+        my_accepted_pubs = [pub for _, _, pub in db.session.query(Channel, Post, Publishing)
+            .filter(Channel.id == Publishing.channel_id)
+            .filter(Publishing.post_id == Post.id)
+            .filter(Publishing.state == 1)
+            .filter(Post.user_id == user.id).order_by(desc(Post.id)).limit(5).all()]
 
     return render_template("index.html", user=user, posts=user_posts, publishings=flattened_list_moderable_pubs,
-                           my_publishings=my_pubs)
+                           my_refused_publishings=my_refused_pubs, my_accepted_publishings=my_accepted_pubs)
 
 
 @app.errorhandler(403)

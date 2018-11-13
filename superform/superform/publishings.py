@@ -40,7 +40,7 @@ def edit_publishing(id, idc):
 
     # Only publishing that have yet to be moderated can be viewed
     # TODO create a page to crearly indicate the error
-    if pub.state != 3:
+    if pub.state == 1:
         return redirect(url_for('index'))
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
@@ -147,7 +147,7 @@ def validate_edit_publishing(id, idc):
 
     # Only pubs that have yet to be moderated can be accepted
     # TODO print an alert at top of page to indicate the problem
-    if pub.state != 3:
+    if pub.state == 1:
         return redirect(url_for('index'))
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()

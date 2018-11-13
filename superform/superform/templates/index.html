@@ -78,7 +78,7 @@
             </thead>
 
                 <tbody>
-                    {% for item in my_publishings %}
+                    {% for item in my_refused_publishings %}
                         {% if item.state == 3 %}
                         <tr>
                             <td>
@@ -122,7 +122,7 @@
             </thead>
 
                 <tbody>
-                    {% for item in my_publishings %}
+                    {% for item in my_accepted_publishings %}
                         {% if item.state == 1 %}
                         <tr>
                             <td>

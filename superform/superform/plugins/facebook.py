@@ -48,7 +48,7 @@ def run(publishing, channel_config):
 def get_url_for_token(id_channel):
     """Return an URL to Facebook to get a valid access token."""
     app_id = current_app.config["FACEBOOK_APP_ID"]
-    canvas_url = url_for('channels.callback_fb', _external=True)
+    canvas_url = url_for('facebook_callback.callback_fb', _external=True)
     perms = ["manage_pages", "publish_pages"]
     graph = facebook.GraphAPI()
     url = graph.get_auth_url(app_id, canvas_url, perms)

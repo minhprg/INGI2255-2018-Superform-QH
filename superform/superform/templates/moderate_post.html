@@ -1,13 +1,9 @@
 {% extends "layout.html" %}
 {% block title %}Moderate{% endblock %}
 {% block content %}
+
     <h1>Moderate this publication</h1>
     {% if session.logged_in %}
-        {% if conf %}
-            <div class="alert alert-danger" role="alert">
-                This channel is not yet configured
-            </div>
-        {% endif %}
         <form method="POST" action="">
             <div class="row">
                 <div class="col-md-12">
@@ -41,10 +37,11 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
-            <button class="btn btn-danger" formaction="{{ url_for('publishings.refuse_publishing',id=pub.post_id,idc=pub.channel_id)}}" formmethod="post" type="submit" {% if conf %} disabled {% endif %}>Refuse</button>
-            <button class="btn btn-success" formaction="{{ url_for('publishings.validate_publishing',id=pub.post_id,idc=pub.channel_id)}}" formmethod="post" type="submit" {% if conf %} disabled {% endif %}>Publish</button>
+            <button class="btn btn-danger" formaction="{{ url_for('publishings.refuse_publishing',id=pub.post_id,idc=pub.channel_id)}}" formmethod="post" type="submit">Refuse</button>
+            <button class="btn btn-success" formaction="{{ url_for('publishings.validate_publishing',id=pub.post_id,idc=pub.channel_id)}}" formmethod="post" type="submit">Publish</button>
         </form>
     {% else %}
         Your are not logged in.

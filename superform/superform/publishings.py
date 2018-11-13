@@ -1,8 +1,7 @@
-from flask import Blueprint, url_for, request, redirect, render_template
+from flask import Blueprint, url_for, request, redirect, render_template, session
 
-from superform import channels
-from superform.models import db, Publishing, Channel
 from superform.utils import login_required, datetime_converter, str_converter
+from superform.models import db, Publishing, Channel
 
 pub_page = Blueprint('publishings', __name__)
 
@@ -29,54 +28,30 @@ def create_a_publishing(post, chn, form):
 
 @pub_page.route('/moderate/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
-def moderate_publishing(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
-    # Only publishing that have yet to be moderated can be viewed
-    # TODO create a page to crearly indicate the error
-    if pub.state != 0:
-        return redirect(url_for('index'))
-
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
+def moderate_publishing(id,idc):
+    pub = db.session.query(Publishing).filter(Publishing.post_id==id,Publishing.channel_id==idc).first()
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
-
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-
     if request.method == "GET":
-        if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-            return render_template('moderate_post.html', pub=pub, conf=False)
-        else:
-            return render_template('moderate_post.html', pub=pub, conf=True)
+        return render_template('moderate_post.html', pub=pub)
 
 
-@pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
+@pub_page.route('/moderate/<int:id>/<string:idc>/refuse_post', methods=["POST"])
 @login_required()
-def refuse_publishing(id, idc):
+def refuse_post(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
-    # Only publishings that have yet to be moderated can be refused.
-    # TODO print an alert at top of page to indicate the problem
-    if pub.state == 0:
-        pub.state = 3
-        db.session.commit()
+    #state is shared & refused
+    pub.state = 3
+    db.session.commit()
 
     return redirect(url_for('index'))
 
 
-@pub_page.route('/moderate/<int:id>/<string:idc>/validate_publishing', methods=["POST"])
+@pub_page.route('/moderate/<int:id>/<string:idc>/validate_post', methods=["POST"])
 @login_required()
-def validate_publishing(id, idc):
+def validate_post(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
-    # Only pubs that have yet to be moderated can be accepted
-    # TODO print an alert at top of page to indicate the problem
-    if pub.state != 0:
-        return redirect(url_for('index'))
-
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
     if request.method == "POST":
@@ -86,22 +61,15 @@ def validate_publishing(id, idc):
         pub.image_url = request.form.get('imagepost')
         pub.date_from = datetime_converter(request.form.get('datefrompost'))
         pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
-
-        c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
+        #state is shared & validated
+        pub.state = 1
+        db.session.commit()
+        #running the plugin here
+        c=db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
         plugin_name = c.module
         c_conf = c.config
         from importlib import import_module
         plugin = import_module(plugin_name)
-
-        if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-            # state is shared & validated
-            pub.state = 1
-            db.session.commit()
-            # running the plugin here
-            plugin.run(pub, c_conf)
-        else:
-            pub.state = 1
-            db.session.commit()
-            return render_template('moderate_post.html', pub=pub, conf=True)
+        plugin.run(pub, c_conf)
 
         return redirect(url_for('index'))

@@ -1,6 +1,9 @@
 from datetime import datetime
 from functools import wraps
 from flask import render_template, session, current_app
+from requests import get
+from re import sub
+
 
 from superform.models import Authorization, Channel
 
@@ -52,3 +55,11 @@ def build_ictv_server_request_args(channel_config, method):
     if method == 'POST':
         headers['Content-Type'] = 'application/json'
     return {'url': base_url, 'headers': headers}
+
+
+def get_ictv_templates(channel_config):
+    request_args = build_ictv_server_request_args(channel_config, 'GET')
+    # TODO : catch errors on request
+    # TODO : check if API is enabled on ICTV and that API keys match
+    ictv_slides_templates = get(request_args['url'] + '/templates', headers=request_args['headers']).json()
+    return {sub('^template\-', '', i): ictv_slides_templates[i] for i in ictv_slides_templates if 'title-1' in ictv_slides_templates[i]}

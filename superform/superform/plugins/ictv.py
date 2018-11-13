@@ -1,25 +1,30 @@
 import json
 import requests
 import datetime
-from utils import build_ictv_server_request_args
+from utils import build_ictv_server_request_args, get_ictv_templates
 
 FIELDS_UNAVAILABLE = []
 
 CONFIG_FIELDS = ["ictv_server_fqdn", "ictv_channel_id", "ictv_api_key"]
 
 
-def generate_slide(pub):
-    content = {'title-1': {'text': pub.title}, 'subtitle-1': {'text': ''}, 'text-1':  {'text': pub.description}}
-    slide = {'content': content, 'template': 'template-text-image', 'duration': -1}
-
-    url = pub.link_url.split(':::')
-    if len(url) > 0:
-        if url[0] != 'url':
-            content[url[0] + '-1'] = {'src': url[1]}
+def generate_slide(chan_conf, pub):
+    splited_url = pub.link_url.split(',')
+    slide_type = splited_url[-1]
+    slide_content = get_ictv_templates(chan_conf)[slide_type]
+    slide_data = {j: k for j, k in (i.split(':::') for i in splited_url[:-1])}
+    for elem in slide_data:
+        """ quick fix, incoherence in ICTV response (img vs image) """
+        if 'img' in elem:
+            slide_content.pop(elem, None)
+            slide_content['image-1'] = {'src': slide_data[elem]}
         else:
-            pass
+            slide_content[elem] = {'src': slide_data[elem]}
+    slide_content['title-1'] = {'text': pub.title}
+    slide_content['text-1'] = {'text': pub.description}
+    slide_content['subtitle-1'] = {'text': ''}
 
-    return slide
+    return {'content': slide_content, 'template': 'template-'+slide_type, 'duration': -1}
 
 
 def get_epoch(date):
@@ -29,7 +34,7 @@ def get_epoch(date):
 def generate_capsule(pub):
     """
     Create the JSON representation of a given publication
-    :param pub: the pubication
+    :param pub: the publication
     :return: the JSON capsule
     """
     capsule = {'name': pub.title, 'theme': 'ictv', 'validity': [int(get_epoch(pub.date_from)), int(get_epoch(pub.date_until))]}
@@ -47,17 +52,12 @@ def run(pub, chan_conf, **kwargs):
             pass
             # TODO : popup with error
 
-    slide = generate_slide(pub)
+    slide = generate_slide(chan_conf, pub)
     # print(slide)
     capsule = generate_capsule(pub)
     # print(capsule)
 
     """ Create new capsule on ICTV server on given channel """
-    #base_url = 'http://' + json_data['ictv_server_fqdn'] + '/channels/' + json_data['ictv_channel_id'] + '/api/capsules'
-    #headers = {'accept': 'application/json', 'Content-Type': 'application/json',
-    #           'X-ICTV-editor-API-Key': json_data['ictv_api_key']}
-
-    #capsule_request = requests.post(base_url, json=capsule, headers=headers)
     request_args = build_ictv_server_request_args(chan_conf, 'POST')
     capsules_url = request_args['url'] + '/capsules'
     # TODO : catch errors on request

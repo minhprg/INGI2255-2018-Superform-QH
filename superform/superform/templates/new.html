@@ -126,11 +126,13 @@
                                 {% for i in ictv_templates %}
                                     <div id="ictv_form_{{ i }}" class="ictv_slide_choice" {% if loop.index0 != 0 %} style="display: none;" {% endif %}>
                                         <h5>{{ ictv_templates[i]["name"] }}</h5>
+                                        {% set count2 = loop.index0 %}
                                         {% for j in ictv_templates[i] %}
-                                            {% if j != 'description' and j != 'name' and 'subtitle' not in j%}
-                                              <div class="form-group "">
-                                                <label for="{{ chan.name }}_data_{{ j }}">{{ j }}</label><br>
-                                                <input type="text" name="{{ chan.name }}_data_{{ j }}" id="{{ chan.name }}_data_{{ j }}" class="form-control">
+                                            {% if j != 'description' and j != 'name' and 'subtitle' not in j and 'title' not in j and 'text' not in j%}
+                                              <div class="form-group">
+                                                <label for="{{ chan.name }}_data_{{ i }}_{{ j }}">{{ j }}</label><br>
+                                                <input type="text" name="{{ chan.name }}_data_{{ i }}_{{ j }}" id="{{ chan.name }}_data_{{ i }}_{{ j }}" class="form-control">
+                                                {% set count2 = count2 + 1 %}
                                               </div>
                                             {% endif %}
                                         {% endfor %}

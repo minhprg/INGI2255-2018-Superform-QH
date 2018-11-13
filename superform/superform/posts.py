@@ -4,9 +4,8 @@ from superform.users import channels_available_for_user
 from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path
 from superform.models import db, Post, Publishing, Channel
 
-import requests
+from utils import get_ictv_templates
 from re import sub
-from utils import build_ictv_server_request_args
 
 posts_page = Blueprint('posts', __name__)
 ictv_slides_templates = None
@@ -28,15 +27,22 @@ def create_a_post(form):
 
 
 def create_a_publishing(post, chn, form):
-
     chan = str(chn.name)
-    if chn.module == 'superform.plugins.ictv':
-        link_post = form.get(chan + '_ictv_url_type') + ':::' + post.link_url
-        print(link_post)
-    else:
-        link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
 
-    slide_typeform.get(chan + '_ictv_slide_type')
+    link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+
+    if chn.module == 'superform.plugins.ictv':
+        link_post = ''
+        slide_type = form.get(chan + '_ictv_slide_type')
+        req = form.to_dict()
+        print(req)
+        for i in req:
+            if chan + '_data_' + slide_type in i:
+                a = sub('^' + chan + '_data_' + slide_type + '_', '', i)
+                link_post = link_post + a + ":::" + req[i] + ','
+
+        link_post = link_post + slide_type
+        print(link_post)
 
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
@@ -74,14 +80,7 @@ def new_post():
         templates_request = None
         """ If there is ICTV in the list of channel, query the list of slides templates from the server """
         if ictv_chan is not None:
-            request_args = build_ictv_server_request_args(ictv_chan.config, 'GET')
-            # base_url = 'http://localhost:8000/channels/1/api/templates'
-            # headers = {'accept': 'application/json', 'X-ICTV-editor-API-Key': 'azertyuiop'}
-            # TODO : catch errors on request
-            # TODO : check if API is enabled on ICTV and that API keys match
-            ictv_slides_templates = requests.get(request_args['url'] + '/templates', headers=request_args['headers']).json()
-            #templates_request = [sub('^template\-', '', i) for i in ictv_slides_templates]
-            templates_request = {sub('^template\-', '', i):ictv_slides_templates[i] for i in ictv_slides_templates}
+            templates_request = get_ictv_templates(ictv_chan.config)
         return render_template('new.html', l_chan=list_of_channels, ictv_templates=templates_request)
     else:
         create_a_post(request.form)

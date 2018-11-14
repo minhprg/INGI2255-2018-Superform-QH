@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
-{% block title %}Moderate{% endblock %}
 {% block content %}
-    <h1>{{ action }} this publication</h1>
+    <h1>{% block sub_title %} {% endblock %}</h1>
     {% if session.logged_in %}
         {% if conf %}
             <div class="alert alert-danger" role="alert">
@@ -10,7 +9,7 @@
         {% endif %}
         <form method="POST" action="">
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-8">
                     <div class="form-group">
                         <label for="titlepost">Title</label><br>
                         <input type="text" name="titlepost" id="titlepost" class="form-control" value="{{ pub.title }}">
@@ -41,10 +40,13 @@
                             </div>
                         </div>
                     </div>
+                    {% block additional_content %} {% endblock %}
+                </div>
+                <div class="col-md-4">
+                    {% block messages %} {% endblock %}
                 </div>
             </div>
-            <button class="btn btn-danger" formaction="{{ url_for(refuse_url, id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit" {% if conf %} disabled {% endif %}>Refuse</button>
-            <button class="btn btn-success" formaction="{{ url_for(validate_url, id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit" {% if conf %} disabled {% endif %}>Publish</button>
+            {% block button %}{% endblock %}
         </form>
     {% else %}
         Your are not logged in.

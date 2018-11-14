@@ -1,15 +1,19 @@
-from flask import Blueprint, url_for, request, redirect, render_template
+import sys
+
+from flask import Blueprint, url_for, request, redirect, render_template, session
+import logging
 
 from superform import channels
-from superform.models import db, Publishing, Channel
+from superform.models import db, Publishing, Channel, Moderation, Post, User
 from superform.utils import login_required, datetime_converter, str_converter
 
+logging.basicConfig(level=logging.DEBUG)
 pub_page = Blueprint('publishings', __name__)
 
 
 @pub_page.route('/edit/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
 @login_required()
-def abort_edit_publishing(id, idc):
+def abort_rework_publishing(id, idc):
     return redirect(url_for('index'))
 
 
@@ -35,7 +39,7 @@ def create_a_publishing(post, chn, form):
 
 @pub_page.route('/edit/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
-def edit_publishing(id, idc):
+def rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     # Only publishing that have yet to be moderated can be viewed
@@ -43,9 +47,12 @@ def edit_publishing(id, idc):
     if pub.state == 1:
         return redirect(url_for('index'))
 
+    post = db.session.query(Post).filter(Post.id == pub.post_id).first()
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-    pub.date_from = str_converter(pub.date_from)
-    pub.date_until = str_converter(pub.date_until)
+
+    mod = [mod for _, _, _, mod in db.session.query(Post, Channel, User, Moderation).filter(Moderation.post_id == pub.post_id)\
+        .filter(Moderation.channel_id == pub.channel_id)\
+        .filter(Moderation.user_id == post.user_id)]
 
     plugin_name = c.module
     c_conf = c.config
@@ -53,10 +60,10 @@ def edit_publishing(id, idc):
     plugin = import_module(plugin_name)
 
     if request.method == "GET":
-        if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-            return render_template('moderate_post.html', pub=pub, conf=False, validate_url='publishings.validate_edit_publishing', refuse_url='publishings.abort_edit_publishing', action='Edit')
+        if not update_db(pub, pub.state, plugin, c_conf):
+            return render_template('rework_publishing.html', pub=pub, conf=False, mod=mod[0].message)
         else:
-            return render_template('moderate_post.html', pub=pub, conf=True, validate_url='publishings.validate_edit_publishing', refuse_url='publishings.abort_edit_publishing', action='Edit')
+            return render_template('rework_publishing.html', pub=pub, conf=True, mod=mod[0].message)
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>', methods=["GET"])
@@ -80,15 +87,26 @@ def moderate_publishing(id, idc):
 
     if request.method == "GET":
         if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-            return render_template('moderate_post.html', pub=pub, conf=False, validate_url='publishings.validate_publishing', refuse_url='publishings.refuse_publishing', action='Moderate')
+            return render_template('moderate_publishing.html', pub=pub, conf=False, validate_url='publishings.validate_publishing', refuse_url='publishings.refuse_publishing', action='Moderate')
         else:
-            return render_template('moderate_post.html', pub=pub, conf=True, validate_url='publishings.validate_publishing', refuse_url='publishings.refuse_publishing', action='Moderate')
+            return render_template('moderate_publishing.html', pub=pub, conf=True, validate_url='publishings.validate_publishing', refuse_url='publishings.refuse_publishing', action='Moderate')
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
 @login_required()
 def refuse_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+    post = db.session.query(Post).filter(Post.id == pub.post_id).first()
+
+    mod = [mod for _, _, _, mod in db.session.query(Post, Channel, User, Moderation).filter(Moderation.post_id == pub.post_id) \
+        .filter(Moderation.channel_id == pub.channel_id) \
+        .filter(Moderation.user_id == post.user_id)]
+
+    if len(mod) == 0:
+        create_a_moderation(request.form, id, idc)
+    else:  # FIXME: For the moment I'm updating the moderation, don't think it is the good thing to do
+        mod[0].message = request.form.get('commentpub')
+        db.session.commit()
 
     # Only publishings that have yet to be moderated can be refused.
     # TODO print an alert at top of page to indicate the problem
@@ -97,6 +115,15 @@ def refuse_publishing(id, idc):
         db.session.commit()
 
     return redirect(url_for('index'))
+
+
+def create_a_moderation(form, id, idc):
+    message = form.get('commentpub') if form.get('commentpub') is not None else ""
+    post = db.session.query(Post).filter(Post.id == id).first()
+    mod = Moderation(user_id=post.user_id, post_id=id, channel_id=int(idc), message=message)
+
+    db.session.add(mod)
+    db.session.commit()
 
 
 def update_db(pub, state, plugin, c_conf):
@@ -120,6 +147,18 @@ def update_db(pub, state, plugin, c_conf):
 @login_required()
 def validate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+    post = db.session.query(Post).filter(Post.id == pub.post_id).first()
+
+    mod = [mod for _, _, _, mod in
+           db.session.query(Post, Channel, User, Moderation).filter(Moderation.post_id == pub.post_id)
+               .filter(Moderation.channel_id == pub.channel_id)
+               .filter(Moderation.user_id == post.user_id)]
+
+    if len(mod) == 0:
+        create_a_moderation(request.form, id, idc)
+    else:  # FIXME: Same as in refuse_publishing()
+        mod[0].message = request.form.get('commentpub')
+        db.session.commit()
 
     # Only pubs that have yet to be moderated can be accepted
     # TODO print an alert at top of page to indicate the problem
@@ -133,7 +172,7 @@ def validate_publishing(id, idc):
     plugin = import_module(plugin_name)
 
     if not update_db(pub, 1, plugin, c_conf):
-        return render_template('moderate_post.html', pub=pub, conf=True)
+        return render_template('moderate_publishing.html', pub=pub, conf=True)
 
     plugin.run(pub, c_conf)
 
@@ -142,7 +181,7 @@ def validate_publishing(id, idc):
 
 @pub_page.route('/edit/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
 @login_required()
-def validate_edit_publishing(id, idc):
+def validate_rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     # Only pubs that have yet to be moderated can be accepted
@@ -157,6 +196,6 @@ def validate_edit_publishing(id, idc):
     plugin = import_module(plugin_name)
 
     if not update_db(pub, 0, plugin, c_conf):
-        return render_template('moderate_post.html', pub=pub, conf=True, validate_url='publishings.validate_edit_publishing', refuse_url='publishings.abort_edit_publishing', action='Edit')
+        return render_template('moderate_publishing.html', pub=pub, conf=True, validate_url='publishings.validate_edit_publishing', refuse_url='publishings.abort_edit_publishing', action='Edit')
 
     return redirect(url_for('index'))

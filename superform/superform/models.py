@@ -14,6 +14,7 @@ class User(db.Model):
 
     posts = db.relationship("Post", backref="user", lazy=True)
     authorizations = db.relationship("Authorization", backref="user", lazy=True)
+    moderation = db.relationship("Moderation", backref="user", lazy=True)
 
     def __repr__(self):
         return '<User {}>'.format(repr(self.id))
@@ -32,6 +33,7 @@ class Post(db.Model):
     source = db.Column(db.Text)
 
     publishings = db.relationship("Publishing", backref="post", lazy=True)
+    moderation = db.relationship("Moderation", backref="post", lazy=True)
 
     __table_args__ = ({"sqlite_autoincrement": True},)
 
@@ -48,6 +50,15 @@ class Post(db.Model):
                     # state 2 is archived.
                     return False
             return True
+
+
+class Moderation(db.Model):
+    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
+    channel_id = db.Column(db.Integer, db.ForeignKey("channel.id"), nullable=False)
+    user_id = db.Column(db.Text, db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(db.Text)
+
+    __table_args__ = (db.PrimaryKeyConstraint('post_id', 'channel_id', 'user_id'),)
 
 
 class Publishing(db.Model):
@@ -79,6 +90,7 @@ class Channel(db.Model):
 
     publishings = db.relationship("Publishing", cascade="all, delete-orphan", backref="channel", lazy=True)
     authorizations = db.relationship("Authorization", cascade="all, delete", backref="channel", lazy=True)
+    moderation = db.relationship("Moderation", cascade="all, delete-orphan", backref="channel", lazy=True)
 
     __table_args__ = ({"sqlite_autoincrement": True},)
 

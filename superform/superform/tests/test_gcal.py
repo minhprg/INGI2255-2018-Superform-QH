@@ -1,18 +1,17 @@
 # To run : Be sure to be in Superform/superform folder and then 'pytest -v' in your terminal
-#export PYTHONPATH=~/PycharmProjects/INGI2255-2018-Superform-QH/superform
+# export PYTHONPATH=~/PycharmProjects/INGI2255-2018-Superform-QH/superform
 import datetime
 import os
 import tempfile
 
 import pytest
 
-from superform import app, db
-from superform.models import Authorization, Channel
-from superform import app, db, Post, User, Publishing
-from superform.users import  is_moderator, get_moderate_channels_for_user,channels_available_for_user
+from superform.models import Channel
+from superform import app, db, Post, Publishing
 
 chan_id_1 = -1  # Should be created
 chan_id_2 = -1  # Shouldn't be created
+
 
 @pytest.fixture
 def client():
@@ -57,11 +56,20 @@ def test_new_channel_as_admin(client):
     assert chan_id_1 >= 0
 
     # Configure the channel
-    client.post("/configure/" + str(chan_id_1), data={'creds': 'test'})
+    calendar_id = 'test'
+    client_id = 'test'
+    client_secret = 'test'
+    client.post("/configure/" + str(chan_id_1), data={"calendar id": calendar_id,
+                                                      "clientID": client_id,
+                                                      "clientSecret": client_secret})
     chan = db.session.query(Channel).filter(Channel.id == chan_id_1).first()
     assert chan
-    # chan_creds = chan.config
-    # TODO test creds correctly saved
+
+    # Check channel configuration
+    chan_creds = chan.config
+    assert chan_creds == "{\"calendar id\" : \"" + calendar_id \
+        + "\",\"clientID\" : \"" + client_id \
+        + "\",\"clientSecret\" : \"" + client_secret + "\"}"
 
 
 def test_new_channel_no_admin(client):
@@ -77,7 +85,9 @@ def test_new_channel_no_admin(client):
     chan_id_2 = -1
 
     # Configure the channel
-    client.post("/configure/" + str(chan_id_2), data={'creds': 'test'})
+    client.post("/configure/" + str(chan_id_2), data={"calendar id": 'test',
+                                                      "clientID": 'test',
+                                                      "clientSecret": 'test'})
     chan = db.session.query(Channel).filter(Channel.id == chan_id_2).first()
     assert not chan
 
@@ -125,12 +135,38 @@ def test_delete_channel_no_admin(client):
     assert chan
 
 
+"""
 def test_delete_channel_as_admin(client):
     global chan_id_1, chan_id_2
     login(client, "myself")
 
-    print(chan_id_1)
     client.post("/channels", data={'@action': 'delete', 'id': chan_id_1})
 
     chan = db.session.query(Channel).filter(Channel.id == chan_id_1).first()
     assert not chan
+"""
+
+"""
+# Use this to test the file apart from the rest of the test files
+def client_bis():
+    app.app_context().push()
+    db_fd, app.config['DATABASE'] = tempfile.mkstemp()
+    app.config['TESTING'] = True
+    client = app.test_client()
+
+    with app.app_context():
+        db.create_all()
+
+    return client
+
+    os.close(db_fd)
+    os.unlink(app.config['DATABASE'])
+
+
+client = client_bis()
+test_new_channel_as_admin(client)
+test_new_channel_no_admin(client)
+test_new_publish_gcal(client)
+test_delete_channel_no_admin(client)
+test_delete_channel_as_admin(client)
+"""

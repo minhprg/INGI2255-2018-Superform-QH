@@ -47,7 +47,7 @@ def configure_channel(id):
     config_fields = clas.CONFIG_FIELDS
 
     if request.method == 'GET':
-        if (c.config is not ""):
+        if c.config is not "":
             d = ast.literal_eval(c.config)
             setattr(c, "config_dict", d)
         if m == 'superform.plugins.facebook':

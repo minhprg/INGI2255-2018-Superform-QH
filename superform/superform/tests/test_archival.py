@@ -4,10 +4,8 @@ import tempfile
 
 import pytest
 
-from superform import app, db
-from superform.models import Authorization, Channel
-from superform import app, db, Post, User, Publishing
-from superform.users import  is_moderator, get_moderate_channels_for_user,channels_available_for_user
+from superform.models import Channel
+from superform import app, db, Post, Publishing
 
 
 @pytest.fixture
@@ -26,6 +24,7 @@ def client():
     os.unlink(app.config['DATABASE'])
 
 
+
 def login(client, login):
     with client as c:
         with c.session_transaction() as sess:
@@ -39,6 +38,7 @@ def login(client, login):
             sess["name"] = "myname_gen"
             sess["email"] = "hello@genemail.com"
             sess['user_id'] = login
+
 
 
 def test_new_records(client):

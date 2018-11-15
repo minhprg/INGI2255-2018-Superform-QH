@@ -25,6 +25,7 @@ app.register_blueprint(posts_page)
 app.register_blueprint(pub_page)
 app.register_blueprint(feed_viewer_page)
 app.register_blueprint(facebook_page)
+app.register_blueprint(linkedin_page)
 
 # Init dbs
 db.init_app(app)

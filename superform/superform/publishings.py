@@ -1,7 +1,6 @@
-import sys
-
-from flask import Blueprint, url_for, request, redirect, render_template, session
 import logging
+
+from flask import Blueprint, redirect, render_template, request, url_for
 
 from superform import channels
 from superform.models import db, Publishing, Channel, Moderation, Post, User
@@ -11,10 +10,30 @@ logging.basicConfig(level=logging.DEBUG)
 pub_page = Blueprint('publishings', __name__)
 
 
-@pub_page.route('/edit/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
-@login_required()
-def abort_rework_publishing(id, idc):
-    return redirect(url_for('index'))
+def check_config_and_commit_pub(pub, state, plugin, c_conf):
+    if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
+        pub.date_from = str_converter(pub.date_from)
+        pub.date_until = str_converter(pub.date_until)
+        pub.title = request.form.get('titlepost')
+        pub.description = request.form.get('descrpost')
+        pub.link_url = request.form.get('linkurlpost')
+        pub.image_url = request.form.get('imagepost')
+        pub.date_from = datetime_converter(request.form.get('datefrompost'))
+        pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
+
+        pub.state = state
+        db.session.commit()
+    else:
+        return False
+
+
+def create_a_moderation(form, id, idc):
+    message = form.get('commentpub') if form.get('commentpub') is not None else ""
+    post = db.session.query(Post).filter(Post.id == id).first()
+    mod = Moderation(user_id=post.user_id, post_id=id, channel_id=int(idc), message=message)
+
+    db.session.add(mod)
+    db.session.commit()
 
 
 def create_a_publishing(post, chn, form):
@@ -37,30 +56,14 @@ def create_a_publishing(post, chn, form):
     return pub
 
 
-@pub_page.route('/edit/<int:id>/<string:idc>', methods=["GET"])
-@login_required()
-def rework_publishing(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
-    # Only refused publishings can be reworked
-    # NOTE We could also allow unmoderated publishings to be reworked, but this overlaps the "editing" feature.
-    if pub.state != 3:
-        return redirect(url_for('index'))
-
+def get_moderation(pub):
     post = db.session.query(Post).filter(Post.id == pub.post_id).first()
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-
-    mod = [mod for _, _, _, mod in db.session.query(Post, Channel, User, Moderation).filter(Moderation.post_id == pub.post_id)\
-        .filter(Moderation.channel_id == pub.channel_id)\
-        .filter(Moderation.user_id == post.user_id)]
-
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-
-    if request.method == "GET":
-        return render_template('rework_publishing.html', pub=pub, mod=mod[0].message)
+    mod = [mod for _, _, _, mod in
+           (db.session.query(Post, Channel, User, Moderation)
+            .filter(Moderation.post_id == pub.post_id)
+            .filter(Moderation.channel_id == pub.channel_id)
+            .filter(Moderation.user_id == post.user_id))]
+    return mod[0]
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>', methods=["GET"])
@@ -84,20 +87,17 @@ def moderate_publishing(id, idc):
 
     if request.method == "GET":
         if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-            return render_template('moderate_publishing.html', pub=pub, notconf=False, validate_url='publishings.validate_publishing', refuse_url='publishings.refuse_publishing', action='Moderate')
+            return render_template('moderate_publishing.html', pub=pub, notconf=False)
         else:
-            return render_template('moderate_publishing.html', pub=pub, notconf=True, validate_url='publishings.validate_publishing', refuse_url='publishings.refuse_publishing', action='Moderate')
+            return render_template('moderate_publishing.html', pub=pub, notconf=True)
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
 @login_required()
 def refuse_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-    post = db.session.query(Post).filter(Post.id == pub.post_id).first()
 
-    mod = [mod for _, _, _, mod in db.session.query(Post, Channel, User, Moderation).filter(Moderation.post_id == pub.post_id) \
-        .filter(Moderation.channel_id == pub.channel_id) \
-        .filter(Moderation.user_id == post.user_id)]
+    mod = get_moderation_message(pub)
 
     if len(mod) == 0:
         create_a_moderation(request.form, id, idc)
@@ -114,44 +114,12 @@ def refuse_publishing(id, idc):
     return redirect(url_for('index'))
 
 
-def create_a_moderation(form, id, idc):
-    message = form.get('commentpub') if form.get('commentpub') is not None else ""
-    post = db.session.query(Post).filter(Post.id == id).first()
-    mod = Moderation(user_id=post.user_id, post_id=id, channel_id=int(idc), message=message)
-
-    db.session.add(mod)
-    db.session.commit()
-
-
-def check_config_and_commit_pub(pub, state, plugin, c_conf):
-    if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-        pub.date_from = str_converter(pub.date_from)
-        pub.date_until = str_converter(pub.date_until)
-        pub.title = request.form.get('titlepost')
-        pub.description = request.form.get('descrpost')
-        pub.link_url = request.form.get('linkurlpost')
-        pub.image_url = request.form.get('imagepost')
-        pub.date_from = datetime_converter(request.form.get('datefrompost'))
-        pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
-
-        pub.state = state
-        db.session.commit()
-    else:
-        return False
-
-        return True if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS) else False
-
-
 @pub_page.route('/moderate/<int:id>/<string:idc>/validate_publishing', methods=["POST"])
 @login_required()
 def validate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-    post = db.session.query(Post).filter(Post.id == pub.post_id).first()
 
-    mod = [mod for _, _, _, mod in
-           db.session.query(Post, Channel, User, Moderation).filter(Moderation.post_id == pub.post_id)
-               .filter(Moderation.channel_id == pub.channel_id)
-               .filter(Moderation.user_id == post.user_id)]
+    mod = get_moderation_message(pub)
 
     if len(mod) == 0:
         create_a_moderation(request.form, id, idc)
@@ -177,6 +145,28 @@ def validate_publishing(id, idc):
         return render_template('moderate_publishing.html', pub=pub, notconf=True)
 
 
+@pub_page.route('/edit/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
+@login_required()
+def abort_rework_publishing(id, idc):
+    return redirect(url_for('index'))
+
+
+@pub_page.route('/edit/<int:id>/<string:idc>', methods=["GET"])
+@login_required()
+def rework_publishing(id, idc):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+
+    # Only refused publishings can be reworked
+    # NOTE We could also allow unmoderated publishings to be reworked, but this overlaps the "editing" feature.
+    if pub.state != 3:
+        return redirect(url_for('index'))
+
+    mod = get_moderation_message(pub)
+
+    if request.method == "GET":
+        return render_template('rework_publishing.html', pub=pub, mod=mod.message)
+
+
 @pub_page.route('/edit/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
 @login_required()
 def validate_rework_publishing(id, idc):
@@ -187,6 +177,7 @@ def validate_rework_publishing(id, idc):
     if pub.state == 1:
         return redirect(url_for('index'))
 
+    mod = get_moderation_message(pub)
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
     plugin_name = c.module
     c_conf = c.config
@@ -196,5 +187,4 @@ def validate_rework_publishing(id, idc):
     if check_config_and_commit_pub(pub, 0, plugin, c_conf):
         return redirect(url_for('index'))
     else:
-        return render_template('moderate_publishing.html', pub=pub, notconf=True, validate_url='publishings.validate_edit_publishing', refuse_url='publishings.abort_edit_publishing', action='Edit')
-
+        return render_template('rework_publishing.html', pub=pub, mod=mod)

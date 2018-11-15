@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from flask import Blueprint, redirect, render_template, request, url_for
 
@@ -86,6 +87,9 @@ def moderate_publishing(id, idc):
     c_conf = c.config
     from importlib import import_module
     plugin = import_module(plugin_name)
+
+    pub.date_from = str_converter(pub.date_from)
+    pub.date_until = str_converter(pub.date_until)
 
     if request.method == "GET":
         if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
@@ -178,6 +182,9 @@ def view_feedback(id, idc):
     else:
         message = ""
 
+    pub.date_until = str_converter(pub.date_until)
+    pub.date_from = str_converter(pub.date_from)
+
     if request.method == "GET":
         return render_template('show_message.html', pub=pub, mod=message)
 
@@ -192,8 +199,6 @@ def abort_rework_publishing(id, idc):
 @login_required()
 def rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-    print(str(pub))
-    print(str(pub.date_until))
 
     # Only refused publishings can be reworked
     # NOTE We could also allow unmoderated publishings to be reworked, but this overlaps the "editing" feature.
@@ -216,10 +221,21 @@ def rework_publishing(id, idc):
 @login_required()
 def validate_rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
+    post = db.session.query(Post).filter(Post.id == id).first()
     # Only pubs that have yet to be moderated can be accepted
     if pub.state == 1:
         return redirect(url_for('index', messages='This publication has already been reworked'))
 
-    commit_pub(pub, 0)
+    new_post = Post(user_id=post.user_id, title=post.title, description=post.description,
+                    date_created=post.date_created, link_url=post.link_url, image_url=post.image_url,
+                    date_from=post.date_from, date_until=post.date_until, source=post.source)
+    db.session.add(new_post)
+    db.session.commit()
+
+    new_pub = Publishing(post_id=new_post.id, channel_id=pub.channel_id, state=pub.state, title=pub.title, date_until=pub.date_until, date_from=pub.date_from)
+
+    pub.state = 4
+    db.session.add(new_pub)
+
+    commit_pub(new_pub, 0)
     return redirect(url_for('index'))

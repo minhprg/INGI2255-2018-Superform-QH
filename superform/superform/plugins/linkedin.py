@@ -9,7 +9,7 @@ CONFIG_FIELDS = ["access_token","Page Id"]
 def render_specific_config_page(c, config_fields):
     """Render a specific template to configure a LinkedIn channel"""
     return render_template("channel_configure_linkedIn.html", channel=c, config_fields=config_fields,
-                           url_token=createRequestCodeLinkedIn(current_app.config["LINKEDIN_API_KEY"], "2"))
+                           url_token=createRequestCodeLinkedIn(current_app.config["LINKEDIN_API_KEY"],str(c.id)))
 
 def run(publishing, channel_config):
     json_data = json.loads(channel_config)
@@ -23,7 +23,7 @@ def run(publishing, channel_config):
         # TODO should add log here
         return
     access_token = json_data['access_token']
-
+    respo = requests.post("https: // api.linkedin.com / v1 / companies?format = json & is -company - admin = true & oauth2_access_token ="+access_token)
     headers = {'Authorization': 'Bearer ' + access_token, 'Host': 'api.linkedin.com', 'Connection': 'Keep-Alive',
                'x-li-format': 'json', "Content-Type": "application/json"}
 

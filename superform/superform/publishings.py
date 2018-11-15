@@ -77,13 +77,10 @@ def moderate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     # Only publishing that have yet to be moderated can be viewed
-    # TODO create a page to crearly indicate the error
     if pub.state != 0:
-        return redirect(url_for('index'))
+        return redirect(url_for('index', messages="This publication has already been moderated"))
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-    pub.date_from = str_converter(pub.date_from)
-    pub.date_until = str_converter(pub.date_until)
 
     plugin_name = c.module
     c_conf = c.config
@@ -92,9 +89,10 @@ def moderate_publishing(id, idc):
 
     if request.method == "GET":
         if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-            return render_template('moderate_publishing.html', pub=pub, notconf=False)
+            return render_template('moderate_publishing.html', pub=pub)
         else:
-            return render_template('moderate_publishing.html', pub=pub, notconf=True)
+            return render_template('moderate_publishing.html', pub=pub,
+                                   error_message="This channel has not yet been configured")
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
@@ -106,6 +104,20 @@ def refuse_publishing(id, idc):
     """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
+    if pub.state != 0:
+        return redirect(url_for('index', messages="This publication has already been moderated"))
+
+    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
+
+    plugin_name = c.module
+    c_conf = c.config
+    from importlib import import_module
+    plugin = import_module(plugin_name)
+
+    if not channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
+        return render_template('moderate_publishing.html', pub=pub,
+                               error_message="This channel has not yet been configured")
+
     mod = get_moderation(pub)
 
     if len(mod) == 0:
@@ -115,7 +127,6 @@ def refuse_publishing(id, idc):
         db.session.commit()
 
     # Only publishings that have yet to be moderated can be refused.
-    # TODO print an alert at top of page to indicate the problem
     if pub.state == 0:
         pub.state = 3
         db.session.commit()
@@ -127,6 +138,18 @@ def refuse_publishing(id, idc):
 @login_required()
 def validate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+    if pub.state != 0:
+        return redirect(url_for('index', messages="This publication has already been moderated"))
+
+    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
+    plugin_name = c.module
+    c_conf = c.config
+    from importlib import import_module
+    plugin = import_module(plugin_name)
+
+    if not check_config_and_commit_pub(pub, 1, plugin, c_conf):
+        return render_template('moderate_publishing.html', pub=pub,
+                               error_message="This channel has not yet been configured")
 
     mod = get_moderation(pub)
 
@@ -136,22 +159,8 @@ def validate_publishing(id, idc):
         mod[0].message = request.form.get('commentpub')
         db.session.commit()
 
-    # Only pubs that have yet to be moderated can be accepted
-    # TODO print an alert at top of page to indicate the problem
-    if pub.state != 0:
-        return redirect(url_for('index'))
-
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-
-    if check_config_and_commit_pub(pub, 1, plugin, c_conf):
-        plugin.run(pub, c_conf)
-        return redirect(url_for('index'))
-    else:
-        return render_template('moderate_publishing.html', pub=pub, notconf=True)
+    plugin.run(pub, c_conf)
+    return redirect(url_for('index'))
 
 
 @pub_page.route('/feedback/<int:id>/<string:idc>', methods=["GET"])
@@ -160,9 +169,8 @@ def view_feedback(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     # Only publishing that have yet to be moderated can be viewed
-    # TODO create a page to crearly indicate the error
     if pub.state == 0:
-        return redirect(url_for('index'))
+        return redirect(url_for('index', messages='This publication has not yet been moderated'))
 
     mod = get_moderation(pub)
     if mod:
@@ -210,9 +218,8 @@ def validate_rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     # Only pubs that have yet to be moderated can be accepted
-    # TODO print an alert at top of page to indicate the problem
     if pub.state == 1:
-        return redirect(url_for('index'))
+        return redirect(url_for('index', messages='This publication has already been reworked'))
 
     commit_pub(pub, 0)
     return redirect(url_for('index'))

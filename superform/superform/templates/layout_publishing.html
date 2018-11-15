@@ -2,9 +2,9 @@
 {% block content %}
     <h1>{% block sub_title %} {% endblock %}</h1>
     {% if session.logged_in %}
-        {% if notconf %}
+        {% if error_message %}
             <div class="alert alert-danger" role="alert">
-                This channel is not yet configured
+                {{ error_message }}
             </div>
         {% endif %}
         <form method="POST" action="">

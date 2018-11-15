@@ -4,6 +4,11 @@
     <h1>Index</h1>
 
     {% if session.logged_in %}
+        {% if error_message and error_message != "" %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message }}
+            </div>
+        {% endif %}
         <div class="row">
         <div class="col-md-12">
             {% if user.is_mod %}

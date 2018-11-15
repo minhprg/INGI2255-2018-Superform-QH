@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session
+from flask import Flask, render_template, session, request
 import pkgutil
 import importlib
 
@@ -65,8 +65,12 @@ def index():
             .filter(Publishing.state == 1)
             .filter(Post.user_id == user.id).order_by(desc(Post.id)).limit(5).all()]
 
+    error_messages = ""
+    if 'messages' in request.args:
+        error_messages = request.args['messages']
+
     return render_template("index.html", user=user, posts=user_posts, publishings=flattened_list_moderable_pubs,
-                           my_refused_publishings=my_refused_pubs, my_accepted_publishings=my_accepted_pubs)
+                           my_refused_publishings=my_refused_pubs, my_accepted_publishings=my_accepted_pubs, error_message=error_messages)
 
 
 @app.errorhandler(403)

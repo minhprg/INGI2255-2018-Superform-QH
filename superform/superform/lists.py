@@ -2,7 +2,7 @@ from flask import session, render_template, Blueprint
 from sqlalchemy import desc
 
 from superform.users import is_moderator, get_moderate_channels_for_user
-from superform.models import User, db, Post, Publishing, Channel
+from superform.models import User, db, Post, Publishing, Channel, State
 from superform.utils import login_required
 
 lists_page = Blueprint('lists', __name__)
@@ -23,7 +23,7 @@ def get_publications_to_moderate(user):
     channels_moderable = get_moderate_channels_for_user(user)
     moderable_pubs_per_chan = (db.session.query(Publishing)
                                    .filter(Publishing.channel_id == c.id)
-                                   .filter(Publishing.state == 0).order_by(desc(Publishing.post_id))
+                                   .filter(Publishing.state == State.NOTVALIDATED.value).order_by(desc(Publishing.post_id))
                                    .all() for c in channels_moderable)
     flattened_list_moderable_pubs = [y for x in moderable_pubs_per_chan for y in x]
     return flattened_list_moderable_pubs
@@ -33,21 +33,24 @@ def get_publications_to_moderate(user):
 @login_required()
 def refused_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
-    return render_template("lists.html", title="Refused publishings",user=user, my_publishings=get_publications(user), state=3)
+    return render_template("lists.html", title="Refused publishings",user=user, my_publishings=get_publications(user),
+                           state=State.REFUSED.value, states=State)
 
 
 @lists_page.route('/my_accepted_publishings')
 @login_required()
 def accepted_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
-    return render_template("lists.html", title="Accepted publishings", user=user, my_publishings=get_publications(user), state=1)
+    return render_template("lists.html", title="Accepted publishings", user=user, my_publishings=get_publications(user),
+                           state=State.VALIDATED.value, states=State)
 
 
 @lists_page.route('/my_unmoderated_publishings')
 @login_required()
 def unmoderated_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
-    return render_template("lists.html", title="Unmoderated publishings", user=user, my_publishings=get_publications(user), state=0)
+    return render_template("lists.html", title="Unmoderated publishings", user=user,
+                           my_publishings=get_publications(user), state=State.NOTVALIDATED.value, states=State)
 
 
 @lists_page.route('/unmoderated_publishings')
@@ -55,4 +58,5 @@ def unmoderated_publishings():
 def moderator_unmoderated_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
     return render_template("lists.html", title="Unmoderated publishings", user=user,
-                           my_publishings=get_publications_to_moderate(user), state=0, to_moderate=True)
+                           my_publishings=get_publications_to_moderate(user), state=State.NOTVALIDATED.value,
+                           to_moderate=True, states=State)

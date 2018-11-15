@@ -37,6 +37,35 @@ def create_a_publishing(post, chn, form):
     return pub
 
 
+@pub_page.route('/feedback/<int:id>/<string:idc>', methods=["GET"])
+@login_required()
+def view_feedback(id, idc):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+
+    # Only publishing that have yet to be moderated can be viewed
+    # TODO create a page to crearly indicate the error
+    if pub.state != 1:
+        return redirect(url_for('index'))
+
+    post = db.session.query(Post).filter(Post.id == pub.post_id).first()
+    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
+
+    mod = [mod for _, _, _, mod in db.session.query(Post, Channel, User, Moderation).filter(Moderation.post_id == pub.post_id) \
+        .filter(Moderation.channel_id == pub.channel_id) \
+        .filter(Moderation.user_id == post.user_id)]
+
+    plugin_name = c.module
+    c_conf = c.config
+    from importlib import import_module
+    plugin = import_module(plugin_name)
+
+    if request.method == "GET":
+        if not update_db(pub, pub.state, plugin, c_conf):
+            return render_template('show_message.html', pub=pub, conf=False, mod=mod[0].message)
+        else:
+            return render_template('show_message.html', pub=pub, conf=True, mod=mod[0].message)
+
+
 @pub_page.route('/edit/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
 def rework_publishing(id, idc):

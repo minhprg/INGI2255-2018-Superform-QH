@@ -47,9 +47,9 @@ def import_xml_to_rss_feed(rss_feed, xml_path):
 
     for i in range(0, len(pub_date)):
         item = PyRSS2Gen.RSSItem(
-            title=title[i],
-            link=link[i],
-            description=description[i],
+            title="" if title[i] is None else title[i],
+            link="" if link[i] is None else link[i],
+            description="" if description[i] is None else description[i],
             pubDate=pub_date[i]
         )
         rss_feed.items.append(item)
@@ -75,13 +75,9 @@ def run(publishing, channel_config):
     pub_date = datetime.datetime.now()
 
     item = PyRSS2Gen.RSSItem(
-                # FIXME: Still don't do the job ...
-                # The idea is to fill the xml file with something in each field so that when rebuilding the rss feed
-                # each field (title, link, ...) are available for each item otherwise it crashes in the
-                # import_xml_to_rss_feed() ...
-                title=publishing.title if publishing.title is not None else "",
-                link=publishing.link_url if publishing.link_url is not None else "",
-                description=publishing.description if publishing.description is not None else "",
+                title=publishing.title,
+                link=publishing.link_url,
+                description=publishing.description,
                 pubDate=pub_date)
 
     rss_feeds[channel_id].items.insert(0, item)

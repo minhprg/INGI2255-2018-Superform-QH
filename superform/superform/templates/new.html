@@ -164,38 +164,25 @@
 
 {% block scripts %}
     <script>
-        dateuntil = $('#dateuntilpost').val();
-        datefrom = $('#datefrompost').val();
-        today = getTodayDate();
-
-
-        var today = new Date();
+        today = new Date();
         today = new Date(today.getTime() - today.getTimezoneOffset() * 60000);
-        var datefrompost = document.querySelector('input[id="datefrompost"]');
+
+        datefrompost = document.querySelector('input[id="datefrompost"]');
         datefrompost.value = today.toISOString().substr(0, 16);
-        var dateuntilpost = document.querySelector('input[id="dateuntilpost"]');
+        dateuntilpost = document.querySelector('input[id="dateuntilpost"]');
         dateuntilpost.value = today.toISOString().substr(0, 16);
 
-
-        function getTodayDate() {
-            var todayDate = new Date();
-            var dd = todayDate.getDate();
-            var mm = todayDate.getMonth();
-            var yyyy = todayDate.getFullYear();
-
-            if (dd < 10) dd = "0" + dd;
-            if (mm < 10) mm = "0" + mm;
-
-            return yyyy + "-" + mm + "-" + dd;
-        }
+        dateuntil = new Date($('#dateuntilpost').val());
+        dateuntil = new Date(dateuntil.getTime() - today.getTimezoneOffset() * 60000);
+        datefrom = new Date($('#datefrompost').val());
+        datefrom = new Date(datefrom.getTime() - today.getTimezoneOffset() * 60000);
 
         function checkIfPublishable() {
-            /*
             var publishable = true;
             $("a", "label[for=\"dateuntilpost\"]").empty().remove();
             $("a", "label[for=\"datefrompost\"]").empty().remove();
 
-            if (datefrom.localeCompare("") == 0) {
+            if (!datefrom.isValid()) {
                 console.log("Datefrom = " + datefrom + " is invalid");
                 publishable = false;
                 $("label[for=\"datefrompost\"]").append(
@@ -203,7 +190,7 @@
                     '<i class="fas fa-exclamation-circle" style="color:orange"></i></a>'
                 );
             }
-            else if (today.localeCompare(datefrom) > 0) {
+            else if (today > datefrom) {
                 console.log("Today date is later than datefrom (" + today + " > " + datefrom + ")");
                 publishable = false;
                 $("label[for=\"datefrompost\"]").append(
@@ -211,7 +198,7 @@
                     '<i class="fas fa-exclamation-circle" style="color:red"></i></a>'
                 );
             }
-            else if (dateuntil.localeCompare("") == 0) {
+            else if (!dateuntil.isValid()) {
                 console.log("Dateuntil = " + dateuntil + " is invalid");
                 publishable = false;
                 $("label[for=\"dateuntilpost\"]").append(
@@ -219,7 +206,7 @@
                     '<i class="fas fa-exclamation-circle" style="color:red"></i></a>'
                 );
             }
-            else if (datefrom.localeCompare(dateuntil) > 0) {
+            else if (datefrom > dateuntil) {
                 console.log("Datefrom is later than dateuntil (" + datefrom + " > " + dateuntil + ")");
                 publishable = false;
                 $("label[for=\"dateuntilpost\"]").append(
@@ -238,8 +225,7 @@
             if (nbselected == 0) {
                 console.log("No channel is currently selected");
                 publishable = false;
-            }*/
-            var publishable = true;
+            }
             if (publishable) {
                 console.log("The post is publishable");
                 $("#publish-button").prop('disabled', false);
@@ -323,7 +309,8 @@
         });
         $('#dateuntilpost').change(function(event){
             text = ($(this).val());
-            dateuntil = text;
+            dateuntil = new Date(text);
+            dateuntil = new Date(dateuntil.getTime() - today.getTimezoneOffset() * 60000);
             //This is a subselect of input that match with the regex .*dateuntilpost
             $('input')
                 .filter(function() {
@@ -334,7 +321,8 @@
         });
         $('#datefrompost').change(function(event){
             text = ($(this).val());
-            datefrom = text;
+            datefrom = new Date(text);
+            datefrom = new Date(datefrom.getTime() - today.getTimezoneOffset() * 60000);
             //This is a subselect of input that match with the regex .*datefrompost
             $('input')
                 .filter(function() {
@@ -343,6 +331,13 @@
                 .val(text);
             checkIfPublishable();
         });
+
+
+        Date.prototype.isValid = function () {
+            // An invalid date object returns NaN for getTime() and NaN is the only
+            // object not strictly equal to itself.
+            return this.getTime() === this.getTime();
+        };
     </script>
 
 {% endblock %}

@@ -4,10 +4,8 @@ import tempfile
 
 import pytest
 
-from superform import app, db
-from superform.models import Authorization, Channel
-from superform import app, db, Post, User, Publishing
-from superform.users import  is_moderator, get_moderate_channels_for_user,channels_available_for_user
+from superform.models import Channel
+from superform import app, db, Post, Publishing
 
 
 @pytest.fixture
@@ -51,13 +49,13 @@ def test_new_records(client):
     # publish a not yet expired post
     d = datetime.date.today()
     d += datetime.timedelta(1)
-    client.post('/new', data=dict(titlepost='A test_new_record post', descriptionpost="A description",
-                                  datefrompost=d.strftime("%Y-%m-%dT%H:%M"),
-                                  dateuntilpost=d.strftime("%Y-%m-%dT%H:%M")))
-    client.post('/publish', data={'chan_option_'+str(chan_id): "chan_option_0",
-                                  'titlepost': 'A test_new_record publishing', 'descriptionpost': "A description",
-                                  'datefrompost': d.strftime("%Y-%m-%dT%H:%M"),
-                                  'dateuntilpost': d.strftime("%Y-%m-%dT%H:%M")})
+    client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",
+                                  datefrompost=d.strftime("%Y-%m-%dT00:00"),
+                                  dateuntilpost=d.strftime("%Y-%m-%dT00:00")))
+    client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
+                                  'titlepost': 'A test_new_record publishing', 'descrpost': "A description",
+                                  'datefrompost': d.strftime("%Y-%m-%dT00:00"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%dT00:00")})
 
     # accept last publication
     post = db.session.query(Post).filter().all()
@@ -78,14 +76,14 @@ def test_new_records(client):
     # publish a expired post
     db.session.query(Post).filter(Post.id == last_add.id).delete()
     d -= datetime.timedelta(3)
-    client.post('/new', data=dict(titlepost='A test_new_record post', descriptionpost="A description",
+    client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",
                                   linkurlpost="http://www.test.com", imagepost="image.jpg",
-                                  datefrompost=d.strftime("%Y-%m-%dT%H:%M"),
-                                  dateuntilpost=d.strftime("%Y-%m-%dT%H:%M")))
-    client.post('/publish', data={'chan_option_'+str(chan_id): "chan_option_0",
-                                  'titlepost': 'A test_new_record publishing', 'descriptionpost': "A description",
-                                  'datefrompost': d.strftime("%Y-%m-%dT%H:%M"),
-                                  'dateuntilpost': d.strftime("%Y-%m-%dT%H:%M")})
+                                  datefrompost=d.strftime("%Y-%m-%dT00:00"),
+                                  dateuntilpost=d.strftime("%Y-%m-%dT00:00")))
+    client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
+                                  'titlepost': 'A test_new_record publishing', 'descrpost': "A description",
+                                  'datefrompost': d.strftime("%Y-%m-%dT00:00"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%dT00:00")})
     # accept last publication
     post = db.session.query(Post).filter().all()
     last_add = post[-1]
@@ -117,14 +115,14 @@ def test_delete_record(client):
 
     d = datetime.date.today()
     d -= datetime.timedelta(1)
-    client.post('/new', data=dict(titlepost='A test_delete_record post',
-                                  descriptionpost="A description", linkurlpost="http://www.test.com",
-                                  imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%dT%H:%M"),
-                                  dateuntilpost=d.strftime("%Y-%m-%dT%H:%M")))
-    client.post('/publish', data={'chan_option_'+str(chan_id): "chan_option_0",
-                                  'titlepost': 'A test_delete_record publishing', 'descriptionpost': "A description",
-                                  'datefrompost': d.strftime("%Y-%m-%dT%H:%M"),
-                                  'dateuntilpost': d.strftime("%Y-%m-%dT%H:%M")})
+    client.post('/new', data=dict(titlepost='A test_delete_record post', descrpost="A description",
+                                  linkurlpost="http://www.test.com", imagepost="image.jpg",
+                                  datefrompost=d.strftime("%Y-%m-%dT00:00"),
+                                  dateuntilpost=d.strftime("%Y-%m-%dT00:00")))
+    client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
+                                  'titlepost': 'A test_delete_record publishing', 'descrpost': "A description",
+                                  'datefrompost': d.strftime("%Y-%m-%dT00:00"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%dT00:00")})
 
     # accept last publication
     post = db.session.query(Post).filter().all()

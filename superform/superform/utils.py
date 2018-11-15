@@ -20,7 +20,8 @@ def datetime_converter(stri):
 
 
 def str_converter(datet):
-    return datetime.strftime(datet,"%Y-%m-%dT%H:%M")
+    return datetime.strftime(datet, "%Y-%m-%dT%H:%M")
+
 
 def get_instance_from_module_path(module_p):
     import os
@@ -38,5 +39,5 @@ def get_modules_names(modules_keys):
 
 def get_module_full_name(module_name):
     for m in current_app.config["PLUGINS"].keys():
-        if(m.split('.')[2] == module_name):
+        if m.split('.')[2] == module_name:
             return m

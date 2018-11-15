@@ -7,8 +7,9 @@ from httplib2 import Http
 from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.file import Storage
+import os
 
-FIELDS_UNAVAILABLE = ['Image_url']
+FIELDS_UNAVAILABLE = ['Image_url','Link_url']
 
 CONFIG_FIELDS = ["calendar id", "clientID", "clientSecret"]
 
@@ -33,7 +34,7 @@ def run(publishing,channel_config):
     client_secret = json_data['clientSecret']
 
     event['summary'] = publishing.title
-    event['description'] = publishing.description + "\nlink:\n" + publishing.link_url
+    event['description'] = publishing.description
 
     start['dateTime'] = publishing.date_from.isoformat()
 
@@ -57,13 +58,13 @@ def run(publishing,channel_config):
 
 def get_credentials():
     """Using the fake user name as a key, retrieve the credentials."""
-    storage = Storage('credentials-%s.dat' % client_id)
+    storage = Storage(os.path.dirname(__file__) + '\\gcal\\credentials-%s.dat' % client_id)
     return storage.get()
 
 
 def save_credentials(credentials):
     """Using the fake user name as a key, save the credentials."""
-    storage = Storage('credentials-%s.dat' % client_id)
+    storage = Storage(os.path.dirname(__file__) + '\\gcal\\credentials-%s.dat' % client_id)
     storage.put(credentials)
 
 
@@ -93,7 +94,6 @@ def respond_redirect_to_auth_server():
     # redirects back to this server.
     response = make_response(redirect(location=uri, code=301))
     response.headers['Cache-Control'] = 'no-cache'
-    #response.headers['Set-Cookie'] = 'fake_user=%s' % fake_user
     return response
 
 

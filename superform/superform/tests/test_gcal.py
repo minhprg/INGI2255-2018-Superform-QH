@@ -96,30 +96,43 @@ def test_new_publish_gcal(client):
     global chan_id_1, chan_id_2
     login(client, "myself")
 
-    title = 'A test new gcal post'
-    description = 'Dome random content, just what we need for a test'
+    chan = db.session.query(Channel).filter(Channel.id == chan_id_1).first()
+    assert chan
 
-    # publish a not yet expired post
+    title = 'A test new gcal post'
+    description = 'Some random content, just what we need for a test'
+
+    # Create a post
     d = datetime.date.today()
     d += datetime.timedelta(1)
+    datefrom = d.strftime("%Y-%m-%dT%H:%M")
+    dateuntil = d.strftime("%Y-%m-%dT%H:%M")
     client.post('/new', data=dict(titlepost=title, descriptionpost=description,
-                                  datefrompost=d.strftime("%Y-%m-%dT%H:%M"),
-                                  dateuntilpost=d.strftime("%Y-%m-%dT%H:%M")))
-    client.post('/publish',
-                data={'chan_option_' + str(chan_id_1): "chan_option_0", 'titlepost': title,
-                      'descriptionpost': description, 'datefrompost': d.strftime("%Y-%m-%dT%H:%M"),
-                      'dateuntilpost': d.strftime("%Y-%m-%dT%H:%M")})
-
-    post = db.session.query(Post).filter(Post.title == title)\
-        .filter(Post.description == description).first()
-    pub = db.session.query(Publishing).filter(Publishing.title == title)\
-        .filter(Publishing.description == description).first()
+                                  datefrompost=datefrom,
+                                  dateuntilpost=dateuntil))
+    post = db.session.query(Post).filter(Post.title == title) \
+        .filter(Post.description == description).all()[-1]
     assert post
+    assert title == post.title
+
+    # Publish a post
+    client.post('/publish',
+                data={'chan_option_' + str(chan.id): "chan_option_0", 'titlepost': title,
+                      'descriptionpost': description, 'datefrompost': datefrom,
+                      'dateuntilpost': dateuntil})
+    pub = db.session.query(Publishing).filter(Publishing.title == title) \
+        .filter(Publishing.description == description).all()[-1]
     assert pub
-    title = post.title
-    assert title == 'A test new gcal post'
-    title = pub.title
-    assert title == 'A test new gcal post'
+    assert title == pub.title
+
+    # Moderate a post
+    print(chan_id_1)
+    print(chan.id)
+    client.post('/moderate/' + str(pub.post_id) + '/' + str(chan.id), data={'titlepost': title,
+                                                           'descrpost': description, 'datefrompost': datefrom,
+                                                           'dateuntilpost': dateuntil})
+
+    # Cleaning up
     db.session.delete(post)
     db.session.delete(pub)
     db.session.commit()
@@ -135,7 +148,6 @@ def test_delete_channel_no_admin(client):
     assert chan
 
 
-"""
 def test_delete_channel_as_admin(client):
     global chan_id_1, chan_id_2
     login(client, "myself")
@@ -144,29 +156,3 @@ def test_delete_channel_as_admin(client):
 
     chan = db.session.query(Channel).filter(Channel.id == chan_id_1).first()
     assert not chan
-"""
-
-"""
-# Use this to test the file apart from the rest of the test files
-def client_bis():
-    app.app_context().push()
-    db_fd, app.config['DATABASE'] = tempfile.mkstemp()
-    app.config['TESTING'] = True
-    client = app.test_client()
-
-    with app.app_context():
-        db.create_all()
-
-    return client
-
-    os.close(db_fd)
-    os.unlink(app.config['DATABASE'])
-
-
-client = client_bis()
-test_new_channel_as_admin(client)
-test_new_channel_no_admin(client)
-test_new_publish_gcal(client)
-test_delete_channel_no_admin(client)
-test_delete_channel_as_admin(client)
-"""

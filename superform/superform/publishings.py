@@ -97,7 +97,7 @@ def moderate_publishing(id, idc):
 def refuse_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
-    mod = get_moderation_message(pub)
+    mod = get_moderation(pub)
 
     if len(mod) == 0:
         create_a_moderation(request.form, id, idc)
@@ -119,7 +119,7 @@ def refuse_publishing(id, idc):
 def validate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
-    mod = get_moderation_message(pub)
+    mod = get_moderation(pub)
 
     if len(mod) == 0:
         create_a_moderation(request.form, id, idc)
@@ -145,6 +145,22 @@ def validate_publishing(id, idc):
         return render_template('moderate_publishing.html', pub=pub, notconf=True)
 
 
+@pub_page.route('/feedback/<int:id>/<string:idc>', methods=["GET"])
+@login_required()
+def view_feedback(id, idc):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+
+    # Only publishing that have yet to be moderated can be viewed
+    # TODO create a page to crearly indicate the error
+    if pub.state == 0:
+        return redirect(url_for('index'))
+
+    mod = get_moderation(pub)
+
+    if request.method == "GET":
+        return render_template('show_message.html', pub=pub, mod=mod[0].message)
+
+
 @pub_page.route('/edit/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
 @login_required()
 def abort_rework_publishing(id, idc):
@@ -161,7 +177,7 @@ def rework_publishing(id, idc):
     if pub.state != 3:
         return redirect(url_for('index'))
 
-    mod = get_moderation_message(pub)
+    mod = get_moderation(pub)
 
     if request.method == "GET":
         return render_template('rework_publishing.html', pub=pub, mod=mod.message)
@@ -177,7 +193,7 @@ def validate_rework_publishing(id, idc):
     if pub.state == 1:
         return redirect(url_for('index'))
 
-    mod = get_moderation_message(pub)
+    mod = get_moderation(pub)
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
     plugin_name = c.module
     c_conf = c.config

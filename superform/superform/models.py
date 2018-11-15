@@ -115,8 +115,11 @@ class Permission(Enum):
     MODERATOR = 2
 
 
+# TODO: Use Enum class instead of hardcoded states and add REFUSED=3 OUTDATED=4
 class State(Enum):
     INCOMPLETE = -1
     NOTVALIDATED = 0
     VALIDATED = 1
     PUBLISHED = 2
+    REFUSED = 3
+    OUTDATED = 4

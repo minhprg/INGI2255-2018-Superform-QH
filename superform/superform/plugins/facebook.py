@@ -1,7 +1,7 @@
 import facebook
 import json
 
-from flask import url_for, current_app, render_template
+from flask import url_for, current_app, render_template, redirect, request
 
 FIELDS_UNAVAILABLE = ['Title']
 
@@ -37,7 +37,7 @@ def run(publishing, channel_config):
         if not debug['data']['is_valid']:
             print("Invalid Access-Token")
             # TODO should add log here
-            return
+            return expired_access_token()
         # publish post
         graph.put_object(
             parent_object="me",
@@ -49,6 +49,12 @@ def run(publishing, channel_config):
         # TODO should add log here
         return
 
+def expired_access_token():
+    """If invalid access, show an error message, then return to the index"""
+    if request.method == "GET":
+        return render_template("Expired_access_token.html")
+    else:
+        return redirect(url_for('index'))
 
 def get_url_for_token(id_channel):
     """Return an URL to Facebook to get a valid access token."""

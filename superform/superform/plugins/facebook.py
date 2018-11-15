@@ -1,7 +1,7 @@
 import facebook
 import json
 
-from flask import url_for, current_app, render_template, redirect, request
+from flask import url_for, current_app, render_template
 
 FIELDS_UNAVAILABLE = ['Title']
 
@@ -37,7 +37,7 @@ def run(publishing, channel_config):
         if not debug['data']['is_valid']:
             print("Invalid Access-Token")
             # TODO should add log here
-            return expired_access_token()
+            return
         # publish post
         graph.put_object(
             parent_object="me",
@@ -49,22 +49,16 @@ def run(publishing, channel_config):
         # TODO should add log here
         return
 
-def check_accessibility(channel_config):
-    """
-    Test different accessibility of the page. Return a different in function of the error.
-    """
+def check_validity(channel_config):
+    """ Test validity of the channel. Return an error message if any. """
     json_data = json.loads(channel_config)
     acc_tok = json_data['access_token']
     if 'page' not in json_data:
-        print("Invalid page")
-        # TODO should add log here
-        return 1
+        return "Error : Invalid page"
     page_id = json_data['page']
     page = get_page_from_id(acc_tok, page_id)
     if page is None:
-        print("Invalid page ID")
-        # TODO should add log here
-        return 2
+        return "Error : Invalid page ID"
     try:
         graph = facebook.GraphAPI(access_token=page['access_token'])
         # check token validity
@@ -73,22 +67,10 @@ def check_accessibility(channel_config):
             current_app.config["FACEBOOK_APP_ID"],
             current_app.config["FACEBOOK_APP_SECRET"])
         if not debug['data']['is_valid']:
-            print("Invalid Access-Token")
-            # TODO should add log here
-            return 3
-        else:
-            return 0
+            return "Error : Invalid Access-Token"
     except facebook.GraphAPIError:
-        print("GraphAPIError")
-        # TODO should add log here
-        return 4
+        return "Error : GraphAPIError"
 
-def expired_access_token():
-    """If invalid access, show an error message, then return to the index"""
-    if request.method == "GET":
-        return render_template("Expired_access_token.html")
-    else:
-        return redirect(url_for('index'))
 
 def get_url_for_token(id_channel):
     """Return an URL to Facebook to get a valid access token."""

@@ -1,6 +1,6 @@
 import requests
 import json
-from flask import url_for, current_app, render_template, redirect
+from flask import url_for, current_app, render_template,redirect
 
 FIELDS_UNAVAILABLE = ['Publication Date', 'Publication Until', 'Title']
 
@@ -23,7 +23,7 @@ def run(publishing, channel_config):
         # TODO should add log here
         return
     access_token = json_data['access_token']
-    respo = requests.post("https: // api.linkedin.com / v1 / companies?format = json & is -company - admin = true & oauth2_access_token ="+access_token)
+    #"https://api.linkedin.com/v1/companies?format=json&is-company-admin=true&oauth2_access_token="+access_token
     headers = {'Authorization': 'Bearer ' + access_token, 'Host': 'api.linkedin.com', 'Connection': 'Keep-Alive',
                'x-li-format': 'json', "Content-Type": "application/json"}
 
@@ -43,7 +43,7 @@ def run(publishing, channel_config):
                              data=data)
     if response.status_code != 201:
         print("Linked In publish failed")
-    return
+    return response
 
 def createRequestCodeLinkedIn(app_key,state):
     canvas_url = url_for('linkedin_callback.callback_In', _external=True)

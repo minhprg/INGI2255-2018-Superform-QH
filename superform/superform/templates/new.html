@@ -91,22 +91,10 @@
                         <div class="row">
                             <div class="col-md-12">
 
-                            <!-- Generate table dropdown for ictv channel option -->
-                            {%  if chan.module == 'superform.plugins.ictv' %}
-                                <div class="form-group" id="ictv_slide_choice">
-                                    <button class="dropdown-toggle" type="button" data-toggle="dropdown">Slide Layout<span class="caret"></span></button>
-                                    <ul class="dropdown-menu">
-                                        {%  for i in ictv_templates %}
-                                            <li>
-                                                <div class="form-check" >
-                                                    <input class="form-check-input" type="radio" name="{{ chan.name }}_ictv_slide_type" id="ictv_slide_type_{{ i }}" value="{{ i }}" {% if loop.index0 == 0 %} checked {% endif %}>
-                                                    <label class="form-check-label" for="ictv_slide_type_{{ i }}">{{ ictv_templates[i]["description"] }}</label>
-                                                </div>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            {%  endif %}
+                                {%  if 'ictv_data_form' in chan.unavailablefields  %}
+                                    <!-- Generate table dropdown for ictv channel options -->
+                                    {{ ictv_dropdown|safe }}
+                                {% endif %}
 
                                 <div class="form-group">
                                     <label for="{{ chan.name }}_titlepost">Title</label><br>
@@ -121,24 +109,10 @@
                                     <input type="text" name="{{ chan.name }}_linkurlpost" id="{{ chan.name }}_linkurlpost" class="form-control">
                                 </div>
 
-                            <!-- Generate specific data input for each ictv slide layout -->
-                            {%  if chan.module  == 'superform.plugins.ictv' %}
-                                {% for i in ictv_templates %}
-                                    <div id="ictv_form_{{ i }}" class="ictv_slide_choice" {% if loop.index0 != 0 %} style="display: none;" {% endif %}>
-                                        <h5>{{ ictv_templates[i]["name"] }}</h5>
-                                        {% set count2 = loop.index0 %}
-                                        {% for j in ictv_templates[i] %}
-                                            {% if j != 'description' and j != 'name' and 'subtitle' not in j and 'title' not in j and 'text' not in j%}
-                                              <div class="form-group">
-                                                <label for="{{ chan.name }}_data_{{ i }}_{{ j }}">{{ j }}</label><br>
-                                                <input type="text" name="{{ chan.name }}_data_{{ i }}_{{ j }}" id="{{ chan.name }}_data_{{ i }}_{{ j }}" class="form-control">
-                                                {% set count2 = count2 + 1 %}
-                                              </div>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
+                                {%  if 'ictv_data_form' in chan.unavailablefields  %}
+                                    <!-- ICTV extra data form -->
+                                    {{ ictv_data_form|safe }}
+                                {% endif %}
 
                                 <div class="form-group">
                                     <label for="{{ chan.name }}_imagepost">Image</label><br>
@@ -296,11 +270,7 @@
                 .val(text));
         });
 
-        $('#ictv_slide_choice').click(function() {
-            var name = $('#ictv_slide_choice input:radio:checked').val();
-            $('.ictv_slide_choice').hide()
-            $('#ictv_form_'+name).show()
-        });
+        {{ ictv_dropdown_control|safe }}
 
     </script>
 

@@ -31,18 +31,17 @@ def create_a_publishing(post, chn, form):
 
     link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
 
+    # TODO : change the condition
     if chn.module == 'superform.plugins.ictv':
         link_post = ''
         slide_type = form.get(chan + '_ictv_slide_type')
         req = form.to_dict()
-        print(req)
         for i in req:
             if chan + '_data_' + slide_type in i:
                 a = sub('^' + chan + '_data_' + slide_type + '_', '', i)
                 link_post = link_post + a + ":::" + req[i] + ','
 
         link_post = link_post + slide_type
-        print(link_post)
 
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
@@ -77,11 +76,12 @@ def new_post():
         setattr(elem, "unavailablefields", unaivalable_fields)
 
     if request.method == "GET":
-        templates_request = None
-        """ If there is ICTV in the list of channel, query the list of slides templates from the server """
+        ictv_fields = {'data': '', 'dropdown': '', 'ictv_dropdown_control': ''}
         if ictv_chan is not None:
-            templates_request = get_ictv_templates(ictv_chan.config)
-        return render_template('new.html', l_chan=list_of_channels, ictv_templates=templates_request)
+            from plugins.ictv import generate_ictv_fields
+            ictv_fields = generate_ictv_fields(ictv_chan)
+        return render_template('new.html', l_chan=list_of_channels, ictv_data_form=ictv_fields['data'],
+                               ictv_dropdown=ictv_fields['dropdown'], ictv_dropdown_control=ictv_fields['control'])
     else:
         create_a_post(request.form)
         return redirect(url_for('index'))

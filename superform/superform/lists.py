@@ -1,6 +1,7 @@
 from flask import session, render_template, Blueprint
+from sqlalchemy import desc
 
-from superform.users import is_moderator
+from superform.users import is_moderator, get_moderate_channels_for_user
 from superform.models import User, db, Post, Publishing, Channel
 from superform.utils import login_required
 
@@ -14,8 +15,18 @@ def get_publications(user):
         my_pubs = [pub for _, _, pub in db.session.query(Channel, Post, Publishing)
             .filter(Channel.id == Publishing.channel_id)
             .filter(Publishing.post_id == Post.id)
-            .filter(Post.user_id == user.id)]
+            .filter(Post.user_id == user.id).order_by(desc(Publishing.post_id))]
     return my_pubs
+
+
+def get_publications_to_moderate(user):
+    channels_moderable = get_moderate_channels_for_user(user)
+    moderable_pubs_per_chan = (db.session.query(Publishing)
+                                   .filter(Publishing.channel_id == c.id)
+                                   .filter(Publishing.state == 0).order_by(desc(Publishing.post_id))
+                                   .all() for c in channels_moderable)
+    flattened_list_moderable_pubs = [y for x in moderable_pubs_per_chan for y in x]
+    return flattened_list_moderable_pubs
 
 
 @lists_page.route('/my_refused_publishings')
@@ -43,4 +54,5 @@ def unmoderated_publishings():
 @login_required()
 def moderator_unmoderated_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
-    return render_template("lists.html", title="Unmoderated publishings", user=user, my_publishings=get_publications(user), state=0)
+    return render_template("lists.html", title="Unmoderated publishings", user=user,
+                           my_publishings=get_publications_to_moderate(user), state=0, to_moderate=True)

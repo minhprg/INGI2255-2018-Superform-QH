@@ -1,5 +1,4 @@
 import logging
-import sys
 
 from flask import Blueprint, redirect, render_template, request, url_for
 
@@ -165,6 +164,18 @@ def validate_publishing(id, idc):
 
     plugin.run(pub, c_conf)
     return redirect(url_for('index'))
+
+
+@pub_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])
+@login_required()
+def view_publishing(id, idc):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+
+    pub.date_until = str_converter(pub.date_until)
+    pub.date_from = str_converter(pub.date_from)
+
+    if request.method == "GET":
+        return render_template('show_message.html', pub=pub)
 
 
 @pub_page.route('/feedback/<int:id>/<string:idc>', methods=["GET"])

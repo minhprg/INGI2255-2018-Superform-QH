@@ -10,19 +10,24 @@ logging.basicConfig(level=logging.DEBUG)
 pub_page = Blueprint('publishings', __name__)
 
 
+def commit_pub(pub, state):
+    pub.date_from = str_converter(pub.date_from)
+    pub.date_until = str_converter(pub.date_until)
+    pub.title = request.form.get('titlepost')
+    pub.description = request.form.get('descrpost')
+    pub.link_url = request.form.get('linkurlpost')
+    pub.image_url = request.form.get('imagepost')
+    pub.date_from = datetime_converter(request.form.get('datefrompost'))
+    pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
+
+    pub.state = state
+    db.session.commit()
+
+
 def check_config_and_commit_pub(pub, state, plugin, c_conf):
     if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-        pub.date_from = str_converter(pub.date_from)
-        pub.date_until = str_converter(pub.date_until)
-        pub.title = request.form.get('titlepost')
-        pub.description = request.form.get('descrpost')
-        pub.link_url = request.form.get('linkurlpost')
-        pub.image_url = request.form.get('imagepost')
-        pub.date_from = datetime_converter(request.form.get('datefrompost'))
-        pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
-
-        pub.state = state
-        db.session.commit()
+        commit_pub(pub, state)
+        return True
     else:
         return False
 
@@ -63,7 +68,7 @@ def get_moderation(pub):
             .filter(Moderation.post_id == pub.post_id)
             .filter(Moderation.channel_id == pub.channel_id)
             .filter(Moderation.user_id == post.user_id))]
-    return mod[0]
+    return mod
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>', methods=["GET"])
@@ -95,6 +100,10 @@ def moderate_publishing(id, idc):
 @pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
 @login_required()
 def refuse_publishing(id, idc):
+    """
+    Refuse a publishing. The publishing is sent back to the author with the specified comment.
+    Note that the changes the moderator may have done on the publishing itself will be lost.
+    """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     mod = get_moderation(pub)
@@ -156,9 +165,13 @@ def view_feedback(id, idc):
         return redirect(url_for('index'))
 
     mod = get_moderation(pub)
+    if mod:
+        message = mod[0].message
+    else:
+        message = ""
 
     if request.method == "GET":
-        return render_template('show_message.html', pub=pub, mod=mod[0].message)
+        return render_template('show_message.html', pub=pub, mod=message)
 
 
 @pub_page.route('/edit/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
@@ -171,6 +184,8 @@ def abort_rework_publishing(id, idc):
 @login_required()
 def rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+    print(str(pub))
+    print(str(pub.date_until))
 
     # Only refused publishings can be reworked
     # NOTE We could also allow unmoderated publishings to be reworked, but this overlaps the "editing" feature.
@@ -178,9 +193,15 @@ def rework_publishing(id, idc):
         return redirect(url_for('index'))
 
     mod = get_moderation(pub)
+    if mod:
+        message = mod[0].message
+    else:
+        message = ""
+    pub.date_from = str_converter(pub.date_from)
+    pub.date_until = str_converter(pub.date_until)
 
     if request.method == "GET":
-        return render_template('rework_publishing.html', pub=pub, mod=mod.message)
+        return render_template('rework_publishing.html', pub=pub, mod=message)
 
 
 @pub_page.route('/edit/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
@@ -193,14 +214,5 @@ def validate_rework_publishing(id, idc):
     if pub.state == 1:
         return redirect(url_for('index'))
 
-    mod = get_moderation(pub)
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-
-    if check_config_and_commit_pub(pub, 0, plugin, c_conf):
-        return redirect(url_for('index'))
-    else:
-        return render_template('rework_publishing.html', pub=pub, mod=mod)
+    commit_pub(pub, 0)
+    return redirect(url_for('index'))

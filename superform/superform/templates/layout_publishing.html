@@ -2,7 +2,7 @@
 {% block content %}
     <h1>{% block sub_title %} {% endblock %}</h1>
     {% if session.logged_in %}
-        {% if conf %}
+        {% if notconf %}
             <div class="alert alert-danger" role="alert">
                 This channel is not yet configured
             </div>

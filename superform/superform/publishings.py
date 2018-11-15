@@ -31,10 +31,10 @@ def moderate_publishing(id, idc):
         from importlib import import_module
         plugin = import_module(plugin_name)
         isURL = plugin.run(pub, c_conf)
-        if isURL == None:
-            return isURL
-        else:
+        if not isURL:
             return redirect(url_for('index'))
+        else:
+            return isURL
 
 
 @pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])

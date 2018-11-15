@@ -1,6 +1,4 @@
-from flask import make_response, redirect, url_for, request
-from superform.utils import login_required
-from superform import app
+from flask import make_response, redirect, url_for, current_app
 import json
 from googleapiclient.discovery import build
 from httplib2 import Http
@@ -22,7 +20,6 @@ event = {}
 start = {}
 end = {}
 service = None
-
 
 
 def run(publishing,channel_config):
@@ -100,9 +97,7 @@ def respond_redirect_to_auth_server():
 def insert_in_gcal(credentials):
     global event, service
     try:
-        if service == None:
-            service = build('calendar', 'v3', http=credentials.authorize(Http()))
-        print(service)
+        service = build('calendar', 'v3', http=credentials.authorize(Http()))
         # Call the Calendar API
         setting = service.settings().get(setting='timezone').execute()
 
@@ -114,7 +109,6 @@ def insert_in_gcal(credentials):
 
         event = service.events().insert(calendarId=calendarId, body=event).execute()
         print('Event created: %s' % (event.get('htmlLink')))
-
 
     except AccessTokenRefreshError:
         # This may happen when access tokens expire. Redirect the browser to

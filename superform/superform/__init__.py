@@ -11,7 +11,7 @@ from superform.channels import channels_page
 from superform.posts import posts_page
 from superform.rssfeed import feed_viewer_page
 from superform.users import get_moderate_channels_for_user, is_moderator
-from superform.plugins.facebook_callback import facebook_page
+from superform.plugins._facebook_callback import facebook_page
 
 app = Flask(__name__)
 app.config.from_json("config.json")
@@ -29,11 +29,10 @@ app.register_blueprint(facebook_page)
 db.init_app(app)
 
 # List available channels in config
-app.config["PLUGINS"] = {
-    name: importlib.import_module(name)
-    for finder, name, ispkg
-    in pkgutil.iter_modules(superform.plugins.__path__, superform.plugins.__name__ + ".")
-}
+app.config["PLUGINS"] = {}
+for finder, name, ispkg in pkgutil.iter_modules(superform.plugins.__path__, superform.plugins.__name__ + "."):
+    if name[18] != '_': # do not include files starting with an underscore (useful for callback pages)
+        app.config["PLUGINS"][name] = importlib.import_module(name)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -46,9 +45,9 @@ def index():
         setattr(user,'is_mod',is_moderator(user))
         posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", ""))
         chans = get_moderate_channels_for_user(user)
-        pubs_per_chan = (db.session.query(Publishing).filter((Publishing.channel_id == c.name) &
+        pubs_per_chan = (db.session.query(Publishing).filter((Publishing.channel_id == c.id) &
                                                              (Publishing.state == 0)) for c in chans)
-        published_per_chan = (db.session.query(Publishing).filter((Publishing.channel_id == c.name) &
+        published_per_chan = (db.session.query(Publishing).filter((Publishing.channel_id == c.id) &
                                                                   (Publishing.state == 1)) for c in chans)
         flattened_list_pubs = [y for x in pubs_per_chan for y in x]
         published_list = [y for x in published_per_chan for y in x]

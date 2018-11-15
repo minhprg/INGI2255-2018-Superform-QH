@@ -49,6 +49,40 @@ def run(publishing, channel_config):
         # TODO should add log here
         return
 
+def check_accessibility(channel_config):
+    """
+    Test different accessibility of the page. Return a different in function of the error.
+    """
+    json_data = json.loads(channel_config)
+    acc_tok = json_data['access_token']
+    if 'page' not in json_data:
+        print("Invalid page")
+        # TODO should add log here
+        return 1
+    page_id = json_data['page']
+    page = get_page_from_id(acc_tok, page_id)
+    if page is None:
+        print("Invalid page ID")
+        # TODO should add log here
+        return 2
+    try:
+        graph = facebook.GraphAPI(access_token=page['access_token'])
+        # check token validity
+        debug = graph.debug_access_token(
+            page['access_token'],
+            current_app.config["FACEBOOK_APP_ID"],
+            current_app.config["FACEBOOK_APP_SECRET"])
+        if not debug['data']['is_valid']:
+            print("Invalid Access-Token")
+            # TODO should add log here
+            return 3
+        else:
+            return 0
+    except facebook.GraphAPIError:
+        print("GraphAPIError")
+        # TODO should add log here
+        return 4
+
 def expired_access_token():
     """If invalid access, show an error message, then return to the index"""
     if request.method == "GET":

@@ -12,27 +12,51 @@ def moderate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
-    if request.method == "GET":
-        return render_template('moderate_post.html', pub=pub)
-    else:
-        pub.title = request.form.get('titlepost')
-        pub.description = request.form.get('descrpost')
-        pub.link_url = request.form.get('linkurlpost')
-        pub.image_url = request.form.get('imagepost')
-        pub.date_from = datetime_converter(request.form.get('datefrompost'))
-        pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
-        #state is shared & validated
-        pub.state = 1
-        db.session.commit()
-        #running the plugin here
-        c=db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-        plugin_name = c.module
-        c_conf = c.config
-        from importlib import import_module
-        plugin = import_module(plugin_name)
-        plugin.run(pub, c_conf)
 
-        return redirect(url_for('index'))
+    pub.date_from = datetime_converter('2018-11-15')
+    pub.date_until = datetime_converter('2018-11-15')
+
+    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
+    plugin_name = c.module
+    c_conf = c.config
+    from importlib import import_module
+    plugin = import_module(plugin_name)
+    reach = plugin.check_accessibility(c_conf)
+
+    if request.method == "GET":
+
+        if reach == 3:
+            return render_template('Expired_access_token.html')
+        else:
+
+            return render_template('moderate_post.html', pub=pub)
+
+    else:
+
+        if reach == 3:
+            return redirect(url_for('index'))
+        else:
+
+            pub.title = request.form.get('titlepost')
+            pub.description = request.form.get('descrpost')
+            pub.link_url = request.form.get('linkurlpost')
+            pub.image_url = request.form.get('imagepost')
+            pub.date_from = datetime_converter(request.form.get('datefrompost'))
+            pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
+            #state is shared & validated
+            pub.state = 1
+            db.session.commit()
+            #running the plugin here
+            '''
+            c=db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
+            plugin_name = c.module
+            c_conf = c.config
+            from importlib import import_module
+            plugin = import_module(plugin_name)
+            '''
+            plugin.run(pub, c_conf)
+
+            return redirect(url_for('index'))
 
 
 @pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])

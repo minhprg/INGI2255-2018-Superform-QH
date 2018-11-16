@@ -3,7 +3,6 @@ from flask import url_for, current_app, Blueprint, request, redirect
 from superform.utils import login_required
 from superform.models import db, Channel
 import requests
-import json
 
 linkedin_page = Blueprint('linkedin_callback', __name__)
 
@@ -17,7 +16,6 @@ def callback_In():
     app_key=current_app.config["LINKEDIN_API_KEY"]
     app_secret=current_app.config["LINKEDIN_API_SECRET"]
     code = request.args.get('code')
-    state=request.args.get('state')
     if "error" in request.args:
         error = request.args.get('error')
         print(error)

@@ -48,7 +48,8 @@ def createRequestCodeLinkedIn(app_key,state):
     returnUrl = "https://www.linkedin.com/uas/oauth2/authorization?response_type=code&scope=rw_company_admin&client_id="+app_key+"&state="+state+"&redirect_uri="+canvas_url
     return returnUrl
 
-def montreInvalidToken(channel_config):
+def check_validity(channel_config):
+    """ Test validity of the channel. Return an error message if any. """
     json_data = json.loads(channel_config)
     if 'access_token' not in json_data:
         print("Invalid acces_token.")

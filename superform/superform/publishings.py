@@ -121,6 +121,16 @@ def refuse_publishing(id, idc):
         return render_template('moderate_publishing.html', pub=pub,
                                error_message="This channel has not yet been configured")
 
+    pub.date_from = str_converter(pub.date_from)
+    pub.date_until = str_converter(pub.date_until)
+
+    if request.form.get('commentpub') == "":
+        return render_template('moderate_publishing.html', pub=pub,
+                               error_message="You must give a feedback to the author")
+
+    pub.date_from = datetime_converter(pub.date_from)
+    pub.date_until = datetime_converter(pub.date_until)
+
     mod = get_moderation(pub)
 
     if len(mod) == 0:
@@ -248,6 +258,7 @@ def validate_rework_publishing(id, idc):
 
     pub.state = State.OUTDATED.value
     db.session.add(new_pub)
+    db.session.commit()
 
     commit_pub(new_pub, State.NOTVALIDATED.value)
     return redirect(url_for('index'))

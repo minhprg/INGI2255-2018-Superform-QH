@@ -36,19 +36,31 @@ def run(publishing, channel_config):
                 "visibility": {"code": "anyone"}}
 
     data = json.dumps(data)
-
     # response = requests.post("https://api.linkedin.com/v1/people/~/shares/?format=json",headers=headers,data=data)
     response = requests.post("https://api.linkedin.com/v1/companies/"+page_id+"/shares/?format=json", headers=headers,
                              data=data)
     if response.status_code != 201:
         print("Linked In publish failed")
-        jd = json.loads(response.text)
-        if jd['message']=='Invalid access token.':
-            print("Invalid access token.")
-            #TODO invalid token
     return response
 
 def createRequestCodeLinkedIn(app_key,state):
     canvas_url = url_for('linkedin_callback.callback_In', _external=True)
     returnUrl = "https://www.linkedin.com/uas/oauth2/authorization?response_type=code&scope=rw_company_admin&client_id="+app_key+"&state="+state+"&redirect_uri="+canvas_url
     return returnUrl
+
+def montreInvalidToken(channel_config):
+    json_data = json.loads(channel_config)
+    if 'access_token' not in json_data:
+        print("Invalid acces_token.")
+        # TODO should add log here
+        return "Error : Invalid Access-Token"
+    access_token = json_data['access_token']
+    headers = {'Authorization': 'Bearer ' + access_token, 'Host': 'api.linkedin.com', 'Connection': 'Keep-Alive',
+               'x-li-format': 'json', "Content-Type": "application/json"}
+    response = requests.get("https://api.linkedin.com/v1/people/~",headers=headers)
+    if response.status_code == 401:
+        jd=json.load(response.text)
+        if jd['message']=='Invalid access token.':
+            print("Invalid access token.")
+            #TODO invalid token
+    return "Error : Invalid Access-Token"

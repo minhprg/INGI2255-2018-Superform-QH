@@ -21,13 +21,18 @@ def callback_In():
         error = request.args.get('error')
         print(error)
     canvas_url = url_for('linkedin_callback.callback_In', _external=True)
-    response = requests.post("https://www.linkedin.com/oauth/v2/accessToken",
-                             data={"grant_type": "authorization_code", "code": code, "redirect_uri": canvas_url,
-                                   "client_id": app_key, "client_secret": app_secret})
-    response=response.json()
-    token=response['access_token']
+    try:
+        response = requests.post("https://www.linkedin.com/oauth/v2/accessToken",
+                                 data={"grant_type": "authorization_code", "code": code, "redirect_uri": canvas_url,
+                                       "client_id": app_key, "client_secret": app_secret})
+        response = response.json()
+        token=response['access_token']
+    except Exception:
+        token = 'Unable to generate access_token'
 
     channel = Channel.query.get(id_channel)
+    if channel == None or channel.module != 'superform.plugins.linkedin':
+        return redirect(url_for("channels.channel_list"))
     # reset config and add new access_token
     channel.config = "{\"access_token\": \"" + str(token) + "\"}"
 

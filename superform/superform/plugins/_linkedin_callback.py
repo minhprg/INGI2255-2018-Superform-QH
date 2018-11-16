@@ -12,7 +12,8 @@ def callback_In():
     """Page where LinkedIn returns the code to get the access token.
             Generate the access token from the code and save it to the DB."""
     id_channel = request.args.get('state')
-
+    if id_channel is None:
+        return redirect(url_for("channels.channel_list"))
     app_key=current_app.config["LINKEDIN_API_KEY"]
     app_secret=current_app.config["LINKEDIN_API_SECRET"]
     code = request.args.get('code')

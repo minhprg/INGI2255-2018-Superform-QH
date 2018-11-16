@@ -60,7 +60,7 @@ def check_validity(channel_config):
                'x-li-format': 'json', "Content-Type": "application/json"}
     response = requests.get("https://api.linkedin.com/v1/people/~",headers=headers)
     if response.status_code == 401:
-        jd=json.load(response.text)
+        jd=json.loads(response.text)
         if jd['message']=='Invalid access token.':
             print("Invalid access token.")
             #TODO invalid token

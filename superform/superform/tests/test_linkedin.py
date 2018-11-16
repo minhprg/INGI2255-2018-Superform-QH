@@ -86,7 +86,7 @@ def test_callback_no_param(client):
     assert rv2.status_code == 200
     assert rv.data == rv2.data
 
-'''
+
 def test_callback_wrong_state(client):
     """ Wrong channel id given on callback -> redirected to channels """
     login(client, "admin")
@@ -113,4 +113,3 @@ def test_callback_state_not_fb(client):
     assert rv.data == rv2.data
 
     delete_channel(client, c.id, c.name)
-'''

@@ -3,7 +3,7 @@ import logging
 from flask import Blueprint, redirect, render_template, request, url_for
 
 from superform import channels
-from superform.models import db, Publishing, Channel, Moderation, Post, User
+from superform.models import db, Publishing, Channel, Moderation, Post, User, State
 from superform.utils import login_required, datetime_converter, str_converter
 
 logging.basicConfig(level=logging.DEBUG)
@@ -52,9 +52,9 @@ def create_a_publishing(post, chn, form):
         form.get(chan + '_datefrompost')) is not None else post.date_from
     date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if datetime_converter(
         form.get(chan + '_dateuntilpost')) is not None else post.date_until
-    pub = Publishing(post_id=post.id, channel_id=chn.id, state=0, title=title_post, description=descr_post,
-                     link_url=link_post, image_url=image_post,
-                     date_from=date_from, date_until=date_until)
+    pub = Publishing(post_id=post.id, channel_id=chn.id, state=State.NOTVALIDATED.value, title=title_post,
+                     description=descr_post, link_url=link_post, image_url=image_post, date_from=date_from,
+                     date_until=date_until)
 
     db.session.add(pub)
     db.session.commit()
@@ -77,7 +77,7 @@ def moderate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     # Only publishing that have yet to be moderated can be viewed
-    if pub.state != 0:
+    if pub.state != State.NOTVALIDATED.value:
         return redirect(url_for('index', messages="This publication has already been moderated"))
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
@@ -107,7 +107,7 @@ def refuse_publishing(id, idc):
     """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
-    if pub.state != 0:
+    if pub.state != State.NOTVALIDATED.value:
         return redirect(url_for('index', messages="This publication has already been moderated"))
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
@@ -125,13 +125,13 @@ def refuse_publishing(id, idc):
 
     if len(mod) == 0:
         create_a_moderation(request.form, id, idc)
-    else:  # FIXME: For the moment I'm updating the moderation, don't think it is the good thing to do
+    else:
         mod[0].message = request.form.get('commentpub')
         db.session.commit()
 
     # Only publishings that have yet to be moderated can be refused.
-    if pub.state == 0:
-        pub.state = 3
+    if pub.state == State.NOTVALIDATED.value:
+        pub.state = State.REFUSED.value
         db.session.commit()
 
     return redirect(url_for('index'))
@@ -141,7 +141,7 @@ def refuse_publishing(id, idc):
 @login_required()
 def validate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-    if pub.state != 0:
+    if pub.state != State.NOTVALIDATED.value:
         return redirect(url_for('index', messages="This publication has already been moderated"))
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
@@ -150,7 +150,7 @@ def validate_publishing(id, idc):
     from importlib import import_module
     plugin = import_module(plugin_name)
 
-    if not check_config_and_commit_pub(pub, 1, plugin, c_conf):
+    if not check_config_and_commit_pub(pub, State.VALIDATED.value, plugin, c_conf):
         return render_template('moderate_publishing.html', pub=pub,
                                error_message="This channel has not yet been configured")
 
@@ -158,7 +158,7 @@ def validate_publishing(id, idc):
 
     if len(mod) == 0:
         create_a_moderation(request.form, id, idc)
-    else:  # FIXME: Same as in refuse_publishing()
+    else:
         mod[0].message = request.form.get('commentpub')
         db.session.commit()
 
@@ -184,7 +184,7 @@ def view_feedback(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     # Only publishing that have yet to be moderated can be viewed
-    if pub.state == 0:
+    if pub.state == State.NOTVALIDATED.value:
         return redirect(url_for('index', messages='This publication has not yet been moderated'))
 
     mod = get_moderation(pub)
@@ -213,7 +213,7 @@ def rework_publishing(id, idc):
 
     # Only refused publishings can be reworked
     # NOTE We could also allow unmoderated publishings to be reworked, but this overlaps the "editing" feature.
-    if pub.state != 3:
+    if pub.state != State.REFUSED.value:
         return redirect(url_for('index'))
 
     mod = get_moderation(pub)
@@ -234,7 +234,7 @@ def validate_rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     post = db.session.query(Post).filter(Post.id == id).first()
     # Only pubs that have yet to be moderated can be accepted
-    if pub.state == 1:
+    if pub.state == State.VALIDATED.value:
         return redirect(url_for('index', messages='This publication has already been reworked'))
 
     new_post = Post(user_id=post.user_id, title=post.title, description=post.description,
@@ -243,12 +243,13 @@ def validate_rework_publishing(id, idc):
     db.session.add(new_post)
     db.session.commit()
 
-    new_pub = Publishing(post_id=new_post.id, channel_id=pub.channel_id, state=pub.state, title=pub.title, date_until=pub.date_until, date_from=pub.date_from)
+    new_pub = Publishing(post_id=new_post.id, channel_id=pub.channel_id, state=pub.state, title=pub.title,
+                         date_until=pub.date_until, date_from=pub.date_from)
 
-    pub.state = 4
+    pub.state = State.OUTDATED.value
     db.session.add(new_pub)
 
-    commit_pub(new_pub, 0)
+    commit_pub(new_pub, State.NOTVALIDATED.value)
     return redirect(url_for('index'))
 
 

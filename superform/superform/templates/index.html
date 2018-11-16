@@ -36,7 +36,7 @@
 
                 <tbody>
                 {% for p in publishings %}
-                    {% if p.state == 0 %}
+                    {% if p.state == states.NOTVALIDATED.value %}
                     <tr>
                         <td>
                             {{ p.channel.name }}
@@ -84,7 +84,7 @@
 
                 <tbody>
                     {% for item in my_refused_publishings %}
-                        {% if item.state == 3 %}
+                        {% if item.state == states.REFUSED.value %}
                         <tr>
                             <td>
                                 {{ item.channel.name }}
@@ -128,7 +128,7 @@
 
                 <tbody>
                     {% for item in my_accepted_publishings %}
-                        {% if item.state == 1 %}
+                        {% if item.state == states.VALIDATED.value %}
                         <tr>
                             <td>
                                 {{ item.channel.name }}

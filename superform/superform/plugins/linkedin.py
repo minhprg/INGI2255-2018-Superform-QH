@@ -64,4 +64,5 @@ def check_validity(channel_config):
         if jd['message']=='Invalid access token.':
             print("Invalid access token.")
             #TODO invalid token
-    return "Error : Invalid Access-Token"
+            return "Error : Invalid Access-Token"
+        return "Error : 401"

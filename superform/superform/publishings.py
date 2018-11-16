@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from flask import Blueprint, redirect, render_template, request, url_for
@@ -62,6 +63,8 @@ def create_a_publishing(post, chn, form):
 
 
 def get_moderation(pub):
+    pub.date_until = pub.date_until if type(pub.date_until) == datetime.datetime else datetime_converter(pub.date_until)
+    pub.date_from = pub.date_from if type(pub.date_from) == datetime.datetime else datetime_converter(pub.date_from)
     post = db.session.query(Post).filter(Post.id == pub.post_id).first()
     mod = [mod for _, _, _, mod in
            (db.session.query(Post, Channel, User, Moderation)

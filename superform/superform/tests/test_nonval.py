@@ -192,8 +192,6 @@ def test_refuse_publishing_with_feedback(client):
 
     path = root + "-1.xml"
     del_file([path])
-    # pub.date_from = datetime_converter(pub.date_from)
-    # pub.date_until = datetime_converter(pub.date_until)
 
 
 def test_refuse_publishing_without_feedback(client):
@@ -217,7 +215,7 @@ def test_refuse_publishing_without_feedback(client):
     del_file([path])
 
 
-def test_rework_publishing(client):
+def test_access_rework_publishing(client):
     login(client, 'myself')
     post, chan, pub = create(client)
 
@@ -293,6 +291,6 @@ def test_view_publishing(client):
 
     pub.date_until = datetime_converter(pub.date_until)
     pub.date_from = datetime_converter(pub.date_from)
-    
+
     new_pub = db.session.query(Publishing).filter(Publishing.post_id == post.id, Publishing.channel_id == chan.id).first()
     assert new_pub.state == pub.state and new_pub.title == pub.title and new_pub.description == pub.description

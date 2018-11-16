@@ -19,11 +19,10 @@ def run(publishing, channel_config):
         return
     page_id = json_data['Page Id']
     if 'access_token' not in json_data:
-        print("Invalid acces_token")
+        print("Invalid acces_token.")
         # TODO should add log here
         return
     access_token = json_data['access_token']
-    #"https://api.linkedin.com/v1/companies?format=json&is-company-admin=true&oauth2_access_token="+access_token
     headers = {'Authorization': 'Bearer ' + access_token, 'Host': 'api.linkedin.com', 'Connection': 'Keep-Alive',
                'x-li-format': 'json', "Content-Type": "application/json"}
 
@@ -43,6 +42,10 @@ def run(publishing, channel_config):
                              data=data)
     if response.status_code != 201:
         print("Linked In publish failed")
+        jd = json.loads(response.text)
+        if jd['message']=='Invalid access token.':
+            print("Invalid access token.")
+            #TODO invalid token
     return response
 
 def createRequestCodeLinkedIn(app_key,state):

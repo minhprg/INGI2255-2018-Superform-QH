@@ -36,7 +36,7 @@ app.config["PLUGINS"] = {
 }
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
     user_posts = []
@@ -64,6 +64,13 @@ def index():
             .filter(Publishing.post_id == Post.id)
             .filter(Publishing.state == 1)
             .filter(Post.user_id == user.id).order_by(desc(Post.id)).limit(5).all()]
+
+        if request.method == "POST" and request.form.get('@action', '') == "delete":
+            post_id = request.form.get("id")
+            post = Post.query.get(post_id)
+            if post:
+                db.session.delete(post)
+                db.session.commit()
 
     error_messages = ""
     if 'messages' in request.args:

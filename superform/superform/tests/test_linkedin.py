@@ -100,8 +100,8 @@ def test_callback_wrong_state(client):
     assert rv.data == rv2.data
 
 
-def test_callback_state_not_fb(client):
-    """ Received channel id is not a facebook channel -> redirected to channels """
+def test_callback_state_not_In(client):
+    """ Received channel id is not a linkedin channel -> redirected to channels """
     login(client, "admin")
     create_channel(client, 'test_In_mail', 'mail')
     c = get_channel(client, 'test_In_mail')

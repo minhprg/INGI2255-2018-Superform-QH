@@ -40,7 +40,7 @@ class IctvChannelConfiguration(IctvException):
             self.msg = self.msg + '\t<li>' + i + '</li>\n'
 
         self.msg = self.msg + '\t</ul>\n<p>You wont be able to submit your post on this channel !</p>\n<p>Please, ' \
-                                             'refer to the channel administrator.</p>\n'
+                              'refer to the channel administrator.</p>\n'
 
 
 # TODO : more interesting to have "plugins manager" in core application to check the configuration
@@ -50,7 +50,6 @@ def check_ictv_channel_config(channel):
     :param channel: the channel having ictv as plugin
     :raise: IctvChannelConfiguration if the channel is misconfigured
     """
-    import json
     json_data = json.loads(channel.config)
     missing_fields = [i for i in CONFIG_FIELDS if (i not in json_data or json_data[i] == 'None')]
     if len(missing_fields) != 0:
@@ -104,33 +103,35 @@ def get_ictv_templates(channel):
 
     # TODO : add filter function to remove the unusable slides layouts ?
 
-    return {sub('^template\-', '', i): ictv_slides_templates[i] for i in ictv_slides_templates
+    return {sub('^template-', '', i): ictv_slides_templates[i] for i in ictv_slides_templates
             if 'title-1' in ictv_slides_templates[i]}
 
 
-def generate_ictv_dropdown_control():
-    code = 'function tmp() {\n' \
-            '    var chan_name = $("#chan_name").data()["chan_name"] + "_ictv_slide_type";\n' \
-            '    $("input:radio[name="+chan_name+"]").click(function() {\n' \
-            '       var name = $("#ictv_slide_choice_button input:radio:checked").val();\n' \
-            '       $(".ictv_slide_choice").hide();\n' \
-            '       $("#ictv_form_"+name).show();\n' \
-            '    });\n' \
-            '};\n'
+def generate_ictv_dropdown_control(chan_name):
+
+    code = '$("#' + chan_name + '_ictv_slide_choice_button").click(function () {' \
+                                'var name = $("#'+ chan_name + '_ictv_slide_choice_button input:radio:checked").val();\n' \
+                                'console.log(name);\n' \
+                                '$(".'+ chan_name +'_ictv_slide_choice").hide();\n' \
+                                '$("#'+ chan_name +'_ictv_form_"+name).show();\n' \
+                                '});'
     return code
 
 
 def generate_ictv_dropdown(chan, templates):
-    ret = '<div class="form-group" id="ictv_slide_choice_button">\n<meta id="chan_name" data-chan_name="' + chan.name + '">\n'
-    ret = ret + '\t<button class="dropdown-toggle" type="button" data-toggle="dropdown" '\
-                'onclick="tmp.bind(this)()">Slide Layout<span class="caret"></span></button>\n'
+    button_id = chan.name + '_ictv_slide_choice_button'
+    ret = '<div class="form-group chan_names" id="'+ button_id + '">\n<meta id="chan_name" data-chan_name="' + \
+          chan.name + '">\n'
+    ret = ret + '\t<button class="dropdown-toggle" type="button" data-toggle="dropdown" ' \
+                '>Slide Layout<span class="caret"></span></button>\n'
     ret = ret + '\t<ul class="dropdown-menu">\n'
     for index, temp in enumerate(templates):
+        input_id = chan.name + '_ictv_slide_type_' + temp
+        input_name = chan.name + '_ictv_slide_type'
         ret = ret + '\t\t<li>\n\t\t\t<div class = "form-check">\n'
-        ret = ret + '\t\t\t\t<input class="form-check-input" type="radio" name="' + chan.name +\
-              '_ictv_slide_type" id="ictv_slide_type_' + temp + '" value="' +\
-               temp + '" ' + ('checked' if index == 0 else '') + '>\n'
-        ret = ret + '\t\t\t\t<label class="form-check-label" for="ictv_slide_type_' + temp +\
+        ret = ret + '\t\t\t\t<input class="form-check-input" type="radio" name="' + input_name + \
+                    '"id="' + input_id + '" value="' + temp + '" ' + ('checked' if index == 0 else '') + '>\n'
+        ret = ret + '\t\t\t\t<label class="form-check-label" for="' + input_id + \
                     '">' + templates[temp]["description"] + '</label>\n\t\t\t</div>\n\t\t</li>\n'
 
     ret = ret + '\t</ul>\n</div>\n'
@@ -142,7 +143,8 @@ def generate_ictv_data_form(chan, templates):
     ret = ''
 
     for index, temp in enumerate(templates):
-        ret = ret + '<div id=\"ictv_form_' + temp + '\" class=\"ictv_slide_choice\" ' + \
+        div_id = chan.name + '_ictv_form_' + temp
+        ret = ret + '<div id="' + div_id + '" class=\"'+ chan.name +'_ictv_slide_choice\" ' + \
               ('style=\"display: none;\"' if index != 0 else '') + '>\n'
         ret = ret + '\t<h5>' + templates[temp]['name'] + '</h5>\n'
 
@@ -151,9 +153,9 @@ def generate_ictv_data_form(chan, templates):
                     'text' not in field:
                 ret = ret + '\t<div class="form-group">\n'
                 ret = ret + '\t\t<label for="' + chan.name + '_data_' + temp + '_' + field + \
-                      '">' + field + '</label><br>\n'
-                ret = ret + '\t\t<input type="text" name="' + chan.name + '_data_' + temp + '_' + field +\
-                      '" id="' + chan.name + '_data_' + temp + '_' + field + '" class="form-control">\n'
+                            '">' + field + '</label><br>\n'
+                ret = ret + '\t\t<input type="text" name="' + chan.name + '_data_' + temp + '_' + field + \
+                            '" id="' + chan.name + '_data_' + temp + '_' + field + '" class="form-control">\n'
                 ret = ret + '\t</div>\n'
 
         ret = ret + '</div>\n'
@@ -165,7 +167,7 @@ def generate_ictv_fields(chan):
     templates = get_ictv_templates(chan)
     # TODO : maybe avoid  the replication of the fields dict
     return {'dropdown': generate_ictv_dropdown(chan, templates), 'data': generate_ictv_data_form(chan, templates),
-            'control': generate_ictv_dropdown_control(), 'error': ''}
+            'control': generate_ictv_dropdown_control(chan.name), 'error': ''}
 
 
 def process_ictv_channels(channels):
@@ -191,9 +193,8 @@ def generate_slide(chan_conf, pub):
     splited_url = pub.link_url.split(',')
     slide_type = splited_url[-1]
     slide_content = get_ictv_templates(chan_conf)[slide_type]
-    if slide_content is None:
-        return None
-    slide_data = {j: k for j, k in (i.split(':::') for i in splited_url[:-1])}
+
+    slide_data = {media_type: url for media_type, url in (media.split(':::') for media in splited_url[:-1])}
     for elem in slide_data:
         """ quick fix, incoherence in ICTV response (img vs image) """
         if 'img' in elem:
@@ -207,7 +208,7 @@ def generate_slide(chan_conf, pub):
     slide_content['text-1'] = {'text': pub.description}
     slide_content['subtitle-1'] = {'text': ''}
 
-    return {'content': slide_content, 'template': 'template-'+slide_type, 'duration': -1}
+    return {'content': slide_content, 'template': 'template-' + slide_type, 'duration': -1}
 
 
 def get_epoch(date):
@@ -221,7 +222,7 @@ def generate_capsule(pub):
     :return: the JSON capsule
     """
     capsule = {'name': pub.title, 'theme': 'ictv', 'validity':
-        [int(get_epoch(pub.date_from)), int(get_epoch(pub.date_until))]}
+               [int(get_epoch(pub.date_from)), int(get_epoch(pub.date_until))]}
     # TODO : change the name of the capsule to unique name
     # TODO : give possibility to change the capsule theme
     return capsule

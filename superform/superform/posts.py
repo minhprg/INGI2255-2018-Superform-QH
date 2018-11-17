@@ -66,7 +66,7 @@ def new_post():
     global ictv_slides_templates
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
-    # TODO : multiple ictv channels ?
+
     ictv_chans = []
     for elem in list_of_channels:
         m = elem.module

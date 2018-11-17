@@ -4,7 +4,6 @@ from superform.users import channels_available_for_user
 from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path
 from superform.models import db, Post, Publishing, Channel
 
-from utils import get_ictv_templates
 from re import sub
 
 posts_page = Blueprint('posts', __name__)
@@ -31,6 +30,7 @@ def create_a_publishing(post, chn, form):
 
     link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
 
+    # TODO : move the complexity to ictv plugin
     # TODO : change the condition
     if chn.module == 'superform.plugins.ictv':
         link_post = ''
@@ -66,22 +66,24 @@ def new_post():
     global ictv_slides_templates
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
-    ictv_chan = None
+    # TODO : multiple ictv channels ?
+    ictv_chans = []
     for elem in list_of_channels:
         m = elem.module
-        if m == 'superform.plugins.ictv':
-            ictv_chan = elem
         clas = get_instance_from_module_path(m)
         unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
+        if 'ictv_data_form' in unaivalable_fields:
+            ictv_chans.append(elem)
         setattr(elem, "unavailablefields", unaivalable_fields)
 
     if request.method == "GET":
-        ictv_fields = {'data': '', 'dropdown': '', 'ictv_dropdown_control': ''}
-        if ictv_chan is not None:
-            from plugins.ictv import generate_ictv_fields
-            ictv_fields = generate_ictv_fields(ictv_chan)
-        return render_template('new.html', l_chan=list_of_channels, ictv_data_form=ictv_fields['data'],
-                               ictv_dropdown=ictv_fields['dropdown'], ictv_dropdown_control=ictv_fields['control'])
+
+        ictv_data = None
+        if len(ictv_chans) != 0:
+            from plugins.ictv import process_ictv_channels
+            ictv_data = process_ictv_channels(ictv_chans)
+
+        return render_template('new.html', l_chan=list_of_channels, ictv_data=ictv_data)
     else:
         create_a_post(request.form)
         return redirect(url_for('index'))

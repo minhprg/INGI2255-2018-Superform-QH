@@ -92,8 +92,9 @@
                             <div class="col-md-12">
 
                                 {%  if 'ictv_data_form' in chan.unavailablefields  %}
+                                    {{ ictv_data[chan.name]['error']|safe }}
                                     <!-- Generate table dropdown for ictv channel options -->
-                                    {{ ictv_dropdown|safe }}
+                                    {{ ictv_data[chan.name]['dropdown']|safe }}
                                 {% endif %}
 
                                 <div class="form-group">
@@ -111,7 +112,7 @@
 
                                 {%  if 'ictv_data_form' in chan.unavailablefields  %}
                                     <!-- ICTV extra data form -->
-                                    {{ ictv_data_form|safe }}
+                                    {{ ictv_data[chan.name]['data']|safe }}
                                 {% endif %}
 
                                 <div class="form-group">
@@ -270,7 +271,11 @@
                 .val(text));
         });
 
-        {{ ictv_dropdown_control|safe }}
+        {% for chan in l_chan %}
+            {%  if 'ictv_data_form' in chan.unavailablefields  %}
+                {{ ictv_data[chan.name]['control']|safe }}
+            {% endif %}
+        {% endfor %}
 
     </script>
 

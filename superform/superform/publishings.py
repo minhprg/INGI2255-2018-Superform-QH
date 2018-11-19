@@ -115,24 +115,11 @@ def refuse_publishing(id, idc):
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
 
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-
-    if not channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-        return render_template('moderate_publishing.html', pub=pub,
-                               error_message="This channel has not yet been configured")
-
-    pub.date_from = str_converter(pub.date_from)
-    pub.date_until = str_converter(pub.date_until)
-
     if request.form.get('commentpub') == "":
+        pub.date_from = str_converter(pub.date_from)
+        pub.date_until = str_converter(pub.date_until)
         return render_template('moderate_publishing.html', pub=pub,
                                error_message="You must give a feedback to the author")
-
-    pub.date_from = datetime_converter(pub.date_from)
-    pub.date_until = datetime_converter(pub.date_until)
 
     mod = get_moderation(pub)
 
@@ -164,6 +151,8 @@ def validate_publishing(id, idc):
     plugin = import_module(plugin_name)
 
     if not check_config_and_commit_pub(pub, State.VALIDATED.value, plugin, c_conf):
+        pub.date_from = str_converter(pub.date_from)
+        pub.date_until = str_converter(pub.date_until)
         return render_template('moderate_publishing.html', pub=pub,
                                error_message="This channel has not yet been configured")
 

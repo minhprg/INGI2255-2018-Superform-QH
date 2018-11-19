@@ -1,8 +1,8 @@
 from flask import session, render_template, Blueprint
 from sqlalchemy import desc
 
-from superform.users import is_moderator, get_moderate_channels_for_user
-from superform.models import User, db, Post, Publishing, Channel, State
+from superform.users import is_moderator
+from superform.models import User, db, Post, Publishing, Channel, State, Authorization, Permission
 from superform.utils import login_required
 
 lists_page = Blueprint('lists', __name__)
@@ -20,13 +20,13 @@ def get_publications(user):
 
 
 def get_publications_to_moderate(user):
-    channels_moderable = get_moderate_channels_for_user(user)
-    moderable_pubs_per_chan = (db.session.query(Publishing)
-                                   .filter(Publishing.channel_id == c.id)
-                                   .filter(Publishing.state == State.NOTVALIDATED.value).order_by(desc(Publishing.post_id))
-                                   .all() for c in channels_moderable)
-    flattened_list_moderable_pubs = [y for x in moderable_pubs_per_chan for y in x]
-    return flattened_list_moderable_pubs
+    moderable_pubs_per_chan = [pub for _, _, pub in db.session.query(Authorization, Channel, Publishing)
+        .filter(Authorization.user_id == user.id, Authorization.permission == Permission.MODERATOR.value)
+        .filter(Authorization.channel_id == Publishing.channel_id)
+        .filter(Publishing.post_id == Post.id).filter(Channel.id == Publishing.channel_id)
+        .filter(Publishing.state == State.NOTVALIDATED.value)
+        .order_by(desc(Publishing.post_id)).limit(5).all()]
+    return moderable_pubs_per_chan
 
 
 @lists_page.route('/my_refused_publishings')

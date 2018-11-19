@@ -25,7 +25,7 @@ def get_publications_to_moderate(user):
         .filter(Authorization.channel_id == Publishing.channel_id)
         .filter(Publishing.post_id == Post.id).filter(Channel.id == Publishing.channel_id)
         .filter(Publishing.state == State.NOTVALIDATED.value)
-        .order_by(desc(Publishing.post_id)).limit(5).all()]
+        .order_by(desc(Publishing.post_id)).all()]
     return moderable_pubs_per_chan
 
 

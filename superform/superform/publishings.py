@@ -202,13 +202,13 @@ def view_feedback(id, idc):
         return render_template('show_message.html', pub=pub, mod=message)
 
 
-@pub_page.route('/edit/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
+@pub_page.route('/rework/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
 @login_required()
 def abort_rework_publishing(id, idc):
     return redirect(url_for('index'))
 
 
-@pub_page.route('/edit/<int:id>/<string:idc>', methods=["GET"])
+@pub_page.route('/rework/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
 def rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
@@ -230,7 +230,7 @@ def rework_publishing(id, idc):
         return render_template('rework_publishing.html', pub=pub, mod=message)
 
 
-@pub_page.route('/edit/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
+@pub_page.route('/rework/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
 @login_required()
 def validate_rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()

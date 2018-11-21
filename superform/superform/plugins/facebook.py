@@ -54,11 +54,11 @@ def check_validity(channel_config):
     json_data = json.loads(channel_config)
     acc_tok = json_data['access_token']
     if 'page' not in json_data:
-        return "Error : Invalid page"
+        return "Error : Invalid page."
     page_id = json_data['page']
     page = get_page_from_id(acc_tok, page_id)
     if page is None:
-        return "Error : Invalid page ID"
+        return "Error : Invalid page ID."
     try:
         graph = facebook.GraphAPI(access_token=page['access_token'])
         # check token validity
@@ -67,9 +67,9 @@ def check_validity(channel_config):
             current_app.config["FACEBOOK_APP_ID"],
             current_app.config["FACEBOOK_APP_SECRET"])
         if not debug['data']['is_valid']:
-            return "Error : Invalid Access-Token"
+            return "Error : Invalid Access-Token."
     except facebook.GraphAPIError:
-        return "Error : GraphAPIError"
+        return "Error : GraphAPIError."
 
 
 def get_url_for_token(id_channel):

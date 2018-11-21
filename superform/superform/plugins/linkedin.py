@@ -54,7 +54,7 @@ def check_validity(channel_config):
     if 'access_token' not in json_data:
         print("Invalid acces_token.")
         # TODO should add log here
-        return "Error : Invalid Access-Token"
+        return "Error : Invalid Access-Token."
     access_token = json_data['access_token']
     headers = {'Authorization': 'Bearer ' + access_token, 'Host': 'api.linkedin.com', 'Connection': 'Keep-Alive',
                'x-li-format': 'json', "Content-Type": "application/json"}
@@ -64,5 +64,5 @@ def check_validity(channel_config):
         if jd['message']=='Invalid access token.':
             print("Invalid access token.")
             #TODO invalid token
-            return "Error : Invalid Access-Token"
-        return "Error : 401"
+            return "Error : Invalid Access-Token."
+        return "Error : 401."

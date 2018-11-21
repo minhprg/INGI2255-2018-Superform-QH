@@ -25,14 +25,6 @@ def commit_pub(pub, state):
     db.session.commit()
 
 
-def check_config_and_commit_pub(pub, state, plugin, c_conf):
-    if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-        commit_pub(pub, state)
-        return True
-    else:
-        return False
-
-
 def create_a_moderation(form, id, idc):
     message = form.get('commentpub') if form.get('commentpub') is not None else ""
     post = db.session.query(Post).filter(Post.id == id).first()
@@ -73,43 +65,6 @@ def get_moderation(pub):
             .filter(Moderation.user_id == post.user_id))]
     return mod
 
-@pub_page.route('/moderate/<int:id>/<string:idc>', methods=["GET", "POST"])
-@login_required()
-def moderate_publishing(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-    try:
-        test_still_valid = plugin.check_validity(c_conf)
-        if test_still_valid != None:
-            return render_template('invalid_channel_config.html', msg=test_still_valid)
-    except AttributeError:
-        pass
-
-
-    if request.method == "GET":
-        pub.date_from = str_converter(pub.date_from)
-        pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_post.html', pub=pub)
-    else:
-        pub.title = request.form.get('titlepost')
-        pub.description = request.form.get('descrpost')
-        pub.link_url = request.form.get('linkurlpost')
-        pub.image_url = request.form.get('imagepost')
-        pub.date_from = datetime_converter(request.form.get('datefrompost'))
-        pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
-        #state is shared & validated
-        pub.state = 1
-        db.session.commit()
-        #running the plugin here
-        plugin.run(pub, c_conf)
-
-        return redirect(url_for('index'))
-
 
 @pub_page.route('/moderate/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
@@ -131,11 +86,12 @@ def moderate_publishing(id, idc):
     pub.date_until = str_converter(pub.date_until)
 
     if request.method == "GET":
-        if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
+        error_msg = channels.check_config_and_validity(plugin, c_conf)
+        if error_msg is None:
             return render_template('moderate_publishing.html', pub=pub)
         else:
             return render_template('moderate_publishing.html', pub=pub,
-                                   error_message="This channel has not yet been configured")
+                                   error_message=error_msg)
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
@@ -157,9 +113,10 @@ def refuse_publishing(id, idc):
     from importlib import import_module
     plugin = import_module(plugin_name)
 
-    if not channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
+    error_msg = channels.check_config_and_validity(plugin, c_conf)
+    if error_msg is not None:
         return render_template('moderate_publishing.html', pub=pub,
-                               error_message="This channel has not yet been configured")
+                               error_message=error_msg)
 
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
@@ -200,9 +157,12 @@ def validate_publishing(id, idc):
     from importlib import import_module
     plugin = import_module(plugin_name)
 
-    if not check_config_and_commit_pub(pub, State.VALIDATED.value, plugin, c_conf):
+    error_msg = channels.check_config_and_validity(plugin, c_conf)
+    if error_msg is None:
+        commit_pub(pub, State.VALIDATED.value)
+    else:
         return render_template('moderate_publishing.html', pub=pub,
-                               error_message="This channel has not yet been configured")
+                               error_message=error_msg)
 
     mod = get_moderation(pub)
 

@@ -12,12 +12,23 @@ import ast
 channels_page = Blueprint('channels', __name__)
 
 
-def valid_conf(config, fields):
-    config_json = json.loads(config)
-    for field in fields:
+'''Check the current config and validity of the channel'''
+def check_config_and_validity(plugin, c_conf):
+    config_json = json.loads(c_conf)
+    for field in plugin.CONFIG_FIELDS:
         if field not in config_json:
-            return False
-    return True
+            return "This channel has not yet been configured"
+    try:
+        test_channel_still_valid = plugin.check_validity(c_conf)
+        if test_channel_still_valid != None:
+            error_message = 'You can no longer publish on this channel for the moment. '
+            error_message += test_channel_still_valid
+            error_message += ' Please contact an administrator to fix this error.'
+            return error_message
+
+    except AttributeError:
+        pass
+    return None
 
 
 @channels_page.route("/channels", methods=['GET', 'POST'])

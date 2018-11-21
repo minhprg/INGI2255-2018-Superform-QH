@@ -1,0 +1,37 @@
+{% extends "layout_publishing.html" %}
+{% block title %}Moderate{% endblock %}
+{% block sub_title %} Moderate this publication {% endblock %}
+{% block messages %}
+    <div class="form-group">
+        <label for="commentpub">Feedback</label><br>
+        <textarea class="form-control" rows="20" id="commentpub" name="commentpub"></textarea>
+    </div>
+{% endblock %}
+{% block button %}
+    {# FIXME: The tooltip don't work like this, some issues when using span and button together ...
+        Now the button works but the tooltip don't #}
+    <span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="You must write a feedback to the author if you refuse his/her post.">
+        <button id="refuse-button" class="btn btn-danger" style="pointer-events: all" formaction="{{ url_for('publishings.refuse_publishing', id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit" disabled>Refuse</button>
+    </span>
+    <button id="publish-button" class="btn btn-success" formaction="{{ url_for('publishings.validate_publishing', id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit" {% if error_message %} disabled {% endif %}>Publish</button>
+{% endblock %}
+{% block scripts %}
+    <script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+    $('#commentpub').on('keyup', function() {
+        var is_configured = {% if notconf %} false; {% else %} true; {% endif %}
+        var content = $(this).val();
+        console.log(content);
+        console.log(content.length);
+        if (content.length > 0 && is_configured) {
+            $('#refuse-button').attr('disabled', false);
+            $('#refuse-button').parent().tooltip('disable');
+        } else {
+            $('#refuse-button').attr('disabled', true);
+            $('#refuse-button').parent().tooltip('enable');
+        }
+    });
+    </script>
+{% endblock %}

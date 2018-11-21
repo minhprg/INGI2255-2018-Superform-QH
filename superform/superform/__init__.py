@@ -12,6 +12,9 @@ from superform.channels import channels_page
 from superform.posts import posts_page
 from superform.rssfeed import feed_viewer_page
 from superform.users import get_moderate_channels_for_user, is_moderator, channels_available_for_user
+from superform.users import get_moderate_channels_for_user, is_moderator
+from superform.plugins._linkedin_callback import linkedin_page
+from superform.plugins._facebook_callback import facebook_page
 
 app = Flask(__name__)
 app.config.from_json("config.json")
@@ -24,16 +27,17 @@ app.register_blueprint(posts_page)
 app.register_blueprint(pub_page)
 app.register_blueprint(lists_page)
 app.register_blueprint(feed_viewer_page)
+app.register_blueprint(facebook_page)
+app.register_blueprint(linkedin_page)
 
 # Init dbs
 db.init_app(app)
 
 # List available channels in config
-app.config["PLUGINS"] = {
-    name: importlib.import_module(name)
-    for finder, name, ispkg
-    in pkgutil.iter_modules(superform.plugins.__path__, superform.plugins.__name__ + ".")
-}
+app.config["PLUGINS"] = {}
+for finder, name, ispkg in pkgutil.iter_modules(superform.plugins.__path__, superform.plugins.__name__ + "."):
+    if name[18] != '_': # do not include files starting with an underscore (useful for callback pages)
+        app.config["PLUGINS"][name] = importlib.import_module(name)
 
 
 @app.route('/', methods=['GET', 'POST'])

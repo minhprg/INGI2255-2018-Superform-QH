@@ -5,14 +5,15 @@ setup(
     packages=['superform'],
     include_package_data=True,
     install_requires=[
-        'facebook-sdk',
         'flask',
-        'flask-sqlalchemy',
         'lxml',
         'pyopenssl',
         'PyRSS2Gen',
         'pytest',
         'python3-saml',
         'sqlalchemy',
+        'flask_sqlalchemy',
+        'facebook-sdk',
+        'pyopenssl'
     ],
 )

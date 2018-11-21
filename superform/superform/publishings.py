@@ -25,14 +25,6 @@ def commit_pub(pub, state):
     db.session.commit()
 
 
-def check_config_and_commit_pub(pub, state, plugin, c_conf):
-    if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-        commit_pub(pub, state)
-        return True
-    else:
-        return False
-
-
 def create_a_moderation(form, id, idc):
     message = form.get('commentpub') if form.get('commentpub') is not None else ""
     post = db.session.query(Post).filter(Post.id == id).first()
@@ -94,11 +86,12 @@ def moderate_publishing(id, idc):
     pub.date_until = str_converter(pub.date_until)
 
     if request.method == "GET":
-        if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
+        error_msg = channels.check_config_and_validity(plugin, c_conf)
+        if error_msg is None:
             return render_template('moderate_publishing.html', pub=pub)
         else:
             return render_template('moderate_publishing.html', pub=pub,
-                                   error_message="This channel has not yet been configured")
+                                   error_message=error_msg)
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
@@ -120,9 +113,10 @@ def refuse_publishing(id, idc):
     from importlib import import_module
     plugin = import_module(plugin_name)
 
-    if not channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
+    error_msg = channels.check_config_and_validity(plugin, c_conf)
+    if error_msg is not None:
         return render_template('moderate_publishing.html', pub=pub,
-                               error_message="This channel has not yet been configured")
+                               error_message=error_msg)
 
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
@@ -163,9 +157,12 @@ def validate_publishing(id, idc):
     from importlib import import_module
     plugin = import_module(plugin_name)
 
-    if not check_config_and_commit_pub(pub, State.VALIDATED.value, plugin, c_conf):
+    error_msg = channels.check_config_and_validity(plugin, c_conf)
+    if error_msg is None:
+        commit_pub(pub, State.VALIDATED.value)
+    else:
         return render_template('moderate_publishing.html', pub=pub,
-                               error_message="This channel has not yet been configured")
+                               error_message=error_msg)
 
     mod = get_moderation(pub)
 
@@ -282,3 +279,5 @@ def archive_publishing(id, idc):
     pub.update({Publishing.state: 2})
     db.session.commit()
     return redirect(url_for('index'))
+
+

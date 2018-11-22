@@ -18,8 +18,14 @@ def commit_pub(pub, state):
     pub.description = request.form.get('descrpost')
     pub.link_url = request.form.get('linkurlpost')
     pub.image_url = request.form.get('imagepost')
+
     pub.date_from = datetime_converter(request.form.get('datefrompost'))
+    time_from = time_converter(request.form.get('timefrompost'))
+    pub.date_from = pub.date_from.replace(hour=time_from.hour, minute=time_from.minute)
+
     pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
+    time_until = time_converter(request.form.get('timeuntilpost'))
+    pub.date_until = pub.date_until.replace(hour=time_until.hour, minute=time_until.minute)
 
     pub.state = state
     db.session.commit()
@@ -172,8 +178,11 @@ def validate_publishing(id, idc):
         mod[0].message = request.form.get('commentpub')
         db.session.commit()
 
-    plugin.run(pub, c_conf)
-    return redirect(url_for('index'))
+    isURL = plugin.run(pub, c_conf)
+    if not isURL:
+        return redirect(url_for('index'))
+    else:
+        return isURL
 
 
 @pub_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])

@@ -14,4 +14,4 @@ before_script: cd superform/
 script:
   - cp /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.test.json /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.json
   - export PYTHONPATH=/home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform
-  - pytest -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.p
+  - pytest -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py

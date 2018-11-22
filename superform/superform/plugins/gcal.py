@@ -125,35 +125,3 @@ def confirm(code):
     insert_in_gcal(credentials)
 
     return redirect(url_for('index'))
-
-"""
-@app.route('/return_gcal', methods=['POST'])
-@login_required()
-def return_gcal():
-    Handles the redirection back from the authorization server.
-    # The server should have responded with a "code" URL query parameter. This
-    # is needed to acquire credentials.
-    code = request.args.get('code')
-
-    # Before we redirected to the authorization server, we set a cookie to save
-    # the fake user for retrieval when handling the redirection back to this
-    # server. This is only needed because we are using this fake user
-    # name as a key to access credentials.
-    #fake_user = get_fake_user_from_cookie()
-
-    #
-    # This is an important step.
-    #
-    # We take the code provided by the authorization server and pass it to the
-    # flow.step2_exchange() function. This function contacts the authorization
-    # server and exchanges the "code" for credentials.
-    credentials = flow.step2_exchange(code)
-
-    # Call a helper function defined below to save these credentials.
-    save_credentials(credentials)
-
-    # Call a helper function defined below to get calendar data for this user.
-    insert_in_gcal(credentials)
-    
-    return redirect(url_for('index'))
-"""

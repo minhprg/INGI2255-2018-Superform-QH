@@ -16,16 +16,24 @@ def login_required(admin_required=False):
 
 
 def datetime_converter(stri):
-    return datetime.strptime(stri, "%Y-%m-%dT%H:%M")
+    return datetime.strptime(stri, "%Y-%m-%d")
+
+
+def time_converter(stri):
+    return datetime.strptime(stri, "%H:%M")
 
 
 def str_converter(datet):
-    return datetime.strftime(datet, "%Y-%m-%dT%H:%M")
+    return datetime.strftime(datet, "%Y-%m-%d")
+
+
+def str_time_converter(datet):
+    return datetime.strftime(datet, "%H:%M")
 
 
 def get_instance_from_module_path(module_p):
     import os
-    module_p = "superform/" + module_p.replace(".", os.sep) # use the os file path separator
+    module_p = module_p.replace(".", os.sep) # use the os file path separator
     import importlib.util
     spec = importlib.util.spec_from_file_location("module.name", module_p+".py")
     foo = importlib.util.module_from_spec(spec)

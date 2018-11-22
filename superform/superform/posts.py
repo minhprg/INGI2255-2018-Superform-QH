@@ -1,9 +1,12 @@
 from flask import Blueprint, url_for, request, redirect, session, render_template
 
 from superform.users import channels_available_for_user
+
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, get_instance_from_module_path
-from superform.models import db, Post, Publishing, Channel, User
+from superform.models import db, Post, Publishing, Channel
 import datetime
+from superform.publishings import create_a_publishing
+
 
 posts_page = Blueprint('posts', __name__)
 
@@ -31,6 +34,7 @@ def create_a_post(form):
     return p
 
 
+
 def create_a_publishing(post, chn, form):
     chan = str(chn.name)
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
@@ -55,6 +59,7 @@ def create_a_publishing(post, chn, form):
     db.session.add(pub)
     db.session.commit()
     return pub
+
 
 
 @posts_page.route('/new', methods=['GET', 'POST'])

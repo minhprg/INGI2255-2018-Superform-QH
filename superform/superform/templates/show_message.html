@@ -1,0 +1,19 @@
+{% extends "layout_publishing.html" %}
+{% block title %} Feedback {% endblock %}
+{% block sub_title %} Feedback for your publication {% endblock %}
+{% block messages %}
+    <label for="feedbackpub">Feedback</label>
+    <div class="card">
+        <div class="card-body">
+            {{ mod }}
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        $(document).ready(function() {
+            $('input').attr('readonly', true);
+            $('textarea').attr('readonly', true);
+        });
+    </script>
+{% endblock %}

@@ -1,11 +1,15 @@
 {% extends "layout.html" %}
-{% block title %}Moderate{% endblock %}
 {% block content %}
-    <h1>Moderate this publication</h1>
+    <h1>{% block sub_title %} {% endblock %}</h1>
     {% if session.logged_in %}
+        {% if error_message %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message }}
+            </div>
+        {% endif %}
         <form method="POST" action="">
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-8">
                     <div class="form-group">
                         <label for="titlepost">Title</label><br>
                         <input type="text" name="titlepost" id="titlepost" class="form-control" value="{{ pub.title }}">
@@ -38,10 +42,13 @@
                             </div>
                         </div>
                     </div>
-
+                    {% block additional_content %} {% endblock %}
+                </div>
+                <div class="col-md-4">
+                    {% block messages %} {% endblock %}
                 </div>
             </div>
-            <button class="btn btn-success">Publish</button>
+            {% block button %}{% endblock %}
         </form>
     {% else %}
         Your are not logged in.

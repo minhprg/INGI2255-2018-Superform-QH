@@ -8,12 +8,15 @@
                 <div class="col-md-8">
                     <div class="row">
                         <div class="col-md-12">
-                            {% for field in config_fields %}
                                 <div class="form-group">
-                                    <label for="{{ field }}">{{ field }}</label><br>
-                                    <input type="text" name="{{ field }}" id="{{ field }}" class="form-control" value="{{ channel.config_dict.get(field) }}">
+                                    <label for="{{ config_fields[0] }}">{{ config_fields[0] }}</label><br>
+                                    <input type="text" name="{{ config_fields[0] }}" id="{{ config_fields[0] }}" class="form-control" value="{{ channel.config_dict.get(config_fields[0]) }}" readonly>
+                                    <a type="button" class="btn btn-outline-primary" href="{{ url_token }}" style="margin-top:10px">Connect</a>
                                 </div>
-                            {% endfor %}
+ <div class="form-group">
+                                    <label for="{{ config_fields[1] }}">{{ config_fields[1] }}</label><br>
+                                    <input type="text" name="{{ config_fields[1] }}" id="{{ config_fields[1] }}" class="form-control" value="{{ channel.config_dict.get(config_fields[1]) }}">
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -26,3 +29,4 @@
     {% endif %}
 
 {% endblock %}
+

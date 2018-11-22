@@ -5,6 +5,15 @@ import datetime
 db = SQLAlchemy()
 
 
+class State(Enum):
+    INCOMPLETE = -1
+    NOTVALIDATED = 0
+    VALIDATED = 1
+    PUBLISHED = 2
+    REFUSED = 3
+    OUTDATED = 4
+
+
 class User(db.Model):
     id = db.Column(db.String(80), primary_key=True, unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -14,6 +23,7 @@ class User(db.Model):
 
     posts = db.relationship("Post", backref="user", lazy=True)
     authorizations = db.relationship("Authorization", backref="user", lazy=True)
+    moderation = db.relationship("Moderation", backref="user", lazy=True)
 
     def __repr__(self):
         return '<User {}>'.format(repr(self.id))
@@ -29,8 +39,10 @@ class Post(db.Model):
     image_url = db.Column(db.Text)
     date_from = db.Column(db.DateTime)
     date_until = db.Column(db.DateTime)
+    source = db.Column(db.Text)
 
     publishings = db.relationship("Publishing", backref="post", lazy=True)
+    moderation = db.relationship("Moderation", backref="post", lazy=True)
 
     __table_args__ = ({"sqlite_autoincrement": True},)
 
@@ -38,21 +50,30 @@ class Post(db.Model):
         return '<Post {}>'.format(repr(self.id))
 
     def is_a_record(self):
-        if (len(self.publishings) == 0):
+        if len(self.publishings) == 0:
             return False
         else:
             # check if all the publications from a post are archived
             for pub in self.publishings:
-                if (pub.state != 2):
+                if pub.state != State.PUBLISHED.value:
                     # state 2 is archived.
                     return False
             return True
 
 
+class Moderation(db.Model):
+    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
+    channel_id = db.Column(db.Integer, db.ForeignKey("channel.id"), nullable=False)
+    user_id = db.Column(db.Text, db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(db.Text)
+
+    __table_args__ = (db.PrimaryKeyConstraint('post_id', 'channel_id', 'user_id'),)
+
+
 class Publishing(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
     channel_id = db.Column(db.Integer, db.ForeignKey("channel.id"), nullable=False)
-    state = db.Column(db.Integer, nullable=False, default=-1)
+    state = db.Column(db.Integer, nullable=False, default=State.INCOMPLETE)
     title = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text)
     link_url = db.Column(db.Text)
@@ -75,8 +96,9 @@ class Channel(db.Model):
     module = db.Column(db.String(100), nullable=False)
     config = db.Column(db.Text, nullable=False)
 
-    publishings = db.relationship("Publishing", backref="channel", lazy=True)
+    publishings = db.relationship("Publishing", cascade="all, delete-orphan", backref="channel", lazy=True)
     authorizations = db.relationship("Authorization", cascade="all, delete", backref="channel", lazy=True)
+    moderation = db.relationship("Moderation", cascade="all, delete-orphan", backref="channel", lazy=True)
 
     __table_args__ = ({"sqlite_autoincrement": True},)
 
@@ -100,7 +122,3 @@ class Permission(Enum):
     AUTHOR = 1
     MODERATOR = 2
 
-
-class State(Enum):
-    WAITING = 1
-    PUBLISHED = 2

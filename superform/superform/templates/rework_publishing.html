@@ -1,0 +1,16 @@
+{% extends "layout_publishing.html" %}
+{% block title %} Rework {% endblock %}
+{% block sub_title %} Rework this publication {% endblock %}
+{% block button %}
+    <button class="btn btn-danger" formaction="{{ url_for('publishings.abort_rework_publishing', id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit">Abort</button>
+    <button class="btn btn-success" formaction="{{ url_for('publishings.validate_rework_publishing', id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit">Submit</button>
+{% endblock %}
+{% block messages %}
+    <label for="feedbackpub">Feedback</label>
+    <div class="card">
+        <div class="card-body">
+            {{ mod }}
+        </div>
+    </div>
+
+{% endblock %}

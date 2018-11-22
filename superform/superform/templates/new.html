@@ -246,6 +246,7 @@
             $('#' + chan_name + '_timefrompost').val(datefrom = (($('#timefrompost')).val()));
             $('#' + chan_name + '_dateuntilpost').val(dateuntil = (($('#dateuntilpost')).val()));
             $('#' + chan_name + '_timeuntilpost').val(dateuntil = (($('#timeuntilpost')).val()));
+            $('#' + chan_name + '_dateuntilpost').val(dateuntil = (($('#dateuntilpost')).val()));
             checkIfPublishable();
         }
         $('input.checkbox').change(function () {
@@ -261,6 +262,8 @@
                     var field_id = $('#'+split[i].toLowerCase()+'post').attr('id');
                     $("input[id='" + nameC + "_" + field_id + "']").prop('disabled', true);
                     $("textarea[id='" + nameC + "_" + field_id + "']").prop('disabled', true);
+
+
                     $("label[for='" + nameC + "_" + field_id + "']").append(
                         '<a href="#" data-toggle="popover" title="Unavailable field" data-content="This field is unavailable for channel '
                         + nameC

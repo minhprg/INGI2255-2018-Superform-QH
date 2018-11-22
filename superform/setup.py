@@ -6,14 +6,15 @@ setup(
     include_package_data=True,
     install_requires=[
         'flask',
+        'python3-saml',
+        'sqlalchemy',
+        'flask-sqlalchemy',
         'lxml',
         'pyopenssl',
         'PyRSS2Gen',
         'pytest',
-        'python3-saml',
-        'sqlalchemy',
-        'flask_sqlalchemy',
-        'facebook-sdk',
-        'pyopenssl'
+        'google-api-python-client',
+        'oauth2client',
+        'facebook-sdk'
     ],
 )

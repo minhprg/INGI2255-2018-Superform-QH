@@ -50,12 +50,16 @@ def test_new_records(client):
     d = datetime.date.today()
     d += datetime.timedelta(1)
     client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",
-                                  datefrompost=d.strftime("%Y-%m-%dT00:00"),
-                                  dateuntilpost=d.strftime("%Y-%m-%dT00:00")))
+                                  datefrompost=d.strftime("%Y-%m-%d"),
+                                  timefrompost=d.strftime("%H:%M"),
+                                  dateuntilpost=d.strftime("%Y-%m-%d"),
+                                  timeuntilpost=d.strftime("%H:%M")))
     client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
                                   'titlepost': 'A test_new_record publishing', 'descrpost': "A description",
-                                  'datefrompost': d.strftime("%Y-%m-%dT00:00"),
-                                  'dateuntilpost': d.strftime("%Y-%m-%dT00:00")})
+                                  'datefrompost': d.strftime("%Y-%m-%d"),
+                                  'timefrompost': d.strftime("%H:%M"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%d"),
+                                  'timeuntilpost': d.strftime("%H:%M")})
 
     # accept last publication
     post = db.session.query(Post).filter().all()
@@ -78,12 +82,16 @@ def test_new_records(client):
     d -= datetime.timedelta(3)
     client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",
                                   linkurlpost="http://www.test.com", imagepost="image.jpg",
-                                  datefrompost=d.strftime("%Y-%m-%dT00:00"),
-                                  dateuntilpost=d.strftime("%Y-%m-%dT00:00")))
+                                  datefrompost=d.strftime("%Y-%m-%d"),
+                                  timefrompost=d.strftime("%H:%M"),
+                                  dateuntilpost=d.strftime("%Y-%m-%d"),
+                                  timeuntilpost=d.strftime("%H:%M")))
     client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
                                   'titlepost': 'A test_new_record publishing', 'descrpost': "A description",
-                                  'datefrompost': d.strftime("%Y-%m-%dT00:00"),
-                                  'dateuntilpost': d.strftime("%Y-%m-%dT00:00")})
+                                  'datefrompost': d.strftime("%Y-%m-%d"),
+                                  'timefrompost': d.strftime("%H:%M"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%d"),
+                                  'timeuntilpost': d.strftime("%H:%M")})
     # accept last publication
     post = db.session.query(Post).filter().all()
     last_add = post[-1]
@@ -117,12 +125,16 @@ def test_delete_record(client):
     d -= datetime.timedelta(1)
     client.post('/new', data=dict(titlepost='A test_delete_record post', descrpost="A description",
                                   linkurlpost="http://www.test.com", imagepost="image.jpg",
-                                  datefrompost=d.strftime("%Y-%m-%dT00:00"),
-                                  dateuntilpost=d.strftime("%Y-%m-%dT00:00")))
+                                  datefrompost=d.strftime("%Y-%m-%d"),
+                                  timefrompost=d.strftime("%H:%M"),
+                                  dateuntilpost=d.strftime("%Y-%m-%d"),
+                                  timeuntilpost=d.strftime("%H:%M")))
     client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
                                   'titlepost': 'A test_delete_record publishing', 'descrpost': "A description",
-                                  'datefrompost': d.strftime("%Y-%m-%dT00:00"),
-                                  'dateuntilpost': d.strftime("%Y-%m-%dT00:00")})
+                                  'datefrompost': d.strftime("%Y-%m-%d"),
+                                  'timefrompost': d.strftime("%H:%M"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%d"),
+                                  'timeuntilpost': d.strftime("%H:%M")})
 
     # accept last publication
     post = db.session.query(Post).filter().all()

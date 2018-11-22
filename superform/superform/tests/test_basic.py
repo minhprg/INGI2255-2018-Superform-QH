@@ -82,7 +82,14 @@ def test_log_out(client):
 
 def test_new_post(client):
     login(client,"myself")
-    rv = client.post('/new',data=dict(titlepost='A new test post', descrpost= "A description", linkurlpost="http://www.test.com", imagepost="image.jpg",datefrompost="2018-07-01T00:00",dateuntilpost="2018-07-01T00:00"))
+    rv = client.post('/new',data=dict(titlepost='A new test post',
+                                      descrpost= "A description",
+                                      linkurlpost="http://www.test.com",
+                                      imagepost="image.jpg",
+                                      datefrompost="2018-07-01",
+                                      timefrompost="00:00",
+                                      dateuntilpost="2018-07-01",
+                                      timeuntilpost="02:00"))
     assert rv.status_code ==302
     posts = db.session.query(Post).all()
     assert len(posts)>0
@@ -117,7 +124,7 @@ def test_forbidden(client):
 
 
 def test_date_converters():
-    t = datetime_converter("2017-06-02T00:00")
+    t = datetime_converter("2017-06-02")
     assert t.day == 2
     assert t.month == 6
     assert t.year == 2017

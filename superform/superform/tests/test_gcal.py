@@ -105,11 +105,11 @@ def test_new_publish_gcal(client):
     # Create a post
     d = datetime.date.today()
     d += datetime.timedelta(1)
-    datefrom = d.strftime("%Y-%m-%dT%H:%M")
-    dateuntil = d.strftime("%Y-%m-%dT%H:%M")
     client.post('/new', data=dict(titlepost=title, descriptionpost=description,
-                                  datefrompost=datefrom,
-                                  dateuntilpost=dateuntil))
+                                  datefrompost=d.strftime("%Y-%m-%d"),
+                                  timefrompost=d.strftime("%H:%M"),
+                                  dateuntilpost=d.strftime("%Y-%m-%d"),
+                                  timeuntilpost=d.strftime("%H:%M")))
     post = db.session.query(Post).filter(Post.title == title) \
         .filter(Post.description == description).all()[-1]
     assert post
@@ -118,8 +118,11 @@ def test_new_publish_gcal(client):
     # Publish a post
     client.post('/publish',
                 data={'chan_option_' + str(chan.id): "chan_option_0", 'titlepost': title,
-                      'descriptionpost': description, 'datefrompost': datefrom,
-                      'dateuntilpost': dateuntil})
+                      'descriptionpost': description,
+                      'datefrompost': d.strftime("%Y-%m-%d"),
+                      'timefrompost': d.strftime("%H:%M"),
+                      'dateuntilpost': d.strftime("%Y-%m-%d"),
+                      'timeuntilpost': d.strftime("%H:%M")})
     pub = db.session.query(Publishing).filter(Publishing.title == title) \
         .filter(Publishing.description == description).all()[-1]
     assert pub
@@ -129,8 +132,11 @@ def test_new_publish_gcal(client):
     print(chan_id_1)
     print(chan.id)
     client.post('/moderate/' + str(pub.post_id) + '/' + str(chan.id), data={'titlepost': title,
-                                                           'descrpost': description, 'datefrompost': datefrom,
-                                                           'dateuntilpost': dateuntil})
+                                                           'descrpost': description,
+                                  'datefrompost': d.strftime("%Y-%m-%d"),
+                                  'timefrompost': d.strftime("%H:%M"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%d"),
+                                  'timeuntilpost': d.strftime("%H:%M")})
 
     # Cleaning up
     db.session.delete(post)

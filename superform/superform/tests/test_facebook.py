@@ -4,7 +4,7 @@ import tempfile
 
 import pytest
 
-from models import Channel
+from superform.models import Channel
 from superform import app, db
 from superform.plugins import facebook
 

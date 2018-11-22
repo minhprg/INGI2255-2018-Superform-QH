@@ -10,6 +10,7 @@ install:
   - pip install Flask
   - SETUP_ENV=travis python superform/setup.py install
 # command to run tests
+before_script: cd superform/
 script:
   - cp /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.test.json /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.json
   - export PYTHONPATH=/home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform

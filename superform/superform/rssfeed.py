@@ -1,20 +1,17 @@
-from flask import Blueprint, make_response, render_template
+import os
 from pathlib import Path
+
+from flask import Blueprint, make_response, render_template
 
 feed_viewer_page = Blueprint('rssfeed', __name__)
 
 
-def tester():
-    print(Path(".").absolute())
-
-
 @feed_viewer_page.route('/rss/<string:feed_url>', methods=["GET"])
 def get_rss_feed(feed_url):
-    full_path = "./../plugins/rssfeeds/" + feed_url
-    folder = Path("./../plugins/rssfeeds/")
-    print(str(folder.exists()) + " " + str(folder.absolute()))
-    file = Path(full_path)
-    resp = None
+    rssfeed_path = os.path.dirname(__file__)
+    if '.xml' not in feed_url:
+        feed_url += '.xml'
+    file = Path(rssfeed_path + "/plugins/rssfeeds/" + feed_url)
     if file.exists():
         # Ok !
         with open(file, 'r') as f:

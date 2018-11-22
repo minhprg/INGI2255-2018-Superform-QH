@@ -3,14 +3,18 @@ import pkgutil
 import importlib
 
 import superform.plugins
+from superform.lists import lists_page
 from superform.publishings import pub_page
-from superform.models import db, User, Post,Publishing
+from superform.models import db, Channel, Post, Publishing, User, State
 from superform.authentication import authentication_page
 from superform.authorizations import authorizations_page
 from superform.channels import channels_page
 from superform.posts import posts_page
 from superform.rssfeed import feed_viewer_page
+from superform.users import get_moderate_channels_for_user, is_moderator, channels_available_for_user
 from superform.users import get_moderate_channels_for_user, is_moderator
+from superform.plugins._linkedin_callback import linkedin_page
+from superform.plugins._facebook_callback import facebook_page
 
 app = Flask(__name__)
 app.config.from_json("config.json")
@@ -21,35 +25,52 @@ app.register_blueprint(authorizations_page)
 app.register_blueprint(channels_page)
 app.register_blueprint(posts_page)
 app.register_blueprint(pub_page)
+app.register_blueprint(lists_page)
 app.register_blueprint(feed_viewer_page)
+app.register_blueprint(facebook_page)
+app.register_blueprint(linkedin_page)
 
 # Init dbs
 db.init_app(app)
 
 # List available channels in config
-app.config["PLUGINS"] = {
-    name: importlib.import_module(name)
-    for finder, name, ispkg
-    in pkgutil.iter_modules(superform.plugins.__path__, superform.plugins.__name__ + ".")
-}
+app.config["PLUGINS"] = {}
+for finder, name, ispkg in pkgutil.iter_modules(superform.plugins.__path__, superform.plugins.__name__ + "."):
+    if name[18] != '_': # do not include files starting with an underscore (useful for callback pages)
+        app.config["PLUGINS"][name] = importlib.import_module(name)
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
-    posts=[]
-    flattened_list_pubs =[]
-    published_list=[]
+    user_posts = []
+    flattened_list_moderable_pubs = []
+    my_accepted_pubs = []
+    my_refused_pubs = []
     if user is not None:
-        setattr(user,'is_mod',is_moderator(user))
-        posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", ""))
-        chans = get_moderate_channels_for_user(user)
-        pubs_per_chan = (db.session.query(Publishing).filter((Publishing.channel_id == c.name) &
-                                                             (Publishing.state == 0)) for c in chans)
-        published_per_chan = (db.session.query(Publishing).filter((Publishing.channel_id == c.name) &
-                                                                  (Publishing.state == 1)) for c in chans)
-        flattened_list_pubs = [y for x in pubs_per_chan for y in x]
-        published_list = [y for x in published_per_chan for y in x]
+        setattr(user, 'is_mod', is_moderator(user))
+        from sqlalchemy import desc
+
+        user_posts = db.session.query(Post).filter(Post.user_id == session.get("user_id", "")).order_by(desc(Post.id))\
+            .limit(5).all()
+        channels_moderable = get_moderate_channels_for_user(user)
+        moderable_pubs_per_chan = (db.session.query(Publishing)
+                                   .filter(Publishing.channel_id == c.id)
+                                   .filter(Publishing.state == State.NOTVALIDATED.value)
+                                   .order_by(desc(Publishing.post_id)).limit(5)
+                                   .all() for c in channels_moderable)
+        flattened_list_moderable_pubs = [y for x in moderable_pubs_per_chan for y in x]
+        my_refused_pubs = [pub for _, _, pub in db.session.query(Channel, Post, Publishing)
+                   .filter(Channel.id == Publishing.channel_id)
+                   .filter(Publishing.post_id == Post.id)
+                   .filter(Publishing.state == State.REFUSED.value)
+                   .filter(Post.user_id == user.id).order_by(desc(Post.id)).limit(5).all()]
+        my_accepted_pubs = [pub for _, _, pub in db.session.query(Channel, Post, Publishing)
+            .filter(Channel.id == Publishing.channel_id)
+            .filter(Publishing.post_id == Post.id)
+            .filter(Publishing.state == State.VALIDATED.value)
+            .filter(Post.user_id == user.id).order_by(desc(Post.id)).limit(5).all()]
+
         if request.method == "POST" and request.form.get('@action', '') == "delete":
             post_id = request.form.get("id")
             post = Post.query.get(post_id)
@@ -57,8 +78,13 @@ def index():
                 db.session.delete(post)
                 db.session.commit()
 
-    return render_template("index.html", user=user, posts=posts, publishings=flattened_list_pubs,
-                           published=published_list)
+    error_messages = ""
+    if 'messages' in request.args:
+        error_messages = request.args['messages']
+
+    return render_template("index.html", user=user, posts=user_posts, publishings=flattened_list_moderable_pubs,
+                           my_refused_publishings=my_refused_pubs, my_accepted_publishings=my_accepted_pubs,
+                           error_message=error_messages, states=State)
 
 
 @app.errorhandler(403)

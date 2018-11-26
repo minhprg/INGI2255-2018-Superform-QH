@@ -114,25 +114,11 @@ def refuse_publishing(id, idc):
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
 
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-
-    error_msg = channels.check_config_and_validity(plugin, c_conf)
-    if error_msg is not None:
-        return render_template('moderate_publishing.html', pub=pub,
-                               error_message=error_msg)
-
-    pub.date_from = str_converter(pub.date_from)
-    pub.date_until = str_converter(pub.date_until)
-
     if request.form.get('commentpub') == "":
+        pub.date_from = str_converter(pub.date_from)
+        pub.date_until = str_converter(pub.date_until)
         return render_template('moderate_publishing.html', pub=pub,
                                error_message="You must give a feedback to the author")
-
-    pub.date_from = datetime_converter(pub.date_from)
-    pub.date_until = datetime_converter(pub.date_until)
 
     mod = get_moderation(pub)
 
@@ -166,6 +152,8 @@ def validate_publishing(id, idc):
     error_msg = channels.check_config_and_validity(plugin, c_conf)
     if error_msg is None:
         commit_pub(pub, State.VALIDATED.value)
+        pub.date_from = str_converter(pub.date_from)
+        pub.date_until = str_converter(pub.date_until)
     else:
         return render_template('moderate_publishing.html', pub=pub,
                                error_message=error_msg)
@@ -219,13 +207,13 @@ def view_feedback(id, idc):
         return render_template('show_message.html', pub=pub, mod=message)
 
 
-@pub_page.route('/edit/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
+@pub_page.route('/rework/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
 @login_required()
 def abort_rework_publishing(id, idc):
     return redirect(url_for('index'))
 
 
-@pub_page.route('/edit/<int:id>/<string:idc>', methods=["GET"])
+@pub_page.route('/rework/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
 def rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
@@ -247,7 +235,7 @@ def rework_publishing(id, idc):
         return render_template('rework_publishing.html', pub=pub, mod=message)
 
 
-@pub_page.route('/edit/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
+@pub_page.route('/rework/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
 @login_required()
 def validate_rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
@@ -288,5 +276,3 @@ def archive_publishing(id, idc):
     pub.update({Publishing.state: 2})
     db.session.commit()
     return redirect(url_for('index'))
-
-

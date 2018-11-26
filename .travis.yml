@@ -12,6 +12,6 @@ install:
 # command to run tests
 before_script: cd superform/
 script:
-  - cp /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.test.json /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.json
-  - export PYTHONPATH=/home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform
-  - pytest -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py
+  - cp superform/config.test.json superform/config.json
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
+  - pytest -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py

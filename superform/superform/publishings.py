@@ -20,11 +20,11 @@ def commit_pub(pub, state):
     pub.image_url = request.form.get('imagepost')
 
     pub.date_from = datetime_converter(request.form.get('datefrompost'))
-    time_from = time_converter(request.form.get('timefrompost'))
+    time_from = time_converter(request.form.get('timefrompost')) if request.form.get('timefrompost') is not None else time_converter("0:0")
     pub.date_from = pub.date_from.replace(hour=time_from.hour, minute=time_from.minute)
 
     pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
-    time_until = time_converter(request.form.get('timeuntilpost'))
+    time_until = time_converter(request.form.get('timeuntilpost')) if request.form.get('timeuntilpost') is not None else time_converter("0:0")
     pub.date_until = pub.date_until.replace(hour=time_until.hour, minute=time_until.minute)
 
     pub.state = state

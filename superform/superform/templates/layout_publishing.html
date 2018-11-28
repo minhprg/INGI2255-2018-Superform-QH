@@ -1,8 +1,12 @@
 {% extends "layout.html" %}
-{% block title %}Moderate{% endblock %}
 {% block content %}
-    <h1>Moderate this publication</h1>
+    <h1>{% block sub_title %} {% endblock %}</h1>
     {% if session.logged_in %}
+        {% if error_message %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message }}
+            </div>
+        {% endif %}
         <form method="POST" action="">
             <div class="row">
                 <div class="col-md-12">
@@ -28,19 +32,24 @@
                             <div class="form-group">
                                 <label for="datefrompost">Publication Date</label><br>
                                 <input id="datefrompost" name="datefrompost" type="date" class="form-control" value="{{ pub.date_from }}">
+                                <input id="timefrompost" name="timefrompost" type="time"  class="form-control" value="{{ time_from }}" >
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="dateuntilpost">Publication Until</label><br>
                                 <input id="dateuntilpost" name="dateuntilpost" type="date" class="form-control" value="{{ pub.date_until }}">
+                                <input id="timeuntilpost" name="timeuntilpost" type="time"  class="form-control" value="{{ time_until }}" >
                             </div>
                         </div>
                     </div>
-
+                    {% block additional_content %} {% endblock %}
+                </div>
+                <div class="col-md-4">
+                    {% block messages %} {% endblock %}
                 </div>
             </div>
-            <button class="btn btn-success">Publish</button>
+            {% block button %}{% endblock %}
         </form>
     {% else %}
         Your are not logged in.

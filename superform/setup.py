@@ -9,6 +9,13 @@ setup(
         'python3-saml',
         'sqlalchemy',
         'flask-sqlalchemy',
-        'requests'
+        'requests',
+        'lxml',
+        'pyopenssl',
+        'PyRSS2Gen',
+        'pytest',
+        'google-api-python-client',
+        'oauth2client',
+        'facebook-sdk'
     ],
 )

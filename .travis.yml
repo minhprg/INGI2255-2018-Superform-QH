@@ -1,0 +1,17 @@
+language: python
+python:
+  - "3.5"
+  - "3.6"
+before_install:
+- sudo apt-get update -qq
+- sudo apt-get install -qq libxmlsec1-dev pkg-config
+# command to install dependencies
+install:
+  - pip install Flask
+  - SETUP_ENV=travis python superform/setup.py install
+# command to run tests
+before_script: cd superform/
+script:
+  - cp /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.test.json /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.json
+  - export PYTHONPATH=/home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform
+  - pytest -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py

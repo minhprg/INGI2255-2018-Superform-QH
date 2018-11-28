@@ -1,10 +1,34 @@
+import json
+
 from flask import Blueprint, current_app, url_for, request, make_response, redirect, session, render_template
+
+import requests
+import json
 
 from superform.utils import login_required, get_instance_from_module_path, get_modules_names, get_module_full_name
 from superform.models import db, Channel
 import ast
 
 channels_page = Blueprint('channels', __name__)
+
+
+'''Check the current config and validity of the channel'''
+def check_config_and_validity(plugin, c_conf):
+    config_json = json.loads(c_conf)
+    for field in plugin.CONFIG_FIELDS:
+        if field not in config_json:
+            return "This channel has not yet been configured"
+    try:
+        test_channel_still_valid = plugin.check_validity(c_conf)
+        if test_channel_still_valid != None:
+            error_message = 'You can no longer publish on this channel for the moment. '
+            error_message += test_channel_still_valid
+            error_message += ' Please contact an administrator to fix this error.'
+            return error_message
+
+    except AttributeError:
+        pass
+    return None
 
 
 @channels_page.route("/channels", methods=['GET', 'POST'])
@@ -46,10 +70,13 @@ def configure_channel(id):
     config_fields = clas.CONFIG_FIELDS
 
     if request.method == 'GET':
-        if (c.config is not ""):
+        if c.config is not "":
             d = ast.literal_eval(c.config)
             setattr(c, "config_dict", d)
-        return render_template("channel_configure.html", channel=c, config_fields=config_fields)
+        try:
+            return clas.render_specific_config_page(c, config_fields)
+        except AttributeError:
+            return render_template("channel_configure.html", channel=c, config_fields=config_fields)
     str_conf = "{"
     cfield = 0
     for field in config_fields:

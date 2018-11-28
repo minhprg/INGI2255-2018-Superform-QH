@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    {% if session.logged_in %}
+        <div class="row">
+        <div class="col-md-12">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>
+                        Channel
+                    </th>
+                    <th>
+                        Subject
+                    </th>
+                    <th>
+                        Action
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in my_publishings %}
+                    {% if item.state == state %}
+                    <tr>
+                        <td>
+                            {{ item.channel.name }}
+                        </td>
+                        <td>
+                            {{ item.title }}
+                        </td>
+                        <td>
+                            {% if to_moderate %}
+                                <a href="{{ url_for('publishings.moderate_publishing',id=item.post_id,idc=item.channel_id) }}" class="btn btn-outline-primary" role="button">Moderate</a>
+                            {% else %}
+                                {% if state == states.REFUSED.value %}
+                                    <a href="{{ url_for('publishings.rework_publishing',id=item.post_id,idc=item.channel_id) }}" class="btn btn-outline-primary" role="button">Rework</a>
+                                {% elif state == states.NOTVALIDATED.value %}
+                                    <a href="{{ url_for('publishings.view_publishing',id=item.post_id,idc=item.channel_id) }}" class="btn btn-outline-primary" role="button">View publishing</a>
+                                {% elif state == states.VALIDATED.value %}
+                                    <a href="{{ url_for('publishings.view_feedback',id=item.post_id,idc=item.channel_id) }}" class="btn btn-outline-primary" role="button">View feedback</a>
+                                {% endif %}
+                                <a href="#" class="btn btn-outline-primary">Copy</a>
+                                <a href="#" class="btn btn-outline-warning" role="button">Delete</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        </div>
+    {% else %}
+        <p>Your are not logged in.</p>
+    {% endif %}
+
+{% endblock %}

@@ -1,5 +1,5 @@
 import json
-from requests import get, post
+from requests import get, post, exceptions
 import datetime
 
 FIELDS_UNAVAILABLE = ['ictv_data_form']
@@ -15,6 +15,9 @@ def generate_warning_popup(msg):
 class IctvException(Exception):
     msg = ''
 
+    def __init__(self, msg):
+        self.msg = msg
+
     def __str__(self):
         return self.msg
 
@@ -23,13 +26,26 @@ class IctvException(Exception):
 
 
 class IctvServerConnection(IctvException):
-    def __init__(self, error_code):
-        self.msg = 'Superform cannot contact the ICTV server !\n\n'
+    # TODO : refactor the error messages
+    def __init__(self, error_code, **kwargs):
+        client_msg = ''
+        if 'msg' in kwargs:
+            client_msg = kwargs['msg']
+        self.msg = '<p>Bad auhtentication : Superform cannot contact the ICTV server !</p>\n\n'
         if error_code == 403:
-            self.msg = self.msg + 'Please, check the following points :\n' \
-                                  '\t* Is the channel id given in the configuration the one from the ICTV server ?\n' \
-                                  '\t* Is the REST API enabled on the channel of the ICTV server ?\n' \
-                                  '\t* Are the API keys matching ?\n'
+            self.msg += 'Please, check the following points :\n' \
+                        '\t* Is the channel id given in the configuration the one from the ICTV server ?\n' \
+                        '\t* Is the REST API enabled on the channel of the ICTV server ?\n' \
+                        '\t* Are the API keys matching ?\n'
+        elif error_code == 400:
+            self.msg += 'The ' + client_msg + ' was misformed. Please correct the data and retry.\n' \
+                        'If the error persists, take contact with an administrator.'
+        elif error_code == 404:
+            if client_msg == 'slide':
+                self.msg += '<p>The capsule for the slide was not found on the server.</p>'
+            else:
+                self.msg += '<p>The ictv server is unaccessible. The requests toward the server fails.</p>\n' \
+                            '<p>Superform cannot ask the different slides layouts ...</p>'
 
 
 class IctvChannelConfiguration(IctvException):
@@ -42,24 +58,28 @@ class IctvChannelConfiguration(IctvException):
         self.msg = self.msg + '\t</ul>\n<p>You wont be able to submit your post on this channel !</p>\n<p>Please, ' \
                               'refer to the channel administrator.</p>\n'
 
+class IctvWrongSlideType(IctvException):
+    pass
+
 
 # TODO : more interesting to have "plugins manager" in core application to check the configuration
-def check_ictv_channel_config(channel):
+def check_ictv_channel_config(chan_name, chan_config):
     """
     Check if the ictv channel is properly configured
-    :param channel: the channel having ictv as plugin
+    :param chan_name: the channel name having ictv as plugin
+    :param chan_config:
     :raise: IctvChannelConfiguration if the channel is misconfigured
     """
-    json_data = json.loads(channel.config)
+    json_data = json.loads(chan_config)
     missing_fields = [i for i in CONFIG_FIELDS if (i not in json_data or json_data[i] == 'None')]
     if len(missing_fields) != 0:
-        missing_fields.append(channel.name)
+        missing_fields.append(chan_name)
         raise IctvChannelConfiguration(missing_fields)
     else:
         return json_data
 
 
-def build_ictv_server_request_args(channel, method):
+def build_ictv_server_request_args(chan_name, chan_config, method):
     """
     Return the headers required to communicate with the ICTV server given the channel configuration and the type of
     request
@@ -68,7 +88,7 @@ def build_ictv_server_request_args(channel, method):
     :return: a dict with the headers of the method of the HTTP request and the url of the channel of the ICTV server
     :raise: IctvChannelConfiguration if the channel is misconfigured
     """
-    json_data = check_ictv_channel_config(channel)
+    json_data = check_ictv_channel_config(chan_name, chan_config)
 
     base_url = 'http://' + json_data['ictv_server_fqdn'] + '/channels/' + json_data['ictv_channel_id'] + '/api'
     headers = {'accept': 'application/json', 'X-ICTV-editor-API-Key': json_data['ictv_api_key']}
@@ -77,7 +97,7 @@ def build_ictv_server_request_args(channel, method):
     return {'url': base_url, 'headers': headers}
 
 
-def get_ictv_templates(channel):
+def get_ictv_templates(chan_name, chan_config):
     """
     Request the dict of the different slides layout used by the ICTV server
     :param channel: the channel having ictv as plugin
@@ -89,9 +109,12 @@ def get_ictv_templates(channel):
     from re import sub
 
     """ Raise IctvChannelConfiguration if the channel is misconfigured """
-    request_args = build_ictv_server_request_args(channel, 'GET')
+    request_args = build_ictv_server_request_args(chan_name, chan_config, 'GET')
+    try:
+        response = get(request_args['url'] + '/templates', headers=request_args['headers'])
+    except exceptions.ConnectionError as e:
+        raise IctvServerConnection(404)
 
-    response = get(request_args['url'] + '/templates', headers=request_args['headers'])
     """ Raise IctvServerConnection if the server replies with status code different from 200 """
     if response.status_code != 200:
         raise IctvServerConnection(response.status_code)
@@ -110,24 +133,23 @@ def get_ictv_templates(channel):
 def generate_ictv_dropdown_control(chan_name):
 
     code = '$("#' + chan_name + '_ictv_slide_choice_button").click(function () {' \
-                                'var name = $("#'+ chan_name + '_ictv_slide_choice_button input:radio:checked").val();\n' \
-                                'console.log(name);\n' \
-                                '$(".'+ chan_name +'_ictv_slide_choice").hide();\n' \
-                                '$("#'+ chan_name +'_ictv_form_"+name).show();\n' \
-                                '});'
+            'var name = $("#'+ chan_name + '_ictv_slide_choice_button input:radio:checked").val();\n' \
+            '$(".' + chan_name + '_ictv_slide_choice").hide();\n' \
+            '$("#' + chan_name + '_ictv_form_"+name).show();\n' \
+            '});'
     return code
 
 
-def generate_ictv_dropdown(chan, templates):
-    button_id = chan.name + '_ictv_slide_choice_button'
+def generate_ictv_dropdown(chan_name, templates):
+    button_id = chan_name + '_ictv_slide_choice_button'
     ret = '<div class="form-group chan_names" id="'+ button_id + '">\n<meta id="chan_name" data-chan_name="' + \
-          chan.name + '">\n'
+          chan_name + '">\n'
     ret = ret + '\t<button class="dropdown-toggle" type="button" data-toggle="dropdown" ' \
                 '>Slide Layout<span class="caret"></span></button>\n'
     ret = ret + '\t<ul class="dropdown-menu">\n'
     for index, temp in enumerate(templates):
-        input_id = chan.name + '_ictv_slide_type_' + temp
-        input_name = chan.name + '_ictv_slide_type'
+        input_id = chan_name + '_ictv_slide_type_' + temp
+        input_name = chan_name + '_ictv_slide_type'
         ret = ret + '\t\t<li>\n\t\t\t<div class = "form-check">\n'
         ret = ret + '\t\t\t\t<input class="form-check-input" type="radio" name="' + input_name + \
                     '"id="' + input_id + '" value="' + temp + '" ' + ('checked' if index == 0 else '') + '>\n'
@@ -139,12 +161,12 @@ def generate_ictv_dropdown(chan, templates):
     return ret
 
 
-def generate_ictv_data_form(chan, templates):
+def generate_ictv_data_form(chan_name, templates):
     ret = ''
 
     for index, temp in enumerate(templates):
-        div_id = chan.name + '_ictv_form_' + temp
-        ret = ret + '<div id="' + div_id + '" class=\"'+ chan.name +'_ictv_slide_choice\" ' + \
+        div_id = chan_name + '_ictv_form_' + temp
+        ret = ret + '<div id="' + div_id + '" class=\"'+ chan_name +'_ictv_slide_choice\" ' + \
               ('style=\"display: none;\"' if index != 0 else '') + '>\n'
         ret = ret + '\t<h5>' + templates[temp]['name'] + '</h5>\n'
 
@@ -152,10 +174,10 @@ def generate_ictv_data_form(chan, templates):
             if field != 'description' and field != 'name' and 'subtitle' not in field and 'title' not in field and \
                     'text' not in field:
                 ret = ret + '\t<div class="form-group">\n'
-                ret = ret + '\t\t<label for="' + chan.name + '_data_' + temp + '_' + field + \
+                ret = ret + '\t\t<label for="' + chan_name + '_data_' + temp + '_' + field + \
                             '">' + field + '</label><br>\n'
-                ret = ret + '\t\t<input type="text" name="' + chan.name + '_data_' + temp + '_' + field + \
-                            '" id="' + chan.name + '_data_' + temp + '_' + field + '" class="form-control">\n'
+                ret = ret + '\t\t<input type="text" name="' + chan_name + '_data_' + temp + '_' + field + \
+                            '" id="' + chan_name + '_data_' + temp + '_' + field + '" class="form-control">\n'
                 ret = ret + '\t</div>\n'
 
         ret = ret + '</div>\n'
@@ -163,11 +185,13 @@ def generate_ictv_data_form(chan, templates):
     return ret
 
 
-def generate_ictv_fields(chan):
-    templates = get_ictv_templates(chan)
+def generate_ictv_fields(chan_name, chan_config):
+    templates = get_ictv_templates(chan_name, chan_config)
     # TODO : maybe avoid  the replication of the fields dict
-    return {'dropdown': generate_ictv_dropdown(chan, templates), 'data': generate_ictv_data_form(chan, templates),
-            'control': generate_ictv_dropdown_control(chan.name), 'error': ''}
+    return {'dropdown': generate_ictv_dropdown(chan_name, templates),
+            'data': generate_ictv_data_form(chan_name, templates),
+            'control': generate_ictv_dropdown_control(chan_name),
+            'error': ''}
 
 
 def process_ictv_channels(channels):
@@ -179,7 +203,7 @@ def process_ictv_channels(channels):
     ret = {}
     for chan in channels:
         try:
-            fields = generate_ictv_fields(chan)
+            fields = generate_ictv_fields(chan.name, chan.config)
         except (IctvChannelConfiguration, IctvServerConnection) as e:
             # TODO : maybe avoid  the replication of the fields dict
             ret[chan.name] = {'data': '', 'dropdown': '', 'control': '', 'error': e.popup()}
@@ -190,20 +214,49 @@ def process_ictv_channels(channels):
 
 
 def generate_slide(chan_conf, pub):
+    """
+    Request the ICTV server the different slides layout and generate the slide corresponding to the publication data
+    :param chan_conf: the configuration of the ictv channel
+    :param pub: the publication to turn into a slide
+    :return: the JSON representation of the slide
+    :raise IctvServerConnection: if the communication with the server is impossible for any reason
+    :raise IctvChannelConfiguration: if the channel is misconfigured and that does not allow to contact the ICTV server
+    :raise IctvWrongSlideType: if the slide type given with the publication does not exist on the ICTV server. Should
+                                never be raised
+    """
     splited_url = pub.link_url.split(',')
-    slide_type = splited_url[-1]
-    slide_content = get_ictv_templates(chan_conf)[slide_type]
 
+    """ Slide type is the last element of the list """
+    slide_type = splited_url[-1]
+
+    """ 
+        Request the templates to the ICTV server 
+        Raise IctvServerConnection, IctvChannelConfiguration
+    """
+    slides_templates = get_ictv_templates(str(pub.channel_id), chan_conf)
+
+    if slide_type in slides_templates:
+        slide_content = slides_templates[slide_type]
+    else:
+        # TODO : correct error msg
+        raise IctvWrongSlideType("TODO ERROR")
+
+    """ Copy extra data from ICTV specific form into the slide template """
     slide_data = {media_type: url for media_type, url in (media.split(':::') for media in splited_url[:-1])}
     for elem in slide_data:
         """ quick fix, incoherence in ICTV response (img vs image) """
+        # TODO : remove quick fix
         if 'img' in elem:
             slide_content.pop(elem, None)
             slide_content['image-1'] = {'src': slide_data[elem]}
         else:
             slide_content[elem] = {'src': slide_data[elem]}
+
+        # TODO : allow the user to choose the background size
         if 'background' in elem:
             slide_content[elem]['size'] = 'cover'
+
+    """ Add publication data to the slide template """
     slide_content['title-1'] = {'text': pub.title}
     slide_content['text-1'] = {'text': pub.description}
     slide_content['subtitle-1'] = {'text': ''}
@@ -217,7 +270,7 @@ def get_epoch(date):
 
 def generate_capsule(pub):
     """
-    Create the JSON representation of a given publication
+    Create the JSON representation of the capsule that will contain the slide
     :param pub: the publication
     :return: the JSON capsule
     """
@@ -229,43 +282,29 @@ def generate_capsule(pub):
 
 
 def run(pub, chan_conf, **kwargs):
-    json_data = json.loads(chan_conf)
 
-    """ Check channel config """
-    for i in json_data:
-        if i is None:
-            pass
-            # TODO : popup with error
+    try:
+        slide = generate_slide(chan_conf, pub)
+    except (IctvServerConnection, IctvChannelConfiguration, IctvWrongSlideType) as e:
+        return e.popup()
 
-    slide = generate_slide(chan_conf, pub)
     capsule = generate_capsule(pub)
 
     """ Create new capsule on ICTV server on given channel """
-    request_args = build_ictv_server_request_args(chan_conf, 'POST')
+    request_args = build_ictv_server_request_args(pub.channel_id, chan_conf, 'POST')
     capsules_url = request_args['url'] + '/capsules'
     # TODO : catch errors on request
     capsule_request = post(capsules_url, json=capsule, headers=request_args['headers'])
 
-    """ Check if the capsule has been created, if true : send the slide, else : prompt popup """
+    """ Check if the capsule has been created """
     if capsule_request.status_code == 201:
-        capsule_id = capsule_request.headers['Location'].split('/')
-        capsule_id = capsule_id[len(capsule_id) - 1]
+        capsule_id = capsule_request.headers['Location'].split('/')[-1]
         slide_url = capsules_url + '/' + str(capsule_id) + '/slides'
         # TODO : catch errors on request
         slide_request = post(slide_url, json=slide, headers=request_args['headers'])
         if slide_request.status_code == 201:
-            # TODO : display popup
-            print('Slide created')
-            pass
+            return None
         else:
-            # TODO : display popup with error
-            print('error with slide creation')
-            pass
+            return IctvServerConnection(slide_request.status_code, msg='slide').popup()
     else:
-        # TODO : raise popup on superform
-        error_str = 'capsule error'
-        if capsule_request.status_code == 400:
-            error_str = 'The capsule was misformed\n'
-        elif capsule_request.status_code == 403:
-            error_str = 'Bad authentication: you should check the ICTV API key in the channel configuration\n'
-        print(error_str)
+        return IctvServerConnection(capsule_request.status_code, msg='capsule').popup()

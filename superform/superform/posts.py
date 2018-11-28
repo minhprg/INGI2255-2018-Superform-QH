@@ -32,16 +32,19 @@ def create_a_publishing(post, chn, form):
 
     # TODO : move the complexity to ictv plugin
     # TODO : change the condition
-    if chn.module == 'superform.plugins.ictv':
-        link_post = ''
+    clas = get_instance_from_module_path(chn.module)
+    unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
+    if 'ictv_data_form' in unaivalable_fields:
         slide_type = form.get(chan + '_ictv_slide_type')
-        req = form.to_dict()
-        for i in req:
-            if chan + '_data_' + slide_type in i:
-                a = sub('^' + chan + '_data_' + slide_type + '_', '', i)
-                link_post = link_post + a + ":::" + req[i] + ','
+        if slide_type != None:
+            link_post = ''
+            req = form.to_dict()
+            for i in req:
+                if chan + '_data_' + slide_type in i:
+                    a = sub('^' + chan + '_data_' + slide_type + '_', '', i)
+                    link_post = link_post + a + ":::" + req[i] + ','
 
-        link_post = link_post + slide_type
+            link_post = link_post + slide_type
 
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(

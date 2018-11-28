@@ -14,5 +14,6 @@ setup(
         'pytest',
         'python3-saml',
         'sqlalchemy',
+        'requests'
     ],
 )

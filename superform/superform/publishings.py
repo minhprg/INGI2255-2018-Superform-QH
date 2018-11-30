@@ -120,12 +120,12 @@ def refuse_publishing(id, idc):
     if pub.state != State.NOTVALIDATED.value:
         return redirect(url_for('index', messages="This publication has already been moderated"))
 
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-
     if request.form.get('commentpub') == "":
+        time_until = str_time_converter(pub.date_until)
+        time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_publishing.html', pub=pub,
+        return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
                                error_message="You must give a feedback to the author")
 
     mod = get_moderation(pub)

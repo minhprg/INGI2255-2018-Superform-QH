@@ -38,8 +38,8 @@ class IctvServerConnection(IctvException):
                         '\t* Is the REST API enabled on the channel of the ICTV server ?\n' \
                         '\t* Are the API keys matching ?\n'
         elif error_code == 400:
-            self.msg += 'The ' + client_msg + ' was misformed. Please correct the data and retry.\n' \
-                        'If the error persists, take contact with an administrator.'
+            self.msg += '<p>The ' + client_msg + ' was misformed. Please correct the data and retry.</p>\n' \
+                        '<p>If the error persists, take contact with an administrator.</p>'
         elif error_code == 404:
             if client_msg == 'slide':
                 self.msg += '<p>The capsule for the slide was not found on the server.</p>'
@@ -57,6 +57,7 @@ class IctvChannelConfiguration(IctvException):
 
         self.msg = self.msg + '\t</ul>\n<p>You wont be able to submit your post on this channel !</p>\n<p>Please, ' \
                               'refer to the channel administrator.</p>\n'
+
 
 class IctvWrongSlideType(IctvException):
     pass
@@ -129,6 +130,21 @@ def get_ictv_templates(chan_name, chan_config):
     return {sub('^template-', '', i): ictv_slides_templates[i] for i in ictv_slides_templates
             if 'title-1' in ictv_slides_templates[i]}
 
+
+def forge_link_url(chan, form):
+    from re import sub
+    link_post = ''
+    slide_type = form.get(chan + '_ictv_slide_type')
+    if slide_type is not None:
+        req = form.to_dict()
+        for i in req:
+            if chan + '_data_' + slide_type in i:
+                a = sub('^' + chan + '_data_' + slide_type + '_', '', i)
+                link_post = link_post + a + ":::" + req[i] + ','
+
+        link_post = link_post + slide_type
+
+    return link_post
 
 def generate_ictv_dropdown_control(chan_name):
 
@@ -260,6 +276,8 @@ def generate_slide(chan_conf, pub):
     slide_content['title-1'] = {'text': pub.title}
     slide_content['text-1'] = {'text': pub.description}
     slide_content['subtitle-1'] = {'text': ''}
+    # slide_content.pop('name', None)
+    # slide_content.pop('description', None)
 
     return {'content': slide_content, 'template': 'template-' + slide_type, 'duration': -1}
 

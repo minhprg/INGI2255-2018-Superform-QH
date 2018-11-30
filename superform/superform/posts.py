@@ -11,8 +11,6 @@ from superform.publishings import create_a_publishing
 from re import sub
 
 posts_page = Blueprint('posts', __name__)
-ictv_slides_templates = None
-
 
 
 def create_a_post(form):
@@ -37,19 +35,25 @@ def create_a_post(form):
     return p
 
 
-
 def create_a_publishing(post, chn, form):
     chan = str(chn.name)
 
-    link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+    plug_name = chn.module
+    from importlib import import_module
+    plug = import_module(plug_name)
+
+    if 'forge_link_url' in dir(plug):
+        link_post = plug.forge_link_url(chan, form)
+    else:
+        link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
 
     # TODO : move the complexity to ictv plugin
     # TODO : change the condition
-    clas = get_instance_from_module_path(chn.module)
+    """clas = get_instance_from_module_path(chn.module)
     unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
     if 'ictv_data_form' in unaivalable_fields:
         slide_type = form.get(chan + '_ictv_slide_type')
-        if slide_type != None:
+        if slide_type is not None:
             link_post = ''
             req = form.to_dict()
             for i in req:
@@ -58,6 +62,7 @@ def create_a_publishing(post, chn, form):
                     link_post = link_post + a + ":::" + req[i] + ','
 
             link_post = link_post + slide_type
+    """
 
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
@@ -82,22 +87,23 @@ def create_a_publishing(post, chn, form):
     return pub
 
 
-
 @posts_page.route('/new', methods=['GET', 'POST'])
 @login_required()
 def new_post():
-    global ictv_slides_templates
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
 
     ictv_chans = []
+
     for elem in list_of_channels:
         m = elem.module
+
         clas = get_instance_from_module_path(m)
         unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
+        setattr(elem, "unavailablefields", unaivalable_fields)
+
         if 'ictv_data_form' in unaivalable_fields:
             ictv_chans.append(elem)
-        setattr(elem, "unavailablefields", unaivalable_fields)
 
     if request.method == "GET":
 
@@ -109,6 +115,7 @@ def new_post():
         return render_template('new.html', l_chan=list_of_channels, ictv_data=ictv_data)
     else:
         create_a_post(request.form)
+
     return redirect(url_for('index'))
 
 
@@ -148,6 +155,7 @@ def copy_new_post(post_id):
 def publish_from_new_post():
     # First create the post
     p = create_a_post(request.form)
+
     # then treat the publish part
     if request.method == "POST":
         for elem in request.form:

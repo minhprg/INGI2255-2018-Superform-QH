@@ -31,7 +31,6 @@ def str_time_converter(datet):
     return datetime.strftime(datet, "%H:%M")
 
 
-
 def get_instance_from_module_path(module_p):
     import os
     module_p = module_p.replace(".", os.sep) # use the os file path separator

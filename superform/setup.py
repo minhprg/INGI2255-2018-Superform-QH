@@ -8,12 +8,13 @@ setup(
         'facebook-sdk',
         'flask',
         'flask-sqlalchemy',
+        'google-api-python-client',
         'lxml',
+        'oauth2client',
         'pyopenssl',
         'PyRSS2Gen',
         'pytest',
         'python3-saml',
         'sqlalchemy',
-        'requests'
     ],
 )

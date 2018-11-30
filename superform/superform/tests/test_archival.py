@@ -4,16 +4,23 @@ import tempfile
 
 import pytest
 
-from superform import app, db
-from superform.models import Authorization, Channel
-from superform import app, db, Post, User, Publishing
-from superform.users import  is_moderator, get_moderate_channels_for_user,channels_available_for_user
+from superform.models import Channel
+from superform import app, db, Post, Publishing
+
+
+def clear_data(session):
+    meta = db.metadata
+    for table in reversed(meta.sorted_tables):
+        session.execute(table.delete())
+    session.commit()
 
 
 @pytest.fixture
 def client():
     app.app_context().push()
-    db_fd, app.config['DATABASE'] = tempfile.mkstemp()
+
+    db_fd, database = tempfile.mkstemp()
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///"+database+".db"
     app.config['TESTING'] = True
     client = app.test_client()
 
@@ -22,8 +29,10 @@ def client():
 
     yield client
 
+    clear_data(db.session)
     os.close(db_fd)
-    os.unlink(app.config['DATABASE'])
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///superform.db"
+
 
 def login(client, login):
     with client as c:
@@ -39,50 +48,70 @@ def login(client, login):
             sess["email"] = "hello@genemail.com"
             sess['user_id'] = login
 
+
 def test_new_records(client):
-    login(client,"myself")
+    login(client, "myself")
 
     # create a test channel
     client.post("/channels", data={'@action': 'new', 'name': 'test_channel', 'module': 'mail'})
     chan_id = db.session.query(Channel).all()[-1].id
 
-    #publish a not yet expired post
-    d  = datetime.date.today()
+    # publish a not yet expired post
+    d = datetime.date.today()
     d += datetime.timedelta(1)
-    client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_new_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
+    client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",
+                                  datefrompost=d.strftime("%Y-%m-%d"),
+                                  timefrompost=d.strftime("%H:%M"),
+                                  dateuntilpost=d.strftime("%Y-%m-%d"),
+                                  timeuntilpost=d.strftime("%H:%M")))
+    client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
+                                  'titlepost': 'A test_new_record publishing', 'descrpost': "A description",
+                                  'datefrompost': d.strftime("%Y-%m-%d"),
+                                  'timefrompost': d.strftime("%H:%M"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%d"),
+                                  'timeuntilpost': d.strftime("%H:%M")})
 
-    #accept last publication
-    post = db.session.query(Post).filter().all()
-    last_add = post[-1]
-    db.session.query(Publishing).filter(Publishing.post_id == last_add.id).update({Publishing.state: 1})
-    db.session.commit()
-
-
-    #update archived posts
-    client.get('/records',data = dict())
-    archived = db.session.query(Publishing).filter(Publishing.state == 2).all()
-    #must not be in the database as archived
-    for arch in archived :
-        if arch.post_id == last_add.id :
-            assert False
-    db.session.query(Publishing).filter(Publishing.post_id == last_add.id).delete()
-    db.session.commit()
-
-    #publish a expired post
-    db.session.query(Post).filter(Post.id == last_add.id).delete()
-    d -= datetime.timedelta(3)
-    client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_new_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
     # accept last publication
     post = db.session.query(Post).filter().all()
     last_add = post[-1]
     db.session.query(Publishing).filter(Publishing.post_id == last_add.id).update({Publishing.state: 1})
     db.session.commit()
 
-    client.get('/records',data = dict())
-    archived = db.session.query(Publishing).filter(Publishing.state == 2).filter( Publishing.post_id == last_add.id).all()
-    #must be in the database as archived
+    # update archived posts
+    client.get('/records', data=dict())
+    archived = db.session.query(Publishing).filter(Publishing.state == 2).all()
+    # must not be in the database as archived
+    for arch in archived:
+        if arch.post_id == last_add.id:
+            assert False
+    db.session.query(Publishing).filter(Publishing.post_id == last_add.id).delete()
+    db.session.commit()
+
+    # publish a expired post
+    db.session.query(Post).filter(Post.id == last_add.id).delete()
+    d -= datetime.timedelta(3)
+    client.post('/new', data=dict(titlepost='A test_new_record post', descrpost="A description",
+                                  linkurlpost="http://www.test.com", imagepost="image.jpg",
+                                  datefrompost=d.strftime("%Y-%m-%d"),
+                                  timefrompost=d.strftime("%H:%M"),
+                                  dateuntilpost=d.strftime("%Y-%m-%d"),
+                                  timeuntilpost=d.strftime("%H:%M")))
+    client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
+                                  'titlepost': 'A test_new_record publishing', 'descrpost': "A description",
+                                  'datefrompost': d.strftime("%Y-%m-%d"),
+                                  'timefrompost': d.strftime("%H:%M"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%d"),
+                                  'timeuntilpost': d.strftime("%H:%M")})
+    # accept last publication
+    post = db.session.query(Post).filter().all()
+    last_add = post[-1]
+    db.session.query(Publishing).filter(Publishing.post_id == last_add.id).update({Publishing.state: 1})
+    db.session.commit()
+
+    client.get('/records', data=dict())
+    archived = db.session.query(Publishing).filter(Publishing.state == 2)\
+        .filter(Publishing.post_id == last_add.id).all()
+    # must be in the database as archived
     assert len(archived) > 0
 
     db.session.query(Publishing).filter(Publishing.post_id == last_add.id).delete()
@@ -92,20 +121,30 @@ def test_new_records(client):
     db.session.commit()
     db.session.query(Post).filter(Post.title == 'A test_new_record publishing').delete()
     db.session.commit()
-    client.post("/channels",data ={'@action':'delete','id':chan_id})
+    client.post("/channels", data={'@action': 'delete', 'id': chan_id})
+
 
 def test_delete_record(client):
-    login(client,"myself")
+    login(client, "myself")
 
-    #create a test channel
-    client.post("/channels",data ={'@action':'new','name':'test_channel','module':'mail'})
+    # create a test channel
+    client.post("/channels", data={'@action': 'new', 'name': 'test_channel', 'module': 'mail'})
     chan_id = db.session.query(Channel).all()[-1].id
 
-
-    d  = datetime.date.today()
+    d = datetime.date.today()
     d -= datetime.timedelta(1)
-    client.post('/new', data=dict(titlepost='A test_delete_record post', descrpost="A description",linkurlpost="http://www.test.com", imagepost="image.jpg", datefrompost=d.strftime("%Y-%m-%d"), dateuntilpost=d.strftime("%Y-%m-%d")))
-    client.post('/publish', data={'chan_option_'+str(chan_id) : "chan_option_0",'titlepost':'A test_delete_record publishing', 'descrpost':"A description", 'datefrompost':d.strftime("%Y-%m-%d"), 'dateuntilpost':d.strftime("%Y-%m-%d")})
+    client.post('/new', data=dict(titlepost='A test_delete_record post', descrpost="A description",
+                                  linkurlpost="http://www.test.com", imagepost="image.jpg",
+                                  datefrompost=d.strftime("%Y-%m-%d"),
+                                  timefrompost=d.strftime("%H:%M"),
+                                  dateuntilpost=d.strftime("%Y-%m-%d"),
+                                  timeuntilpost=d.strftime("%H:%M")))
+    client.post('/publish', data={'chan_option_' + str(chan_id): "chan_option_0",
+                                  'titlepost': 'A test_delete_record publishing', 'descrpost': "A description",
+                                  'datefrompost': d.strftime("%Y-%m-%d"),
+                                  'timefrompost': d.strftime("%H:%M"),
+                                  'dateuntilpost': d.strftime("%Y-%m-%d"),
+                                  'timeuntilpost': d.strftime("%H:%M")})
 
     # accept last publication
     post = db.session.query(Post).filter().all()
@@ -113,18 +152,21 @@ def test_delete_record(client):
     db.session.query(Publishing).filter(Publishing.post_id == last_add.id).update({Publishing.state: 1})
     db.session.commit()
 
-    client.get('/records',data = dict())
+    client.get('/records', data=dict())
 
-    archived = db.session.query(Publishing).filter(Publishing.state == 2).filter( Publishing.post_id == last_add.id).all()
+    archived = db.session.query(Publishing).filter(Publishing.state == 2)\
+        .filter(Publishing.post_id == last_add.id).all()
     # must be in the database as archived
     assert len(archived) > 0
 
-    rv = client.post("/records", data={"@action" : "delete","id" : archived[-1].post_id,"idc" : archived[-1].channel_id,"follow_redirects" : True})
+    client.post("/records", data={"@action": "delete", "id": archived[-1].post_id, "idc": archived[-1].channel_id,
+                                  "follow_redirects": True})
 
-    archived = db.session.query(Publishing).filter(Publishing.state == 2).filter(Publishing.post_id == last_add.id).all()
+    archived = db.session.query(Publishing).filter(Publishing.state == 2)\
+        .filter(Publishing.post_id == last_add.id).all()
     assert not archived
     db.session.query(Post).filter(Post.title == 'A test_delete_record post').delete()
     db.session.commit()
     db.session.query(Post).filter(Post.title == 'A test_delete_record publishing').delete()
     db.session.commit()
-    client.post("/channels",data ={'@action':'delete','id':chan_id})
+    client.post("/channels", data={'@action': 'delete', 'id': chan_id})

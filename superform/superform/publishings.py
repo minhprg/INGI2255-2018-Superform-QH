@@ -1,11 +1,11 @@
 import datetime
 import logging
 
-from flask import Blueprint, redirect, render_template, request, url_for
-
-from superform import channels
+from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
 from superform.models import db, Publishing, Channel, Moderation, Post, User, State
-from superform.utils import login_required, datetime_converter, str_converter
+from flask import Blueprint, redirect, render_template, request, url_for
+from superform import channels
+
 
 logging.basicConfig(level=logging.DEBUG)
 pub_page = Blueprint('publishings', __name__)
@@ -18,19 +18,17 @@ def commit_pub(pub, state):
     pub.description = request.form.get('descrpost')
     pub.link_url = request.form.get('linkurlpost')
     pub.image_url = request.form.get('imagepost')
+
     pub.date_from = datetime_converter(request.form.get('datefrompost'))
+    time_from = time_converter(request.form.get('timefrompost')) if request.form.get('timefrompost') is not None else time_converter("0:0")
+    pub.date_from = pub.date_from.replace(hour=time_from.hour, minute=time_from.minute)
+
     pub.date_until = datetime_converter(request.form.get('dateuntilpost'))
+    time_until = time_converter(request.form.get('timeuntilpost')) if request.form.get('timeuntilpost') is not None else time_converter("0:0")
+    pub.date_until = pub.date_until.replace(hour=time_until.hour, minute=time_until.minute)
 
     pub.state = state
     db.session.commit()
-
-
-def check_config_and_commit_pub(pub, state, plugin, c_conf):
-    if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-        commit_pub(pub, state)
-        return True
-    else:
-        return False
 
 
 def create_a_moderation(form, id, idc):
@@ -49,13 +47,19 @@ def create_a_publishing(post, chn, form):
         chan + '_descriptionpost') is not None else post.description
     link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
-    date_from = datetime_converter(form.get(chan + '_datefrompost')) if datetime_converter(
-        form.get(chan + '_datefrompost')) is not None else post.date_from
-    date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if datetime_converter(
-        form.get(chan + '_dateuntilpost')) is not None else post.date_until
-    pub = Publishing(post_id=post.id, channel_id=chn.id, state=State.NOTVALIDATED.value, title=title_post,
-                     description=descr_post, link_url=link_post, image_url=image_post, date_from=date_from,
-                     date_until=date_until)
+    date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
+    time_from = time_converter(form.get(chan + '_timefrompost')) if form.get(chan + '_timefrompost') is not None else None
+    if date_from and time_from:
+        date_from = date_from.replace(hour=time_from.hour, minute=time_from.minute)
+
+    date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
+    time_until = time_converter(form.get(chan + '_timeuntilpost')) if form.get(chan + '_timeuntilpost') is not None else None
+    if date_until and time_until:
+        date_until = date_until.replace(hour=time_until.hour, minute=time_until.minute)
+
+    pub = Publishing(post_id=post.id, channel_id=chn.id, state=0, title=title_post, description=descr_post,
+                     link_url=link_post, image_url=image_post,
+                     date_from=date_from, date_until=date_until)
 
     db.session.add(pub)
     db.session.commit()
@@ -90,15 +94,18 @@ def moderate_publishing(id, idc):
     from importlib import import_module
     plugin = import_module(plugin_name)
 
+    time_until = str_time_converter(pub.date_until)
+    time_from = str_time_converter(pub.date_from)
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
 
     if request.method == "GET":
-        if channels.valid_conf(c_conf, plugin.CONFIG_FIELDS):
-            return render_template('moderate_publishing.html', pub=pub)
+        error_msg = channels.check_config_and_validity(plugin, c_conf)
+        if error_msg is None:
+            return render_template('moderate_publishing.html', pub=pub, time_from=time_from,time_until=time_until)
         else:
             return render_template('moderate_publishing.html', pub=pub,
-                                   error_message="This channel has not yet been configured")
+                                   error_message=error_msg, time_from=time_from,time_until=time_until)
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
@@ -113,12 +120,12 @@ def refuse_publishing(id, idc):
     if pub.state != State.NOTVALIDATED.value:
         return redirect(url_for('index', messages="This publication has already been moderated"))
 
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-
     if request.form.get('commentpub') == "":
+        time_until = str_time_converter(pub.date_until)
+        time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_publishing.html', pub=pub,
+        return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
                                error_message="You must give a feedback to the author")
 
     mod = get_moderation(pub)
@@ -150,11 +157,14 @@ def validate_publishing(id, idc):
     from importlib import import_module
     plugin = import_module(plugin_name)
 
-    if not check_config_and_commit_pub(pub, State.VALIDATED.value, plugin, c_conf):
+    error_msg = channels.check_config_and_validity(plugin, c_conf)
+    if error_msg is None:
+        commit_pub(pub, State.VALIDATED.value)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
+    else:
         return render_template('moderate_publishing.html', pub=pub,
-                               error_message="This channel has not yet been configured")
+                               error_message=error_msg)
 
     mod = get_moderation(pub)
 
@@ -164,8 +174,11 @@ def validate_publishing(id, idc):
         mod[0].message = request.form.get('commentpub')
         db.session.commit()
 
-    plugin.run(pub, c_conf)
-    return redirect(url_for('index'))
+    isURL = plugin.run(pub, c_conf)
+    if not isURL:
+        return redirect(url_for('index'))
+    else:
+        return isURL
 
 
 @pub_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])

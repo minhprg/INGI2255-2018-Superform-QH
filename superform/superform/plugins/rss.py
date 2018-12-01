@@ -2,6 +2,7 @@ import os
 
 import PyRSS2Gen
 import datetime
+import feedparser
 import json
 from pathlib import Path
 
@@ -13,6 +14,26 @@ FIELDS_UNAVAILABLE = ["date_from", "date_until", "image"]
 CONFIG_FIELDS = ["feed_title", "feed_description"]
 SERVER_URL = "localhost:5000/rss/"
 rss_feeds = {}
+
+
+def add_rss_feed(rss_feed, link):
+    feed = feedparser.parse(link)
+    for item in feed['items']:
+        title = item['title']
+        try:
+            link = item['link']
+        except KeyError:
+            link = None
+
+        description = item['description']
+        pubdate = item['published']
+        new_item = PyRSS2Gen.RSSItem(
+            title=title,
+            link=link,
+            description=description,
+            pubDate=pubdate
+        )
+        rss_feed.items.insert(0, new_item)
 
 
 def create_initial_feed(feed_url, feed_title="Superform's RSS feed", feed_description="The RSS feed of Superform"):
@@ -72,7 +93,7 @@ def run(publishing, channel_config):
     rss_feed_local_file_path = rss_plugin_path + "/rssfeeds/" + str(channel_id) + ".xml"
     rss_feed_url = SERVER_URL + str(channel_id) + ".xml"
 
-    if publishing.title is None or publishing.title == "" and publishing.description is None or publishing.description == "":
+    if (publishing.title is None or publishing.title == "") and (publishing.description is None or publishing.description == ""):
         return Error.RSS_TYPE.value
 
     if channel_id not in rss_feeds:
@@ -82,6 +103,9 @@ def run(publishing, channel_config):
 
     pub_date = datetime.datetime.now()
 
+    if publishing.rss_feed is not None:
+        add_rss_feed(rss_feeds[channel_id], publishing.rss_feed)
+
     item = PyRSS2Gen.RSSItem(
                 title=publishing.title,
                 link=publishing.link_url,
@@ -90,9 +114,12 @@ def run(publishing, channel_config):
 
     rss_feeds[channel_id].items.insert(0, item)
 
+    """
     for post in rss_feeds[channel_id].items:
+        print(post.pubDate, datetime.timedelta(365), file=sys.stderr)
         if post.pubDate + datetime.timedelta(365) < pub_date:
             rss_feeds[channel_id].items.remove(post)
+    """
 
     with open(rss_feed_local_file_path, "w+") as file:
         rss_feeds[channel_id].write_xml(file)

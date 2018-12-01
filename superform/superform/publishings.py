@@ -17,6 +17,7 @@ def commit_pub(pub, state):
     pub.title = request.form.get('titlepost')
     pub.description = request.form.get('descrpost')
     pub.link_url = request.form.get('linkurlpost')
+    pub.rss_feed = request.form.get('linkrssfeedpost')
     pub.image_url = request.form.get('imagepost')
 
     pub.date_from = datetime_converter(request.form.get('datefrompost'))
@@ -46,6 +47,7 @@ def create_a_publishing(post, chn, form):
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
     link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+    rss_feed = form.get(chan + '_linkrssfeedpost') if form.get(chan + '_linkrssfeedpost') is not None else post.rss_feed
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
     date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
     time_from = time_converter(form.get(chan + '_timefrompost')) if form.get(chan + '_timefrompost') is not None else None
@@ -59,7 +61,7 @@ def create_a_publishing(post, chn, form):
 
     pub = Publishing(post_id=post.id, channel_id=chn.id, state=0, title=title_post, description=descr_post,
                      link_url=link_post, image_url=image_post,
-                     date_from=date_from, date_until=date_until)
+                     date_from=date_from, date_until=date_until, rss_feed=rss_feed)
 
     db.session.add(pub)
     db.session.commit()
@@ -167,6 +169,7 @@ def validate_publishing(id, idc):
         return render_template('moderate_publishing.html', pub=pub, chan=c,
                                error_message=error_msg, time_until=time_until, time_from=time_from)
 
+    commit_pub(pub, State.VALIDATED.value)
     plug = plugin.run(pub, c_conf)
 
     if plug == Error.RSS_TYPE.value:
@@ -177,7 +180,6 @@ def validate_publishing(id, idc):
         return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
                                error_message='You need to enter at least a title or a description', chan=c)
 
-    commit_pub(pub, State.VALIDATED.value)
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
 

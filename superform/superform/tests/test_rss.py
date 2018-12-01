@@ -10,7 +10,7 @@ from lxml import etree
 from superform import *
 from superform.models import Error
 from superform.plugins import rss
-from superform.plugins.rss import create_initial_feed, import_xml_to_rss_feed
+from superform.plugins.rss import create_initial_feed, import_xml_to_rss_feed, add_rss_feed
 from superform.utils import datetime_converter
 
 
@@ -136,34 +136,6 @@ def test_publish_post():
     del_file([path])
 
 
-def test_delete_old_post():
-    """
-    Test that if an old post (older than 1 year) is still in the feed it will be deleted
-    """
-    pub = Publishing(title="Voici un super beau titre", description="Avec une super description", link_url="www.facebook.com", date_from="2018-10-25", channel_id=-5)
-    conf = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
-
-    path = root + "-5.xml"
-    new_rss = rss.create_initial_feed(path)
-    item = PyRSS2Gen.RSSItem(
-                title=pub.title,
-                link=pub.link_url,
-                description=pub.description,
-                pubDate=datetime_converter('2016-01-01'))
-
-    new_rss.items.insert(0, item)
-
-    with open(path, "w+") as file:
-        new_rss.write_xml(file)
-
-    assert count(path) == 1  # Check that the post has been added
-
-    rss.run(pub, conf)
-    assert count(path) == 1
-
-    del_file([path])
-
-
 def test_server_reboot():
     """
     Test that when de server reboots it restore the rss feeds with the xml files already existing and add the new item
@@ -227,3 +199,4 @@ def test_import_xml_to_rss_feed_empty_title():
     rss_feed = import_xml_to_rss('test_empty_title.xml', length=1)
     for item in rss_feed.items:
         assert item.title is None
+

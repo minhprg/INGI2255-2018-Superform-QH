@@ -2,7 +2,7 @@ import datetime
 import logging
 
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
-from superform.models import db, Publishing, Channel, Moderation, Post, User, State
+from superform.models import db, Publishing, Channel, Moderation, Post, User, State, Error
 from flask import Blueprint, redirect, render_template, request, url_for
 from superform import channels
 
@@ -158,13 +158,27 @@ def validate_publishing(id, idc):
     plugin = import_module(plugin_name)
 
     error_msg = channels.check_config_and_validity(plugin, c_conf)
-    if error_msg is None:
-        commit_pub(pub, State.VALIDATED.value)
+    if error_msg is not None:
+        time_until = str_time_converter(pub.date_until)
+        time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
-    else:
         return render_template('moderate_publishing.html', pub=pub,
-                               error_message=error_msg)
+                               error_message=error_msg, time_until=time_until, time_from=time_from)
+
+    plug = plugin.run(pub, c_conf)
+
+    if plug == Error.RSS_TYPE.value:
+        time_until = str_time_converter(pub.date_until)
+        time_from = str_time_converter(pub.date_from)
+        pub.date_from = str_converter(pub.date_from)
+        pub.date_until = str_converter(pub.date_until)
+        return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
+                               error_message='You need to enter at least a title or a description')
+
+    commit_pub(pub, State.VALIDATED.value)
+    pub.date_from = str_converter(pub.date_from)
+    pub.date_until = str_converter(pub.date_until)
 
     mod = get_moderation(pub)
 
@@ -174,11 +188,10 @@ def validate_publishing(id, idc):
         mod[0].message = request.form.get('commentpub')
         db.session.commit()
 
-    isURL = plugin.run(pub, c_conf)
-    if not isURL:
+    if not plug:
         return redirect(url_for('index'))
     else:
-        return isURL
+        return plug
 
 
 @pub_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])

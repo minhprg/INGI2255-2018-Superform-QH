@@ -4,8 +4,10 @@ import PyRSS2Gen
 import datetime
 import json
 from pathlib import Path
+
 from lxml import etree
 
+from superform.models import Error
 
 FIELDS_UNAVAILABLE = ["date_from", "date_until", "image"]
 CONFIG_FIELDS = ["feed_title", "feed_description"]
@@ -46,13 +48,16 @@ def import_xml_to_rss_feed(rss_feed, xml_path):
         pub_date.append(datetime.datetime.strptime(attrib.text, "%a, %d %b %Y %X GMT"))
 
     for i in range(0, len(pub_date)):
-        item = PyRSS2Gen.RSSItem(
-            title="" if title[i] is None else title[i],
-            link="" if link[i] is None else link[i],
-            description="" if description[i] is None else description[i],
-            pubDate=pub_date[i]
-        )
-        rss_feed.items.append(item)
+        actual_title = None if len(title) <= i else title[i]
+        actual_description = None if len(description) <= i else description[i]
+        if actual_title is not None or actual_description is not None:
+            item = PyRSS2Gen.RSSItem(
+                title=None if len(title) <= i else title[i],
+                link=None if len(link) <= i else link[i],
+                description=None if len(description) <= i else description[i],
+                pubDate=pub_date[i]
+            )
+            rss_feed.items.append(item)
 
 
 def run(publishing, channel_config):
@@ -66,6 +71,9 @@ def run(publishing, channel_config):
     channel_id = publishing.channel_id
     rss_feed_local_file_path = rss_plugin_path + "/rssfeeds/" + str(channel_id) + ".xml"
     rss_feed_url = SERVER_URL + str(channel_id) + ".xml"
+
+    if publishing.title is None or publishing.title == "" and publishing.description is None or publishing.description == "":
+        return Error.RSS_TYPE.value
 
     if channel_id not in rss_feeds:
         rss_feeds[channel_id] = create_initial_feed(feed_url=rss_feed_url, feed_title=rss_feed_title, feed_description=rss_feed_description)

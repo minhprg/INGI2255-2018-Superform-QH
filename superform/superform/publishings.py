@@ -102,10 +102,10 @@ def moderate_publishing(id, idc):
     if request.method == "GET":
         error_msg = channels.check_config_and_validity(plugin, c_conf)
         if error_msg is None:
-            return render_template('moderate_publishing.html', pub=pub, time_from=time_from,time_until=time_until)
+            return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until, chan=c)
         else:
-            return render_template('moderate_publishing.html', pub=pub,
-                                   error_message=error_msg, time_from=time_from,time_until=time_until)
+            return render_template('moderate_publishing.html', pub=pub, error_message=error_msg, time_from=time_from,
+                                   time_until=time_until, chan=c)
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
@@ -121,12 +121,13 @@ def refuse_publishing(id, idc):
         return redirect(url_for('index', messages="This publication has already been moderated"))
 
     if request.form.get('commentpub') == "":
+        chan = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
         time_until = str_time_converter(pub.date_until)
         time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
         return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
-                               error_message="You must give a feedback to the author")
+                               error_message="You must give a feedback to the author", chan=chan)
 
     mod = get_moderation(pub)
 
@@ -163,7 +164,7 @@ def validate_publishing(id, idc):
         time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_publishing.html', pub=pub,
+        return render_template('moderate_publishing.html', pub=pub, chan=c,
                                error_message=error_msg, time_until=time_until, time_from=time_from)
 
     plug = plugin.run(pub, c_conf)
@@ -174,7 +175,7 @@ def validate_publishing(id, idc):
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
         return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
-                               error_message='You need to enter at least a title or a description')
+                               error_message='You need to enter at least a title or a description', chan=c)
 
     commit_pub(pub, State.VALIDATED.value)
     pub.date_from = str_converter(pub.date_from)
@@ -198,12 +199,13 @@ def validate_publishing(id, idc):
 @login_required()
 def view_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
 
     pub.date_until = str_converter(pub.date_until)
     pub.date_from = str_converter(pub.date_from)
 
     if request.method == "GET":
-        return render_template('show_message.html', pub=pub)
+        return render_template('show_message.html', pub=pub, chan=c)
 
 
 @pub_page.route('/feedback/<int:id>/<string:idc>', methods=["GET"])
@@ -211,6 +213,7 @@ def view_publishing(id, idc):
 def view_feedback(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
+    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
     # Only publishing that have yet to be moderated can be viewed
     if pub.state == State.NOTVALIDATED.value:
         return redirect(url_for('index', messages='This publication has not yet been moderated'))
@@ -225,7 +228,7 @@ def view_feedback(id, idc):
     pub.date_from = str_converter(pub.date_from)
 
     if request.method == "GET":
-        return render_template('show_message.html', pub=pub, mod=message)
+        return render_template('show_message.html', pub=pub, mod=message, chan=c)
 
 
 @pub_page.route('/rework/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
@@ -238,6 +241,7 @@ def abort_rework_publishing(id, idc):
 @login_required()
 def rework_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
+    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
 
     # Only refused publishings can be reworked
     # NOTE We could also allow unmoderated publishings to be reworked, but this overlaps the "editing" feature.
@@ -253,7 +257,7 @@ def rework_publishing(id, idc):
     pub.date_until = str_converter(pub.date_until)
 
     if request.method == "GET":
-        return render_template('rework_publishing.html', pub=pub, mod=message)
+        return render_template('rework_publishing.html', pub=pub, mod=message, chan=c)
 
 
 @pub_page.route('/rework/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])

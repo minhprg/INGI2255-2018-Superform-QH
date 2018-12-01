@@ -1,16 +1,21 @@
 import os
+import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import PyRSS2Gen
+import pytest
+from lxml import etree
 
 from superform import *
+from superform.models import Error
 from superform.plugins import rss
+from superform.plugins.rss import create_initial_feed, import_xml_to_rss_feed
 from superform.utils import datetime_converter
 
 
-root, current_dir = os.path.split(os.path.dirname(__file__))
-root = root + "/plugins/rssfeeds/"
+parent_root, current_dir = os.path.split(os.path.dirname(__file__))
+root = parent_root + "/plugins/rssfeeds/"
 
 
 def check_post(pub, path):
@@ -37,6 +42,21 @@ def del_file(path):
     for item in path:
         if Path(item).exists():
             os.remove(item)
+
+
+def import_xml_to_rss(file, length=3):
+    path = parent_root + '/tests/test_rss_xmls/' + file
+    file = Path(path)
+
+    assert file.exists()
+
+    rss_feed = create_initial_feed(feed_url=path)
+    try:
+        import_xml_to_rss_feed(rss_feed, path)
+        assert len(rss_feed.items) == length
+        return rss_feed
+    except IndexError or TypeError:
+        assert False
 
 
 def test_create_feed_if_none_exist():
@@ -165,5 +185,45 @@ def test_server_reboot():
     assert count(path) == 2
     assert check_post(pub, path)
 
-
     del_file([path])
+
+
+def test_non_valid_publishing():
+    pub = Publishing(link_url="www.facebook.com", date_from="2018-10-25", channel_id=-7)
+    conf = "{\"feed_title\": \"-\", \"feed_description\": \"-\"}"
+
+    path = root + "-7.xml"
+
+    response = rss.run(pub, conf)
+    assert response == Error.RSS_TYPE.value
+
+    file = Path(path)
+    assert not file.exists()
+
+
+def test_import_xml_to_rss_feed():
+    import_xml_to_rss('test_normal.xml')
+
+
+def test_import_xml_to_rss_feed_no_link():
+    rss_feed = import_xml_to_rss('test_no_link.xml')
+    for item in rss_feed.items:
+        assert item.link is None
+
+
+def test_import_xml_to_rss_feed_empty_link():
+    rss_feed = import_xml_to_rss('test_empty_link.xml')
+    for item in rss_feed.items:
+        assert item.link is None
+
+
+def test_import_xml_to_rss_feed_no_title():
+    rss_feed = import_xml_to_rss('test_no_title.xml', length=1)
+    for item in rss_feed.items:
+        assert item.title is None
+
+
+def test_import_xml_to_rss_feed_empty_title():
+    rss_feed = import_xml_to_rss('test_empty_title.xml', length=1)
+    for item in rss_feed.items:
+        assert item.title is None

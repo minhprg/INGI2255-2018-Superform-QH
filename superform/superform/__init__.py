@@ -4,6 +4,7 @@ import importlib
 
 import superform.plugins
 from superform.lists import lists_page
+from superform.non_validation import val_page
 from superform.publishings import pub_page
 from superform.models import db, Channel, Post, Publishing, User, State, Authorization, Permission
 from superform.authentication import authentication_page
@@ -29,6 +30,7 @@ app.register_blueprint(lists_page)
 app.register_blueprint(feed_viewer_page)
 app.register_blueprint(facebook_page)
 app.register_blueprint(linkedin_page)
+app.register_blueprint(val_page)
 
 # Init dbs
 db.init_app(app)

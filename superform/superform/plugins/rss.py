@@ -45,11 +45,11 @@ def import_xml_to_rss_feed(rss_feed, xml_path):
     for attrib in tree.xpath("/rss/channel/item/pubDate"):
         pub_date.append(datetime.datetime.strptime(attrib.text, "%a, %d %b %Y %X GMT"))
 
-    for i in range(0, len(title)):
+    for i in range(0, len(pub_date)):
         item = PyRSS2Gen.RSSItem(
-            title=title[i],
-            link=link[i],
-            description=description[i],
+            title="" if title[i] is None else title[i],
+            link="" if link[i] is None else link[i],
+            description="" if description[i] is None else description[i],
             pubDate=pub_date[i]
         )
         rss_feed.items.append(item)

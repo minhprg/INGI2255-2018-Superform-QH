@@ -165,4 +165,5 @@ def test_server_reboot():
     assert count(path) == 2
     assert check_post(pub, path)
 
+
     del_file([path])

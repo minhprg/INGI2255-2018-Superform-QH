@@ -4,6 +4,11 @@
     <h1>Index</h1>
 
     {% if session.logged_in %}
+        {% if error_message and error_message != "" %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message }}
+            </div>
+        {% endif %}
         <div class="row">
         <div class="col-md-12">
             {% if user.is_mod %}
@@ -31,7 +36,7 @@
 
                 <tbody>
                 {% for p in publishings %}
-                    {% if p.state == 0 %}
+                    {% if p.state == states.NOTVALIDATED.value %}
                     <tr>
                         <td>
                             {{ p.channel.name }}
@@ -78,8 +83,8 @@
             </thead>
 
                 <tbody>
-                    {% for item in my_publishings %}
-                        {% if item.state == 3 %}
+                    {% for item in my_refused_publishings %}
+                        {% if item.state == states.REFUSED.value %}
                         <tr>
                             <td>
                                 {{ item.channel.name }}
@@ -93,7 +98,7 @@
                                 </div>
                             </td>
                             <td>
-                                <a href="#" class="btn btn-outline-primary" role="button">Edit</a>
+                                <a href="{{ url_for('non-validation.rework_publishing',id=item.post_id,idc=item.channel_id) }}" class="btn btn-outline-primary" role="button">Rework</a>
                                 <a href="#" class="btn btn-outline-primary">Copy</a>
                                 <a href="#" class="btn btn-outline-warning" role="button">Delete</a>
                             </td>
@@ -122,8 +127,8 @@
             </thead>
 
                 <tbody>
-                    {% for item in my_publishings %}
-                        {% if item.state == 1 %}
+                    {% for item in my_accepted_publishings %}
+                        {% if item.state == states.VALIDATED.value %}
                         <tr>
                             <td>
                                 {{ item.channel.name }}
@@ -137,7 +142,7 @@
                                 </div>
                             </td>
                             <td>
-                                <a href="#" class="btn btn-outline-primary" role="button">Edit</a>
+                                <a href="{{ url_for('non-validation.view_feedback', id=item.post_id, idc=item.channel_id)}}" class="btn btn-outline-primary">View feedback</a>
                                 <a href="#" class="btn btn-outline-primary">Copy</a>
                                 <a href="#" class="btn btn-outline-warning" role="button">Delete</a>
                             </td>

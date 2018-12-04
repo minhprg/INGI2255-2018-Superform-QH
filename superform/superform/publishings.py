@@ -59,18 +59,21 @@ def create_a_publishing(post, chn, form):
 
 
 def edit_a_publishing(post, chn, form):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == post.id).filter(Publishing.channel_id == chn.id).first()
-    chan = str(chn.name)
-    pub.title = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
-    pub.description = form.get(chan + '_descriptionpost') if form.get(
-        chan + '_descriptionpost') is not None else post.description
-    pub.link_url = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
-    pub.image_url = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
-    pub.date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
-    pub.date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
+    pub = db.session.query(Publishing).filter(Publishing.post_id == post.id).filter(Publishing.channel_id == chn.id).first() # ici ca renvoie None quand on modifie un publishing d'un channel qui n'existait pas encore: normal...
+    if(pub is None):
+        return create_a_publishing(post,chn,form)
+    else:
+        chan = str(chn.name)
+        pub.title = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
+        pub.description = form.get(chan + '_descriptionpost') if form.get(
+            chan + '_descriptionpost') is not None else post.description
+        pub.link_url = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+        pub.image_url = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
+        pub.date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
+        pub.date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
 
-    db.session.commit()
-    return pub
+        db.session.commit()
+        return pub
 
 
 def get_moderation(pub):

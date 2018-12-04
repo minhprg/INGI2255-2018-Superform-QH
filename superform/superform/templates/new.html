@@ -11,6 +11,13 @@
                 <a class="nav-link" data-toggle="tab" href="#menu{{ chan.id }}">{{ chan.name }}</a>
             </li>
         {% endfor %}
+        {% if not new %}
+            {% for chan1 in l_chan_not %}
+                <li class="nav-item" id="li_{{ chan1.name }}" style="display:none;">
+                    <a class="nav-link" data-toggle="tab" href="#menu{{ chan1.id }}">{{ chan1.name }}</a>
+                </li>
+            {% endfor %}
+        {% endif %}
     </ul>
     {% if session.logged_in %}
         <p>{{ user }}</p>
@@ -71,6 +78,22 @@
                                     {% endfor %}
                                 {% endif %}
                             </div>
+                            {% if not new %}
+                                <div class="form-group">
+                                    <label for="publishpost2">New Modules</label>
+                                    {% if l_chan_not|length == 0 %}
+                                        <p>All channels already selected</p>
+                                    {% else %}
+                                        {% for chan in l_chan_not %}
+                                            <div class="form-check">
+                                                <label class="form-check-label">
+                                                    <input id="chan_option_{{ chan.id }}" data-namechan="{{ chan.name }}" data-unavailablefields="{{ chan.unavailablefields }}" name="chan_option_{{ chan.id }}" type="checkbox" class="form-check-input checkbox" value="{{ chan.id }}">{{ chan.name }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
 
                             <div class="card">
                                 <div class="card-header">Status</div>
@@ -138,15 +161,72 @@
                                     <div class="card-header">Status</div>
                                     <div class="card-body">Content</div>
                                 </div>
-
-
                             </div>
-
                         </div>
-
-
                     </div>
                 {% endfor %}
+                {% if not new %}
+                    {% for chan1 in l_chan_not %}
+                        <div class="tab-pane container-fluid fade" id="menu{{ chan1.id }}">
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="{{ chan1.name }}_titlepost">Title</label><br>
+                                                <input type="text" name="{{ chan1.name }}_titlepost" id="{{ chan1.name }}_titlepost" class="form-control" value="{% if post %}{{ post.title }}{% endif %}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="{{ chan1.name }}_descriptionpost">Description</label><br>
+                                                <textarea class="form-control" rows="5" id="{{ chan1.name }}_descriptionpost" name="{{ chan1.name }}_descriptionpost">{% if post %}{{ post.description }}{% endif %}</textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="{{ chan1.name }}_linkurlpost">Link</label><br>
+                                                <input type="text" name="{{ chan1.name }}_linkurlpost" id="{{ chan1.name }}_linkurlpost" class="form-control" value="{% if post %}{{ post.link_url }}{% endif %}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="{{ chan1.name }}_imagepost">Image</label><br>
+                                                <input type="file" name="{{ chan1.name }}_imagepost" id="{{ chan1.name }}_imagepost" class="form-control" value="{% if post %}{{ post.image_url }}{% endif %}">
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ chan1.name }}_datefrompost">Publication Date</label><br>
+                                                        <input id="{{ chan1.name }}_datefrompost" name="{{ chan1.name }}_datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ chan1.name }}_dateuntilpost">Publication Until</label><br>
+                                                        <input id="{{ chan1.name }}_dateuntilpost" name="{{ chan1.name }}_dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="publishpost">Publish</label>
+                                        <div>
+                                            <label class="form-check-label">
+                                                {{ chan1.name }}
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="card">
+                                        <div class="card-header">Status</div>
+                                        <div class="card-body">Content</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
             </div>
             <div align="right" style="margin-top: 1rem; ">
                 {% if new %}
@@ -215,7 +295,7 @@
                 );
             }
             else if (datefrom.localeCompare(dateuntil) > 0) {
-                console.log("Datefrom is later than dateuntil (" + datefrom + " > " + dateuntil + ")");
+                console.log("Datefrom is later than dateun  til (" + datefrom + " > " + dateuntil + ")");
                 publishable = false;
                 $("label[for=\"dateuntilpost\"]").append(
                     '<a href="#" data-toggle="tooltip" title="This date schould be later than the previous one">' +

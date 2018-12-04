@@ -58,6 +58,21 @@ def create_a_publishing(post, chn, form):
     return pub
 
 
+def edit_a_publishing(post, chn, form):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == post.id).filter(Publishing.channel_id == chn.id).first()
+    chan = str(chn.name)
+    pub.title = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
+    pub.description = form.get(chan + '_descriptionpost') if form.get(
+        chan + '_descriptionpost') is not None else post.description
+    pub.link_url = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+    pub.image_url = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
+    pub.date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
+    pub.date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
+
+    db.session.commit()
+    return pub
+
+
 def get_moderation(pub):
     pub.date_until = pub.date_until if type(pub.date_until) == datetime.datetime else datetime_converter(pub.date_until)
     pub.date_from = pub.date_from if type(pub.date_from) == datetime.datetime else datetime_converter(pub.date_from)

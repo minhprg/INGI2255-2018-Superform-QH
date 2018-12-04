@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
-{% block title %}New Post{% endblock %}
+{% block title %}{% if new %}New Post{% else %}Edit Post{% endif %}{% endblock %}
 {% block content %}
-    <h1>New Post</h1>
+    <h1>{% if new %}New Post{% else %}Edit Post{% endif %}</h1>
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="nav-link active" data-toggle="tab" href="#home">General</a>
@@ -58,7 +58,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="publishpost">Publish</label>
+                                <label for="publishpost">{% if new %}Publish{% else %}Modify in{% endif %}</label>
                                 {% if l_chan|length == 0 %}
                                     <p>No channel available for this user</p>
                                 {% else %}
@@ -153,8 +153,8 @@
                     <button class="btn btn-primary" formaction="{{ url_for('posts.new_post')}}" formmethod="post" type="submit">Save as draft</button>
                     <button id="publish-button" class="btn btn-success" formaction="{{ url_for('posts.publish_from_new_post')}}" formmethod="post" type="submit" disabled>Save & Publish</button>
                 {% else %}
-                    <button class="btn btn-primary" formaction="{{ url_for('posts.edit_post', post_id=post_id)}}" formmethod="post" type="submit">Edit as draft</button>
-                    <button id="publish-button" class="btn btn-success" formaction="{{ url_for('posts.publish_from_edit_post',post_id=post_id)}}" formmethod="post" type="submit" disabled>Edit & Publish</button>
+                    <button class="btn btn-primary" formaction="{{ url_for('posts.edit_post', post_id=post.id)}}" formmethod="post" type="submit">Edit as draft</button>
+                    <button id="publish-button" class="btn btn-success" formaction="{{ url_for('posts.publish_from_edit_post',post_id=post.id)}}" formmethod="post" type="submit" disabled>Edit & Publish</button>
                 {% endif %}
                 <button class="btn btn-outline-primary" type="reset">Abort</button>
             </div>

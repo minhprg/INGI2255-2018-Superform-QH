@@ -4,7 +4,7 @@ from flask import Blueprint, url_for, request, redirect, session, render_templat
 from superform.users import channels_available_for_user
 from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path
 from superform.models import db, Channel, Post, Publishing, User
-from superform.publishings import create_a_publishing
+from superform.publishings import create_a_publishing, edit_a_publishing
 
 posts_page = Blueprint('posts', __name__)
 
@@ -105,10 +105,19 @@ def edit_post(post_id):
 
     # Query the data from the post
     post = db.session.query(Post).filter(Post.id == post_id).first()
+    list_publishing = db.session.query(Publishing).filter(Publishing.post_id == post_id)
+    list_chan_id_selected = []
+    for pub in list_publishing:
+        list_chan_id_selected.append(pub.channel_id)
+    list_chan_selected = []
+    for chan in list_of_channels:
+        if (list_chan_id_selected.__contains__(chan.id)):
+            list_chan_selected.append(chan)
+
     if request.method == "GET":
         post.date_from = str_converter(post.date_from)
         post.date_until = str_converter(post.date_until)
-        return render_template('new.html', l_chan=list_of_channels, post=post, new=False, post_id=post_id)
+        return render_template('new.html', l_chan=list_chan_selected, post=post, new=False)
     else:
         modify_a_post(request.form,post_id)
         return redirect(url_for('index'))
@@ -129,7 +138,7 @@ def publish_from_edit_post(post_id):
                 c = Channel.query.get(substr(elem))
                 # for each selected channel options
                 # create the publication
-                #pub = create_a_publishing(p, c, request.form) #TODO edit publishing and not create a new
+                pub = edit_a_publishing(p, c, request.form)
 
     db.session.commit()
     return redirect(url_for('index'))

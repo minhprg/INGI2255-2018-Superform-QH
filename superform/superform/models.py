@@ -123,7 +123,3 @@ class Authorization(db.Model):
 class Permission(Enum):
     AUTHOR = 1
     MODERATOR = 2
-
-
-class Error(Enum):
-    RSS_TYPE = 1

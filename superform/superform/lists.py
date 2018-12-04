@@ -9,6 +9,8 @@ lists_page = Blueprint('lists', __name__)
 
 
 def get_publications(user):
+    if user is None:
+        return []
     setattr(user, 'is_mod', is_moderator(user))
     my_pubs = []
     if user is not None:

@@ -16,6 +16,7 @@ setup(
         'pytest',
         'google-api-python-client',
         'oauth2client',
-        'facebook-sdk'
+        'facebook-sdk',
+        'selenium'
     ],
 )

@@ -66,7 +66,16 @@ def import_xml_to_rss_feed(rss_feed, xml_path):
         description.append(attrib.text)
 
     for attrib in tree.xpath("/rss/channel/item/pubDate"):
-        pub_date.append(datetime.datetime.strptime(attrib.text, "%a, %d %b %Y %X GMT"))
+        try:
+            pub_date.append(datetime.datetime.strptime(attrib.text, "%a, %d %b %Y %X %Z"))
+        except ValueError:
+            try:
+                pub_date.append(datetime.datetime.strptime(attrib.text, "%a, %d %b %Y %X %z"))
+            except ValueError:
+                try:
+                    pub_date.append(datetime.datetime.strptime(attrib.text, "%a, %d %b %Y %X GMT"))
+                except ValueError:
+                    pub_date.append(datetime.datetime.now())
 
     for i in range(0, len(pub_date)):
         actual_title = None if len(title) <= i else title[i]

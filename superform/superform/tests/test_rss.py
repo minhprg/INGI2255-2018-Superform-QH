@@ -1,18 +1,11 @@
 import os
-import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-import PyRSS2Gen
-import pytest
-from lxml import etree
-
 from superform import *
-from superform.models import Error
 from superform.plugins import rss
-from superform.plugins.rss import create_initial_feed, import_xml_to_rss_feed, add_rss_feed
-from superform.utils import datetime_converter
-
+from superform.plugins.rss import create_initial_feed, import_xml_to_rss_feed
+from superform.utils import StatusCode
 
 parent_root, current_dir = os.path.split(os.path.dirname(__file__))
 root = parent_root + "/plugins/rssfeeds/"
@@ -167,7 +160,7 @@ def test_non_valid_publishing():
     path = root + "-7.xml"
 
     response = rss.run(pub, conf)
-    assert response == Error.RSS_TYPE.value
+    assert response == StatusCode.ERROR.value
 
     file = Path(path)
     assert not file.exists()

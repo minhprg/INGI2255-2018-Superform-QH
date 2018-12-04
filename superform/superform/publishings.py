@@ -1,8 +1,8 @@
 import datetime
 import logging
 
-from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
-from superform.models import db, Publishing, Channel, Moderation, Post, User, State, Error
+from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter, StatusCode
+from superform.models import db, Publishing, Channel, Moderation, Post, User, State
 from flask import Blueprint, redirect, render_template, request, url_for
 from superform import channels
 
@@ -29,7 +29,6 @@ def commit_pub(pub, state):
     pub.date_until = pub.date_until.replace(hour=time_until.hour, minute=time_until.minute)
 
     pub.state = state
-    db.session.commit()
 
 
 def create_a_moderation(form, id, idc):
@@ -172,13 +171,15 @@ def validate_publishing(id, idc):
     commit_pub(pub, State.VALIDATED.value)
     plug = plugin.run(pub, c_conf)
 
-    if plug == Error.RSS_TYPE.value:
+    if plug == StatusCode.ERROR.value:
         time_until = str_time_converter(pub.date_until)
         time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
         return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
                                error_message='You need to enter at least a title or a description', chan=c)
+
+    db.session.commit()
 
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)

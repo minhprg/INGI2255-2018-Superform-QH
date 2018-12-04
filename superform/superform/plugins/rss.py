@@ -8,7 +8,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from superform.models import Error
+from superform.utils import StatusCode
 
 FIELDS_UNAVAILABLE = ["date_from", "date_until", "image"]
 CONFIG_FIELDS = ["feed_title", "feed_description"]
@@ -94,7 +94,7 @@ def run(publishing, channel_config):
     rss_feed_url = SERVER_URL + str(channel_id) + ".xml"
 
     if (publishing.title is None or publishing.title == "") and (publishing.description is None or publishing.description == ""):
-        return Error.RSS_TYPE.value
+        return StatusCode.ERROR.value
 
     if channel_id not in rss_feeds:
         rss_feeds[channel_id] = create_initial_feed(feed_url=rss_feed_url, feed_title=rss_feed_title, feed_description=rss_feed_description)
@@ -114,12 +114,7 @@ def run(publishing, channel_config):
 
     rss_feeds[channel_id].items.insert(0, item)
 
-    """
-    for post in rss_feeds[channel_id].items:
-        print(post.pubDate, datetime.timedelta(365), file=sys.stderr)
-        if post.pubDate + datetime.timedelta(365) < pub_date:
-            rss_feeds[channel_id].items.remove(post)
-    """
-
     with open(rss_feed_local_file_path, "w+") as file:
         rss_feeds[channel_id].write_xml(file)
+
+    return StatusCode.OK.value

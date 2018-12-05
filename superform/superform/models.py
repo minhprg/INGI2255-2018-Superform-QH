@@ -36,6 +36,7 @@ class Post(db.Model):
     title = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text)
     link_url = db.Column(db.Text)
+    rss_feed = db.Column(db.Text)
     image_url = db.Column(db.Text)
     date_from = db.Column(db.DateTime)
     date_until = db.Column(db.DateTime)
@@ -77,6 +78,7 @@ class Publishing(db.Model):
     title = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text)
     link_url = db.Column(db.Text)
+    rss_feed = db.Column(db.Text)
     image_url = db.Column(db.Text)
     date_from = db.Column(db.DateTime)
     date_until = db.Column(db.DateTime)
@@ -121,4 +123,3 @@ class Authorization(db.Model):
 class Permission(Enum):
     AUTHOR = 1
     MODERATOR = 2
-

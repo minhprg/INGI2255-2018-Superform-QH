@@ -17,6 +17,7 @@ def create_a_post(form):
     descr_post = form.get('descriptionpost')
     link_post = form.get('linkurlpost')
     image_post = form.get('imagepost')
+    rss_feed = form.get("linkrssfeedpost")
 
     date_from = datetime_converter(form.get('datefrompost'))
     time_from = time_converter(form.get('timefrompost'))
@@ -27,7 +28,7 @@ def create_a_post(form):
     date_until = date_until.replace(hour=time_until.hour, minute=time_until.minute)
 
     p = Post(user_id=user_id, title=title_post, description=descr_post, link_url=link_post, image_url=image_post,
-             date_from=date_from, date_until=date_until)
+             date_from=date_from, date_until=date_until, rss_feed=rss_feed)
     db.session.add(p)
     db.session.commit()
     return p

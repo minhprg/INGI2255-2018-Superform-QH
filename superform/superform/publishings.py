@@ -1,9 +1,11 @@
 import logging
 
+from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter, StatusCode
+from superform.models import db, Publishing, Channel, Moderation, Post, User, State
 from flask import Blueprint, redirect, render_template, request, url_for
 
 from superform import channels
-from superform.models import db, Publishing, Channel, State
+from superform.models import db, Publishing, Channel, Moderation, Post, User, State
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
 
 logging.basicConfig(level=logging.DEBUG)
@@ -16,6 +18,7 @@ def create_a_publishing(post, chn, form):
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
     link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+    rss_feed = form.get(chan + '_linkrssfeedpost') if form.get(chan + '_linkrssfeedpost') is not None else post.rss_feed
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
     date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
     time_from = time_converter(form.get(chan + '_timefrompost')) if form.get(chan + '_timefrompost') is not None else None
@@ -29,7 +32,7 @@ def create_a_publishing(post, chn, form):
 
     pub = Publishing(post_id=post.id, channel_id=chn.id, state=0, title=title_post, description=descr_post,
                      link_url=link_post, image_url=image_post,
-                     date_from=date_from, date_until=date_until)
+                     date_from=date_from, date_until=date_until, rss_feed=rss_feed)
 
     db.session.add(pub)
     db.session.commit()
@@ -60,10 +63,10 @@ def moderate_publishing(id, idc):
     if request.method == "GET":
         error_msg = channels.check_config_and_validity(plugin, c_conf)
         if error_msg is None:
-            return render_template('moderate_publishing.html', pub=pub, time_from=time_from,time_until=time_until)
+            return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until, chan=c)
         else:
-            return render_template('moderate_publishing.html', pub=pub,
-                                   error_message=error_msg, time_from=time_from,time_until=time_until)
+            return render_template('moderate_publishing.html', pub=pub, error_message=error_msg, time_from=time_from,
+                                   time_until=time_until, chan=c)
 
 
 @pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])

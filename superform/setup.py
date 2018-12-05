@@ -6,9 +6,11 @@ setup(
     include_package_data=True,
     install_requires=[
         'facebook-sdk',
+        'feedparser',
         'flask',
         'flask-sqlalchemy',
         'google-api-python-client',
+        'idna>=2.5,<2.8',
         'lxml',
         'oauth2client',
         'pyopenssl',

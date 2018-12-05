@@ -1,5 +1,6 @@
 import logging
 
+from superform.non_validation import get_moderation
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter, StatusCode
 from superform.models import db, Publishing, Channel, Moderation, Post, User, State
 from flask import Blueprint, redirect, render_template, request, url_for
@@ -55,6 +56,10 @@ def moderate_publishing(id, idc):
     from importlib import import_module
     plugin = import_module(plugin_name)
 
+    mod = get_moderation(pub)
+    if len(mod) > 0:
+        mod.remove(mod[-1])
+
     time_until = str_time_converter(pub.date_until)
     time_from = str_time_converter(pub.date_from)
     pub.date_from = str_converter(pub.date_from)
@@ -63,10 +68,10 @@ def moderate_publishing(id, idc):
     if request.method == "GET":
         error_msg = channels.check_config_and_validity(plugin, c_conf)
         if error_msg is None:
-            return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until, chan=c)
+            return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until, chan=c, mod=mod)
         else:
             return render_template('moderate_publishing.html', pub=pub, error_message=error_msg, time_from=time_from,
-                                   time_until=time_until, chan=c)
+                                   time_until=time_until, chan=c, mod=mod)
 
 
 @pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])

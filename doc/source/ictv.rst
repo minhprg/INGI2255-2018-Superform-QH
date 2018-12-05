@@ -54,3 +54,7 @@ the REST API, you have to tick the `Enable the REST API` box and add a secure ke
 *That's it*
 
 You now have a development instance of ICTV ready to get your wonderful slides !
+
+.. _virtualenv: https://virtualenv.pypa.io/en/latest/
+.. _install ictv: https://ictv.readthedocs.io/en/latest/install_ictv.html#installing-ictv
+.. _minimal development configuration file: https://ictv.readthedocs.io/en/latest/dev_environment.html#setting-up

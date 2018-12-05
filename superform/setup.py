@@ -10,6 +10,7 @@ setup(
         'flask',
         'flask-sqlalchemy',
         'google-api-python-client',
+        'idna>=2.5,<2.8',
         'lxml',
         'oauth2client',
         'pyopenssl',

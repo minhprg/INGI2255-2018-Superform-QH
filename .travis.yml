@@ -5,12 +5,20 @@ python:
 before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -qq libxmlsec1-dev pkg-config
+- sudo apt-get install curl
 # command to install dependencies
 install:
   - pip install Flask
   - SETUP_ENV=travis python superform/setup.py install
+  - pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV.git
+  - pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV-plugins.git
 # command to run tests
-before_script: cd superform/
+before_script: 
+  # configure ictv
+  - ictv-setup-database --config ictv_config.yaml
+  - ictv-webapp 0.0.0.0:8000 --config ictv_config.yaml
+  - curl 0.0.0.0:8000
+  - cd superform/
 script:
   - cp /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.test.json /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.json
   - export PYTHONPATH=/home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform

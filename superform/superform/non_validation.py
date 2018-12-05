@@ -122,8 +122,8 @@ def validate_publishing(id, idc):
 
     db.session.commit()
 
-    pub.date_from = str_converter(pub.date_from)
-    pub.date_until = str_converter(pub.date_until)
+    #pub.date_from = str_converter(pub.date_from)
+    #pub.date_until = str_converter(pub.date_until)
 
     mod = get_moderation(pub)
 
@@ -145,11 +145,13 @@ def view_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
 
+    time_until = str_time_converter(pub.date_until)
+    time_from = str_time_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
     pub.date_from = str_converter(pub.date_from)
 
     if request.method == "GET":
-        return render_template('show_message.html', pub=pub, chan=c)
+        return render_template('show_message.html', pub=pub, chan=c, time_until=time_until, time_from=time_from)
 
 
 @val_page.route('/feedback/<int:id>/<string:idc>', methods=["GET"])
@@ -168,11 +170,13 @@ def view_feedback(id, idc):
     else:
         message = ""
 
+    time_until = str_time_converter(pub.date_until)
+    time_from = str_time_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
     pub.date_from = str_converter(pub.date_from)
 
     if request.method == "GET":
-        return render_template('show_message.html', pub=pub, mod=message, chan=c)
+        return render_template('show_message.html', pub=pub, mod=message, chan=c, time_from=time_from, time_until=time_until)
 
 
 @val_page.route('/rework/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
@@ -197,11 +201,14 @@ def rework_publishing(id, idc):
         message = mod[0].message
     else:
         message = ""
+
+    time_until = str_time_converter(pub.date_until)
+    time_from = str_time_converter(pub.date_from)
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
 
     if request.method == "GET":
-        return render_template('rework_publishing.html', pub=pub, mod=message, chan=c)
+        return render_template('rework_publishing.html', pub=pub, mod=message, chan=c, time_until=time_until, time_from=time_from)
 
 
 @val_page.route('/rework/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])

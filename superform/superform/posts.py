@@ -3,7 +3,7 @@ from flask import Blueprint, url_for, request, redirect, session, render_templat
 
 from superform.users import channels_available_for_user
 from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path
-from superform.models import db, Channel, Post, Publishing, User
+from superform.models import db, Channel, Post, Publishing, User, State
 from superform.publishings import create_a_publishing, edit_a_publishing
 
 posts_page = Blueprint('posts', __name__)
@@ -107,13 +107,17 @@ def edit_post(post_id):
     post = db.session.query(Post).filter(Post.id == post_id).first()
     list_publishing = db.session.query(Publishing).filter(Publishing.post_id == post_id)
     list_chan_id_selected = []
+    list_already_pub = []
     for pub in list_publishing:
         list_chan_id_selected.append(pub.channel_id)
+        if pub.state == State.PUBLISHED.value or pub.state == State.VALIDATED.value:
+            list_already_pub.append(pub.channel_id)
     list_chan_selected = []
     list_chan_not_selected = []
     for chan in list_of_channels:
         if (list_chan_id_selected.__contains__(chan.id)):
-            list_chan_selected.append(chan)
+            if not list_already_pub.__contains__(chan.id):
+                list_chan_selected.append(chan)
         else:
             list_chan_not_selected.append(chan)
     if request.method == "GET":

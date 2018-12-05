@@ -20,12 +20,8 @@ def create_a_post(form):
     rss_feed = form.get("linkrssfeedpost")
 
     date_from = datetime_converter(form.get('datefrompost'))
-    time_from = time_converter(form.get('timefrompost'))
-    date_from = date_from.replace(hour=time_from.hour, minute=time_from.minute)
 
     date_until = datetime_converter(form.get('dateuntilpost'))
-    time_until = time_converter(form.get('timeuntilpost'))
-    date_until = date_until.replace(hour=time_until.hour, minute=time_until.minute)
 
     p = Post(user_id=user_id, title=title_post, description=descr_post, link_url=link_post, image_url=image_post,
              date_from=date_from, date_until=date_until, rss_feed=rss_feed)

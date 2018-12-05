@@ -43,14 +43,12 @@
                                             <div class="form-group">
                                                 <label for="datefrompost">Publication Date</label><br>
                                                 <input id="datefrompost" name="datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
-                                                <input id="timefrompost" name="timefrompost" type="time"  class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="dateuntilpost">Publication Until</label><br>
                                                 <input id="dateuntilpost" name="dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}" >
-                                                <input id="timeuntilpost" name="timeuntilpost" type="time"  class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
                                             </div>
                                         </div>
                                     </div>
@@ -113,14 +111,12 @@
                                                 <div class="form-group">
                                                     <label for="{{ chan.name }}_datefrompost">Publication Date</label><br>
                                                     <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
-                                                    <input id="{{ chan.name }}_timefrompost" name="{{ chan.name }}_timefrompost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="{{ chan.name }}_dateuntilpost">Publication Until</label><br>
                                                     <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
-                                                    <input id="{{ chan.name }}_timeuntilpost" name="{{ chan.name }}_timeuntilpost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
                                                 </div>
                                             </div>
                                         </div>
@@ -246,9 +242,7 @@
             $('#' + chan_name + '_linkurlpost').val(($('#linkurlpost')).val());
             $('#' + chan_name + '_imagepost').val(($('#imagepost')).val());
             $('#' + chan_name + '_datefrompost').val(datefrom = (($('#datefrompost')).val()));
-            $('#' + chan_name + '_timefrompost').val(($('#timefrompost')).val());
             $('#' + chan_name + '_dateuntilpost').val(dateuntil = (($('#dateuntilpost')).val()));
-            $('#' + chan_name + '_timeuntilpost').val(($('#timeuntilpost')).val());
             checkIfPublishable();
         }
         $('input.checkbox').change(function () {

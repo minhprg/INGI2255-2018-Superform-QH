@@ -97,7 +97,14 @@ def prefill_db(client):
 def test_modif_publishing(client):
     login(client, "myself")
     post, chan, pub = prefill_db(client)
-    data1 = {str(chan.name)+'_titlepost': 'title_post2', 'datefrompost': '2018-12-05', 'dateuntilpost': '2018-12-05',
-         'descriptionpost': 'descr', 'titlepost' : 'title', 'imagepost': ''}
+    data1 = {'datefrompost': '2021-01-01', 'dateuntilpost': '2021-01-01',
+         'descriptionpost': post.description, 'titlepost' : 'new title', 'linkurlpost': post.link_url,'imagepost': post.image_url}
     rv = client.post('/publish/edit/'+str(post.id), data=data1, follow_redirects=True)
     assert rv.status_code == 200
+    po = db.session.query(Post).filter(Post.id == post.id).first()
+    assert po.date_from == datetime_converter('2021-01-01')
+    assert po.date_until == datetime_converter('2021-01-01')
+    assert po.description == post.description
+    assert po.title == 'new title'
+    assert po.link_url == post.link_url
+    assert po.image_url == post.image_url

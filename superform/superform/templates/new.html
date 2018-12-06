@@ -68,9 +68,9 @@
                                 <label for="publishpost">{% if new %}Publish{% else %}Modify in{% endif %}</label>
                                 {% if l_chan|length == 0 %}
                                     {% if new %}
-                                        <p>No channel available for this user</p>
+                                        <p>No channels available for this user</p>
                                     {% else %}
-                                        <p>No channel editable for this post</p>
+                                        <p>No editable channels for this post</p>
                                     {% endif %}
                                 {% else %}
                                     {% for chan in l_chan %}
@@ -86,7 +86,7 @@
                                 <div class="form-group">
                                     <label for="publishpost2">New Channels</label>
                                     {% if l_chan_not|length == 0 %}
-                                        <p>All channels already selected</p>
+                                        <p>No new channels available</p>
                                     {% else %}
                                         {% for chan in l_chan_not %}
                                             <div class="form-check">

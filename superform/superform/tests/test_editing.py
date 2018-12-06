@@ -97,6 +97,7 @@ def prefill_db(client):
 def test_modif_publishing(client):
     login(client, "myself")
     post, chan, pub = prefill_db(client)
-    data1 = {str(chan.name)+'_titlepost': 'title_post2'}
+    data1 = {str(chan.name)+'_titlepost': 'title_post2', 'datefrompost': '2018-12-05', 'dateuntilpost': '2018-12-05',
+         'descriptionpost': 'descr', 'titlepost' : 'title', 'imagepost': ''}
     rv = client.post('/publish/edit/'+str(post.id), data=data1, follow_redirects=True)
     assert rv.status_code == 200

@@ -90,6 +90,7 @@ def test_new_channel_no_admin(client):
                                                       "ictv_api_key": 'azertyuiop'})
     chan = db.session.query(Channel).filter(Channel.id == chan_id_4).first()
     assert not chan
+
 def test_new_publish_ictv(client):
     global chan_id_3, chan_id_4
     login(client, "myself")

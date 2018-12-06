@@ -84,7 +84,8 @@ def build_ictv_server_request_args(chan_name, chan_config, method):
     """
     Return the headers required to communicate with the ICTV server given the channel configuration and the type of
     request
-    :param channel: the channel having ictv as plugin
+    :param chan_name: the name of the channel having ictv as plugin
+    :param chan_config: the configuration of the channel
     :param method: the method of the HTTP request
     :return: a dict with the headers of the method of the HTTP request and the url of the channel of the ICTV server
     :raise: IctvChannelConfiguration if the channel is misconfigured
@@ -101,19 +102,19 @@ def build_ictv_server_request_args(chan_name, chan_config, method):
 def get_ictv_templates(chan_name, chan_config):
     """
     Request the dict of the different slides layout used by the ICTV server
-    :param channel: the channel having ictv as plugin
+    :param chan_name: the name of the channel having ictv as plugin
+    :param chan_config: the configuration of the channel
     :return: the dict of the slides layout
-    :raise: IctvChannelConfiguration if the channel is misconfigured
-    :raise: IctvServerConnection if the server is not accessible or if the given configuration does not match any
+    :raise IctvChannelConfiguration: if the channel is misconfigured
+    :raise IctvServerConnection: if the server is not accessible or if the given configuration does not match any
     channels on the ICTV server
     """
     from re import sub
-
     """ Raise IctvChannelConfiguration if the channel is misconfigured """
     request_args = build_ictv_server_request_args(chan_name, chan_config, 'GET')
     try:
         response = get(request_args['url'] + '/templates', headers=request_args['headers'])
-    except exceptions.ConnectionError as e:
+    except exceptions.ConnectionError:
         raise IctvServerConnection(404)
 
     """ Raise IctvServerConnection if the server replies with status code different from 200 """
@@ -146,10 +147,11 @@ def forge_link_url(chan, form):
 
     return link_post
 
+
 def generate_ictv_dropdown_control(chan_name):
 
     code = '$("#' + chan_name + '_ictv_slide_choice_button").click(function () {' \
-            'var name = $("#'+ chan_name + '_ictv_slide_choice_button input:radio:checked").val();\n' \
+            'var name = $("#' + chan_name + '_ictv_slide_choice_button input:radio:checked").val();\n' \
             '$(".' + chan_name + '_ictv_slide_choice").hide();\n' \
             '$("#' + chan_name + '_ictv_form_"+name).show();\n' \
             '});'
@@ -158,7 +160,7 @@ def generate_ictv_dropdown_control(chan_name):
 
 def generate_ictv_dropdown(chan_name, templates):
     button_id = chan_name + '_ictv_slide_choice_button'
-    ret = '<div class="form-group chan_names" id="'+ button_id + '">\n<meta id="chan_name" data-chan_name="' + \
+    ret = '<div class="form-group chan_names" id="' + button_id + '">\n<meta id="chan_name" data-chan_name="' + \
           chan_name + '">\n'
     ret = ret + '\t<button class="dropdown-toggle" type="button" data-toggle="dropdown" ' \
                 '>Slide Layout<span class="caret"></span></button>\n'
@@ -182,8 +184,8 @@ def generate_ictv_data_form(chan_name, templates):
 
     for index, temp in enumerate(templates):
         div_id = chan_name + '_ictv_form_' + temp
-        ret = ret + '<div id="' + div_id + '" class=\"'+ chan_name +'_ictv_slide_choice\" ' + \
-              ('style=\"display: none;\"' if index != 0 else '') + '>\n'
+        ret = ret + '<div id="' + div_id + '" class=\"' + chan_name + '_ictv_slide_choice\" ' + \
+            ('style=\"display: none;\"' if index != 0 else '') + '>\n'
         ret = ret + '\t<h5>' + templates[temp]['name'] + '</h5>\n'
 
         for field in templates[temp]:
@@ -307,6 +309,7 @@ def run(pub, chan_conf, **kwargs):
         return e.popup()
 
     capsule = generate_capsule(pub)
+    print(capsule)
 
     """ Create new capsule on ICTV server on given channel """
     request_args = build_ictv_server_request_args(pub.channel_id, chan_conf, 'POST')
@@ -319,6 +322,7 @@ def run(pub, chan_conf, **kwargs):
         capsule_id = capsule_request.headers['Location'].split('/')[-1]
         slide_url = capsules_url + '/' + str(capsule_id) + '/slides'
         # TODO : catch errors on request
+        print(slide)
         slide_request = post(slide_url, json=slide, headers=request_args['headers'])
         if slide_request.status_code == 201:
             return None

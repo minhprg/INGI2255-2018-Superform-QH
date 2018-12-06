@@ -46,35 +46,6 @@ def login(client, login):
             sess["email"] = "hello@genemail.com"
             sess['user_id'] = login
 
-'''@pytest.fixture
-def client():
-    app.app_context().push()
-    db_fd, app.config['DATABASE'] = tempfile.mkstemp()
-    app.config['TESTING'] = True
-    client = app.test_client()
-
-    with app.app_context():
-        db.create_all()
-
-    yield client
-
-    os.close(db_fd)
-    os.unlink(app.config['DATABASE'])
-
-def login(client, login):
-    with client as c:
-        with c.session_transaction() as sess:
-            if login is "myself":
-                sess["admin"] = True
-            else:
-                sess["admin"] = False
-
-            sess["logged_in"] = True
-            sess["first_name"] = "gen_login"
-            sess["name"] = "myname_gen"
-            sess["email"] = "hello@genemail.com"
-            sess['user_id'] = login'''
-
 
 def prefill_db(client):
     post = Post(user_id='myself', title='title_post', description='descr_post', link_url='link_post',
@@ -94,11 +65,11 @@ def prefill_db(client):
 
     return post, chan, pub
 
-def test_modif_publishing(client):
+def test_modif_post(client):
     login(client, "myself")
     post, chan, pub = prefill_db(client)
-    data1 = {'datefrompost': '2021-01-01', 'dateuntilpost': '2021-01-01',
-         'descriptionpost': post.description, 'titlepost' : 'new title', 'linkurlpost': post.link_url,'imagepost': post.image_url}
+    data1 = {'datefrompost': '2021-01-01', 'dateuntilpost': '2021-01-01', 'descriptionpost': post.description,
+             'titlepost' : 'new title', 'linkurlpost': post.link_url,'imagepost': post.image_url}
     rv = client.post('/publish/edit/'+str(post.id), data=data1, follow_redirects=True)
     assert rv.status_code == 200
     po = db.session.query(Post).filter(Post.id == post.id).first()
@@ -108,3 +79,29 @@ def test_modif_publishing(client):
     assert po.title == 'new title'
     assert po.link_url == post.link_url
     assert po.image_url == post.image_url
+
+def test_modif_publishing(client):
+    login(client, "myself")
+    post, chan, pub = prefill_db(client)
+    data1 = {'datefrompost': '2021-01-01', 'dateuntilpost': '2021-01-01', 'descriptionpost': post.description,
+             'titlepost' : 'new title', 'linkurlpost': post.link_url,'imagepost': post.image_url,
+             'chan_option_'+str(chan.id) : chan.id, chan.name + '_datefrompost': '2022-01-01',
+             chan.name + '_dateuntilpost': '2022-01-01', chan.name + '_descriptionpost': post.description,
+             chan.name + '_titlepost': 'new title spec for chan', chan.name + '_linkurlpost': post.link_url,
+             chan.name + '_imagepost': post.image_url}
+    rv = client.post('/publish/edit/'+str(post.id), data=data1, follow_redirects=True)
+    assert rv.status_code == 200
+    po = db.session.query(Post).filter(Post.id == post.id).first()
+    assert po.date_from == datetime_converter('2021-01-01')
+    assert po.date_until == datetime_converter('2021-01-01')
+    assert po.description == post.description
+    assert po.title == 'new title'
+    assert po.link_url == post.link_url
+    assert po.image_url == post.image_url
+    pu = db.session.query(Publishing).filter(Publishing.post_id == post.id, Publishing.channel_id == chan.id).first()
+    assert pu.date_from == datetime_converter('2022-01-01')
+    assert pu.date_until == datetime_converter('2022-01-01')
+    assert pu.description == post.description
+    assert pu.title == 'new title spec for chan'
+    assert pu.link_url == post.link_url
+    assert pu.image_url == post.image_url

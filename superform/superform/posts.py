@@ -105,7 +105,11 @@ def edit_post(post_id):
 
     # Query the data from the post
     post = db.session.query(Post).filter(Post.id == post_id).first()
+    # Query the publishing of the post
     list_publishing = db.session.query(Publishing).filter(Publishing.post_id == post_id)
+
+    # Get list of channels with publishing not yet publish or validated
+    # and list of channels with not yet publishing
     list_chan_id_selected = []
     list_already_pub = []
     for pub in list_publishing:
@@ -115,17 +119,18 @@ def edit_post(post_id):
     list_chan_selected = []
     list_chan_not_selected = []
     for chan in list_of_channels:
-        if (list_chan_id_selected.__contains__(chan.id)):
+        if list_chan_id_selected.__contains__(chan.id):
             if not list_already_pub.__contains__(chan.id):
                 list_chan_selected.append(chan)
         else:
             list_chan_not_selected.append(chan)
+
     if request.method == "GET":
         post.date_from = str_converter(post.date_from)
         post.date_until = str_converter(post.date_until)
         return render_template('new.html', l_chan=list_chan_selected, post=post, new=False, l_chan_not=list_chan_not_selected)
     else:
-        modify_a_post(request.form,post_id)
+        modify_a_post(request.form, post_id)
         return redirect(url_for('index'))
 
 @posts_page.route('/publish/edit/<int:post_id>', methods=['POST'])

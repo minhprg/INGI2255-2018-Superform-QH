@@ -90,8 +90,8 @@ def copy_new_post(post_id):
 @login_required()
 def edit_post(post_id):
     """
-    This method allow the editing the content of a post (defined by his post_id) and open the new post tab with all the informations
-    of the post in it
+    This method allow the editing the content of a post (defined by his post_id) and opens the new post tab with all the information
+    about the post in it
     :param post_id: id of the post to be edited
     :return:
     """
@@ -133,7 +133,7 @@ def edit_post(post_id):
 def publish_from_edit_post(post_id):
     # First edit the post
     p = modify_a_post(request.form,post_id)
-    # then treat the publish part
+    # Then treat the publish part
     if request.method == "POST":
         for elem in request.form:
             if elem.startswith("chan_option_"):
@@ -143,7 +143,7 @@ def publish_from_edit_post(post_id):
 
                 c = Channel.query.get(substr(elem))
                 # for each selected channel options
-                # create the publication
+                # edit the publication
                 pub = edit_a_publishing(p, c, request.form)
 
     db.session.commit()

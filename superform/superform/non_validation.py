@@ -121,15 +121,15 @@ def validate_publishing(id, idc):
                                error_message=error_msg, time_until=time_until, time_from=time_from)
 
     commit_pub(pub, State.VALIDATED.value)
-    plug = plugin.run(pub, c_conf)
+    plug_exitcode = plugin.run(pub, c_conf)
 
-    if plug == StatusCode.ERROR.value:
+    if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR.value:
         time_until = str_time_converter(pub.date_until)
         time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
         return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
-                               error_message='You need to enter at least a title or a description', chan=c)
+                               error_message=plug_exitcode[1], chan=c)
 
     db.session.commit()
 
@@ -142,10 +142,12 @@ def validate_publishing(id, idc):
         mod[-1].moderator_id = session.get("user_id", "")
         db.session.commit()
 
-    if not plug:
+    if type(plug_exitcode) is tuple:
+        plug_exitcode = plug_exitcode[2]
+    if not plug_exitcode:
         return redirect(url_for('index'))
     else:
-        return plug
+        return plug_exitcode
 
 
 @val_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])

@@ -103,7 +103,7 @@ def run(publishing, channel_config):
     rss_feed_url = SERVER_URL + str(channel_id) + ".xml"
 
     if (publishing.title is None or publishing.title == "") and (publishing.description is None or publishing.description == ""):
-        return StatusCode.ERROR.value
+        return StatusCode.ERROR.value, 'You need to enter at least a title or a description', None
 
     if channel_id not in rss_feeds:
         rss_feeds[channel_id] = create_initial_feed(feed_url=rss_feed_url, feed_title=rss_feed_title, feed_description=rss_feed_description)
@@ -126,4 +126,4 @@ def run(publishing, channel_config):
     with open(rss_feed_local_file_path, "w+") as file:
         rss_feeds[channel_id].write_xml(file)
 
-    return StatusCode.OK.value
+    return StatusCode.OK.value, None, None

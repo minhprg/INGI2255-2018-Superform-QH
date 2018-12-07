@@ -178,11 +178,13 @@ def validate_publishing(id, idc):
         mod[0].message = request.form.get('commentpub')
         db.session.commit()
 
-    isURL = plugin.run(pub, c_conf)
-    if not isURL:
+    ret = plugin.run(pub, c_conf)
+    if not ret:
         return redirect(url_for('index'))
     else:
-        return isURL
+        pub.state = State.NOTVALIDATED.value
+        db.session.commit()
+        return redirect(url_for('index', messages=ret))
 
 
 @pub_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])

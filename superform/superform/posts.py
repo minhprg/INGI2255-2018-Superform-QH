@@ -8,8 +8,9 @@ import datetime
 from superform.publishings import create_a_publishing
 
 
-posts_page = Blueprint('posts', __name__)
+from re import sub
 
+posts_page = Blueprint('posts', __name__)
 
 
 def create_a_post(form):
@@ -34,13 +35,21 @@ def create_a_post(form):
     return p
 
 
-
 def create_a_publishing(post, chn, form):
     chan = str(chn.name)
+
+    plug_name = chn.module
+    from importlib import import_module
+    plug = import_module(plug_name)
+
+    if 'forge_link_url' in dir(plug):
+        link_post = plug.forge_link_url(chan, form)
+    else:
+        link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
-    link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
     date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
     time_from = time_converter(form.get(chan + '_timefrompost')) if form.get(chan + '_timefrompost') is not None else None
@@ -61,22 +70,34 @@ def create_a_publishing(post, chn, form):
     return pub
 
 
-
 @posts_page.route('/new', methods=['GET', 'POST'])
 @login_required()
 def new_post():
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
+
+    ictv_chans = []
+
     for elem in list_of_channels:
         m = elem.module
+
         clas = get_instance_from_module_path(m)
         unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
         setattr(elem, "unavailablefields", unaivalable_fields)
 
+        if 'ictv_data_form' in unaivalable_fields:
+            ictv_chans.append(elem)
+
     if request.method == "GET":
-        return render_template('new.html', l_chan=list_of_channels)
+        ictv_data = None
+        if len(ictv_chans) != 0:
+            from plugins.ictv import process_ictv_channels
+            ictv_data = process_ictv_channels(ictv_chans)
+
+        return render_template('new.html', l_chan=list_of_channels, ictv_data=ictv_data)
     else:
         create_a_post(request.form)
+
     return redirect(url_for('index'))
 
 
@@ -116,6 +137,7 @@ def copy_new_post(post_id):
 def publish_from_new_post():
     # First create the post
     p = create_a_post(request.form)
+
     # then treat the publish part
     if request.method == "POST":
         for elem in request.form:

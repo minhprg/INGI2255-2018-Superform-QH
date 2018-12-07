@@ -89,42 +89,51 @@
                     <div class="tab-pane container-fluid fade" id="menu{{ chan.id }}">
 
                         <div class="row">
-                            <div class="col-md-8">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_titlepost">Title</label><br>
-                                            <input type="text" name="{{ chan.name }}_titlepost" id="{{ chan.name }}_titlepost" class="form-control" value="{% if post %}{{ post.title }}{% endif %}">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_descriptionpost">Description</label><br>
-                                            <textarea class="form-control" rows="5" id="{{ chan.name }}_descriptionpost" name="{{ chan.name }}_descriptionpost">{% if post %}{{ post.description }}{% endif %}</textarea>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_linkurlpost">Link</label><br>
-                                            <input type="text" name="{{ chan.name }}_linkurlpost" id="{{ chan.name }}_linkurlpost" class="form-control" value="{% if post %}{{ post.link_url }}{% endif %}">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_imagepost">Image</label><br>
-                                            <input type="file" name="{{ chan.name }}_imagepost" id="{{ chan.name }}_imagepost" class="form-control" value="{% if post %}{{ post.image_url }}{% endif %}">
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="{{ chan.name }}_datefrompost">Publication Date</label><br>
-                                                    <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
-                                                    <input id="{{ chan.name }}_timefrompost" name="{{ chan.name }}_timefrompost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="{{ chan.name }}_dateuntilpost">Publication Until</label><br>
-                                                    <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
-                                                    <input id="{{ chan.name }}_timeuntilpost" name="{{ chan.name }}_timeuntilpost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
-                                                </div>
-                                            </div>
-                                        </div>
+                            <div class="col-md-12">
 
+                                {%  if 'ictv_data_form' in chan.unavailablefields  %}
+                                    {{ ictv_data[chan.name]['error']|safe }}
+                                    <!-- Generate table dropdown for ictv channel options -->
+                                    {{ ictv_data[chan.name]['dropdown']|safe }}
+                                {% endif %}
+
+                                <div class="form-group">
+                                    <label for="{{ chan.name }}_titlepost">Title</label><br>
+                                    <input type="text" name="{{ chan.name }}_titlepost" id="{{ chan.name }}_titlepost" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ chan.name }}_descriptionpost">Description</label><br>
+                                    <textarea class="form-control" rows="5" id="{{ chan.name }}_descriptionpost" name="{{ chan.name }}_descriptionpost"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ chan.name }}_linkurlpost">Link</label><br>
+                                    <input type="text" name="{{ chan.name }}_linkurlpost" id="{{ chan.name }}_linkurlpost" class="form-control">
+                                </div>
+
+                                {%  if 'ictv_data_form' in chan.unavailablefields  %}
+                                    <!-- ICTV extra data form -->
+                                    {{ ictv_data[chan.name]['data']|safe }}
+                                {% endif %}
+
+                                <div class="form-group">
+                                    <label for="{{ chan.name }}_imagepost">Image</label><br>
+                                    <input type="file" name="{{ chan.name }}_imagepost" id="{{ chan.name }}_imagepost" class="form-control">
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ chan.name }}_datefrompost">Publication Date</label><br>
+                                            <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                            <input id="{{ chan.name }}_timefrompost" name="{{ chan.name }}_timefrompost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ chan.name }}_dateuntilpost">Publication Until</label><br>
+                                            <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                            <input id="{{ chan.name }}_timeuntilpost" name="{{ chan.name }}_timeuntilpost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -162,7 +171,6 @@
     {% else %}
         Your are not logged in.
     {% endif %}
-
 
 {% endblock %}
 
@@ -283,6 +291,69 @@
                 $('#li_'+nameC).hide();
             }
         });
+        // From here, I copy a field ONCE from general to all the equivalent fields of each channel
+        //It works but it's not really sexy to rewrite this for all fields of general tab
+        $('#titlepost').one("change",function(event){
+            text = ($(this).val());
+            //This is a subselect of input that match with the regex .*titlepost
+            $('input')
+                .filter(function() {
+                    return this.id.match(/.*titlepost/);
+                })
+                .val(text);
+        });
+        $('#descriptionpost').one("change",function(event){
+            text = ($(this).val());
+            //This is a subselect of input that match with the regex .*descriptionpost
+            $('textarea')
+                .filter(function() {
+                    return this.id.match(/.*descriptionpost/);
+                })
+                .val(text);
+        });
+        $('#linkurlpost').one("change",function(event){
+            text = ($(this).val());
+            //This is a subselect of input that match with the regex .*linkurlpost
+            $('input')
+                .filter(function() {
+                    return this.id.match(/.*linkurlpost/);
+                })
+                .val(text);
+        });
+        $('#imagepost').one("change",function(event){
+            text = ($(this).val());
+            //This is a subselect of input that match with the regex .*imagepost
+            $('input')
+                .filter(function() {
+                    return this.id.match(/.*imagepost/);
+                })
+                .val(text);
+        });
+        $('#dateuntilpost').one("change",function(event){
+            text = ($(this).val());
+            //This is a subselect of input that match with the regex .*dateuntilpost
+            $('input')
+                .filter(function() {
+                    return this.id.match(/.*dateuntilpost/);
+                })
+                .val(text);
+        });
+        $('#datefrompost').one("change",function(event){
+            text = ($(this).val());
+            //This is a subselect of input that match with the regex .*datefrompost
+            console.log($('input')
+                .filter(function() {
+                    return this.id.match(/.*datefrompost/);
+                })
+                .val(text));
+        });
+
+        {% for chan in l_chan %}
+            {%  if 'ictv_data_form' in chan.unavailablefields  %}
+                {{ ictv_data[chan.name]['control']|safe }}
+            {% endif %}
+        {% endfor %}
+
     </script>
 
 {% endblock %}

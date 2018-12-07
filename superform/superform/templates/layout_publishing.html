@@ -9,7 +9,8 @@
         {% endif %}
         <form method="POST" action="">
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-12">
+                    {{ ictv_error|safe }}
                     <div class="form-group">
                         <label for="titlepost">Title</label><br>
                         <input type="text" name="titlepost" id="titlepost" class="form-control" value="{{ pub.title }}">

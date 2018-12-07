@@ -41,7 +41,7 @@ def run(publishing, channel_config):
                              data=data)
     if response.status_code != 201:
         print("Linked In publish failed")
-    return response
+    return
 
 def createRequestCodeLinkedIn(app_key,state):
     canvas_url = url_for('linkedin_callback.callback_In', _external=True)

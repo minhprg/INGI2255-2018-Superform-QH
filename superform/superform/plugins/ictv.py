@@ -7,12 +7,10 @@ FIELDS_UNAVAILABLE = ['ictv_data_form']
 CONFIG_FIELDS = ['ictv_server_fqdn', 'ictv_channel_id', 'ictv_api_key']
 
 
-def generate_warning_popup(msg):
-    return '<div class="alert alert-danger">\n \
-            \t<strong>ERROR</strong>\n' + msg + '\n</div>\n'
-
-
 class IctvException(Exception):
+    """
+    This class is the superclass that represents the errors from the ICTV plugin
+    """
     msg = ''
 
     def __init__(self, msg):
@@ -22,11 +20,18 @@ class IctvException(Exception):
         return self.msg
 
     def popup(self):
-        return generate_warning_popup(self.msg)
+        """
+        Generate HTML code for ICTV error messages
+        :return: the encapsulation of the error message
+        """
+        return '<div class="alert alert-danger">\n \
+                \t<strong>ERROR</strong>\n' + self.msg + '\n</div>\n'
 
 
 class IctvServerConnection(IctvException):
-    # TODO : refactor the error messages
+    """
+    This class represents the connection problems toward the remote ICTV server
+    """
     def __init__(self, error_code, **kwargs):
         client_msg = ''
         if 'msg' in kwargs:
@@ -49,6 +54,9 @@ class IctvServerConnection(IctvException):
 
 
 class IctvChannelConfiguration(IctvException):
+    """
+    This class represents the configuration problems of the superform ictv plugin
+    """
     def __init__(self, fields):
         self.msg = '<p>The following configuration fields of the <strong>' + fields[-1] + \
                    '</strong> channel are misconfigured : </p>\n\t<ul>'
@@ -59,17 +67,13 @@ class IctvChannelConfiguration(IctvException):
                               'refer to the channel administrator.</p>\n'
 
 
-class IctvWrongSlideType(IctvException):
-    pass
-
-
 # TODO : more interesting to have "plugins manager" in core application to check the configuration
 def check_ictv_channel_config(chan_name, chan_config):
     """
     Check if the ictv channel is properly configured
     :param chan_name: the channel name having ictv as plugin
     :param chan_config:
-    :raise: IctvChannelConfiguration if the channel is misconfigured
+    :raise IctvChannelConfiguration: if the channel is misconfigured
     """
     json_data = json.loads(chan_config)
     missing_fields = [i for i in CONFIG_FIELDS if (i not in json_data or json_data[i] == 'None')]
@@ -122,17 +126,18 @@ def get_ictv_templates(chan_name, chan_config):
         raise IctvServerConnection(response.status_code)
 
     ictv_slides_templates = response.json()
-    if type(ictv_slides_templates) != dict:
-        # TODO : check the dict format ?
-        pass
-
-    # TODO : add filter function to remove the unusable slides layouts ?
 
     return {sub('^template-', '', i): ictv_slides_templates[i] for i in ictv_slides_templates
             if 'title-1' in ictv_slides_templates[i]}
 
 
 def forge_link_url(chan, form):
+    """
+    Create the data structure to store the slide specific fields into the link_url entry in the Publishing
+    :param chan: the channel from which come the slide data
+    :param form: the actuel form from the Post
+    :return: the data to store in the link_url entry of the Publishing
+    """
     from re import sub
     link_post = ''
     slide_type = form.get(chan + '_ictv_slide_type')
@@ -149,16 +154,27 @@ def forge_link_url(chan, form):
 
 
 def generate_ictv_dropdown_control(chan_name):
+    """
+    Generate the JS code to control the ictv slide dropdown from the Posts page
+    :param chan_name: the name of the channel that requires the dropdown
+    :return: the JS control code of the dropdown specific to the *chan_name* channel
+    """
 
     code = '$("#' + chan_name + '_ictv_slide_choice_button").click(function () {' \
-            'var name = $("#' + chan_name + '_ictv_slide_choice_button input:radio:checked").val();\n' \
-            '$(".' + chan_name + '_ictv_slide_choice").hide();\n' \
-            '$("#' + chan_name + '_ictv_form_"+name).show();\n' \
-            '});'
+        'var name = $("#' + chan_name + '_ictv_slide_choice_button input:radio:checked").val();\n' \
+        '$(".' + chan_name + '_ictv_slide_choice").hide();\n' \
+        '$("#' + chan_name + '_ictv_form_"+name).show();\n' \
+        '});'
     return code
 
 
 def generate_ictv_dropdown(chan_name, templates):
+    """
+    Generate the ictv slide dropdown HTML code for the Posts page
+    :param chan_name: the name of the channel that requires the dropdown
+    :param templates: the list of the ictv templates proposed in the dropdown
+    :return: the HTML code of the dropdown specific to the *chan_name* channel
+    """
     button_id = chan_name + '_ictv_slide_choice_button'
     ret = '<div class="form-group chan_names" id="' + button_id + '">\n<meta id="chan_name" data-chan_name="' + \
           chan_name + '">\n'
@@ -180,6 +196,12 @@ def generate_ictv_dropdown(chan_name, templates):
 
 
 def generate_ictv_data_form(chan_name, templates):
+    """
+    Generate the ictv slide specific fields for each slide template given in templates
+    :param chan_name: the name of the channel that requires the form
+    :param templates: list of all the slide templates supported by both Superform and the ICTV server
+    :return: the HTML code of the form
+    """
     ret = ''
 
     for index, temp in enumerate(templates):
@@ -204,8 +226,13 @@ def generate_ictv_data_form(chan_name, templates):
 
 
 def generate_ictv_fields(chan_name, chan_config):
+    """
+    Generate a dict with all the ictv specific codr to inject into Posts page with Jijna
+    :param chan_name: the name of the channel that requires the extended code
+    :param chan_config: the configuration of the channel
+    :return: the dict containing all the extendend code required in the Posts page
+    """
     templates = get_ictv_templates(chan_name, chan_config)
-    # TODO : maybe avoid  the replication of the fields dict
     return {'dropdown': generate_ictv_dropdown(chan_name, templates),
             'data': generate_ictv_data_form(chan_name, templates),
             'control': generate_ictv_dropdown_control(chan_name),
@@ -223,7 +250,6 @@ def process_ictv_channels(channels):
         try:
             fields = generate_ictv_fields(chan.name, chan.config)
         except (IctvChannelConfiguration, IctvServerConnection) as e:
-            # TODO : maybe avoid  the replication of the fields dict
             ret[chan.name] = {'data': '', 'dropdown': '', 'control': '', 'error': e.popup()}
         else:
             ret[chan.name] = fields
@@ -239,8 +265,6 @@ def generate_slide(chan_conf, pub):
     :return: the JSON representation of the slide
     :raise IctvServerConnection: if the communication with the server is impossible for any reason
     :raise IctvChannelConfiguration: if the channel is misconfigured and that does not allow to contact the ICTV server
-    :raise IctvWrongSlideType: if the slide type given with the publication does not exist on the ICTV server. Should
-                                never be raised
     """
     splited_url = pub.link_url.split(',')
 
@@ -252,25 +276,13 @@ def generate_slide(chan_conf, pub):
         Raise IctvServerConnection, IctvChannelConfiguration
     """
     slides_templates = get_ictv_templates(str(pub.channel_id), chan_conf)
-
-    if slide_type in slides_templates:
-        slide_content = slides_templates[slide_type]
-    else:
-        # TODO : correct error msg
-        raise IctvWrongSlideType("TODO ERROR")
+    slide_content = slides_templates[slide_type]
 
     """ Copy extra data from ICTV specific form into the slide template """
     slide_data = {media_type: url for media_type, url in (media.split(':::') for media in splited_url[:-1])}
     for elem in slide_data:
-        """ quick fix, incoherence in ICTV response (img vs image) """
-        # TODO : remove quick fix
-        if 'img' in elem:
-            slide_content.pop(elem, None)
-            slide_content['image-1'] = {'src': slide_data[elem]}
-        else:
-            slide_content[elem] = {'src': slide_data[elem]}
+        slide_content[elem] = {'src': slide_data[elem]}
 
-        # TODO : allow the user to choose the background size
         if 'background' in elem:
             slide_content[elem]['size'] = 'cover'
 
@@ -278,13 +290,16 @@ def generate_slide(chan_conf, pub):
     slide_content['title-1'] = {'text': pub.title}
     slide_content['text-1'] = {'text': pub.description}
     slide_content['subtitle-1'] = {'text': ''}
-    # slide_content.pop('name', None)
-    # slide_content.pop('description', None)
 
     return {'content': slide_content, 'template': 'template-' + slide_type, 'duration': -1}
 
 
 def get_epoch(date):
+    """
+    Convert the given date into epoch format for ictv slide
+    :param date: the date to convert
+    :return: the epoch representation of the given date
+    """
     return date.replace(tzinfo=datetime.timezone.utc).timestamp()
 
 
@@ -296,33 +311,27 @@ def generate_capsule(pub):
     """
     capsule = {'name': pub.title, 'theme': 'ictv', 'validity':
                [int(get_epoch(pub.date_from)), int(get_epoch(pub.date_until))]}
-    # TODO : change the name of the capsule to unique name
-    # TODO : give possibility to change the capsule theme
     return capsule
 
 
-def run(pub, chan_conf, **kwargs):
+def run(pub, chan_conf):
 
     try:
         slide = generate_slide(chan_conf, pub)
-    except (IctvServerConnection, IctvChannelConfiguration, IctvWrongSlideType) as e:
+    except (IctvServerConnection, IctvChannelConfiguration) as e:
         return e.popup()
 
     capsule = generate_capsule(pub)
-    print(capsule)
 
     """ Create new capsule on ICTV server on given channel """
     request_args = build_ictv_server_request_args(pub.channel_id, chan_conf, 'POST')
     capsules_url = request_args['url'] + '/capsules'
-    # TODO : catch errors on request
     capsule_request = post(capsules_url, json=capsule, headers=request_args['headers'])
 
     """ Check if the capsule has been created """
     if capsule_request.status_code == 201:
         capsule_id = capsule_request.headers['Location'].split('/')[-1]
         slide_url = capsules_url + '/' + str(capsule_id) + '/slides'
-        # TODO : catch errors on request
-        print(slide)
         slide_request = post(slide_url, json=slide, headers=request_args['headers'])
         if slide_request.status_code == 201:
             return None

@@ -160,7 +160,9 @@ def test_non_valid_publishing():
     path = root + "-7.xml"
 
     response = rss.run(pub, conf)
-    assert response == StatusCode.ERROR.value
+    assert type(response) is tuple
+    assert response[0] == StatusCode.ERROR.value
+    assert response[2] is None
 
     file = Path(path)
     assert not file.exists()

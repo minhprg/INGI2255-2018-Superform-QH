@@ -47,23 +47,6 @@ def create_a_publishing(post, chn, form):
     else:
         link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
 
-    # TODO : move the complexity to ictv plugin
-    # TODO : change the condition
-    """clas = get_instance_from_module_path(chn.module)
-    unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
-    if 'ictv_data_form' in unaivalable_fields:
-        slide_type = form.get(chan + '_ictv_slide_type')
-        if slide_type is not None:
-            link_post = ''
-            req = form.to_dict()
-            for i in req:
-                if chan + '_data_' + slide_type in i:
-                    a = sub('^' + chan + '_data_' + slide_type + '_', '', i)
-                    link_post = link_post + a + ":::" + req[i] + ','
-
-            link_post = link_post + slide_type
-    """
-
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
@@ -106,7 +89,6 @@ def new_post():
             ictv_chans.append(elem)
 
     if request.method == "GET":
-
         ictv_data = None
         if len(ictv_chans) != 0:
             from plugins.ictv import process_ictv_channels

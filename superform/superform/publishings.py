@@ -177,22 +177,14 @@ def validate_publishing(id, idc):
     else:
         mod[0].message = request.form.get('commentpub')
         db.session.commit()
-        #running the plugin here
-        c=db.session.query(Channel).filter(Channel.name == pub.channel_id).first()
-        plugin_name = c.module
-        c_conf = c.config
-        from importlib import import_module
-        plugin = import_module(plugin_name)
-        ret = plugin.run(pub,c_conf)
-        if ret is not None:
-            # TODO : fix resend
-            return render_template('moderate_post.html', pub=pub, ictv_error=ret)
 
-    isURL = plugin.run(pub, c_conf)
-    if not isURL:
+    ret = plugin.run(pub, c_conf)
+    if not ret:
         return redirect(url_for('index'))
     else:
-        return isURL
+        pub.state = State.NOTVALIDATED.value
+        db.session.commit()
+        return redirect(url_for('index', messages=ret))
 
 
 @pub_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])

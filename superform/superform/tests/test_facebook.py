@@ -1,18 +1,25 @@
-import datetime
 import os
 import tempfile
 
 import pytest
 
-from superform.models import Channel
 from superform import app, db
+from superform.models import Channel
 from superform.plugins import facebook
 
+
+def clear_data(session):
+    meta = db.metadata
+    for table in reversed(meta.sorted_tables):
+        session.execute(table.delete())
+    session.commit()
 
 @pytest.fixture
 def client():
     app.app_context().push()
-    db_fd, app.config['DATABASE'] = tempfile.mkstemp()
+
+    db_fd, database = tempfile.mkstemp()
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///"+database+".db"
     app.config['TESTING'] = True
     client = app.test_client()
 
@@ -21,8 +28,10 @@ def client():
 
     yield client
 
+    clear_data(db.session)
     os.close(db_fd)
-    os.unlink(app.config['DATABASE'])
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///superform.db"
+
 
 def login(client, login):
     with client as c:
@@ -38,23 +47,12 @@ def login(client, login):
             sess["email"] = "hello@genemail.com"
             sess['user_id'] = login
 
-def create_channel(client, name, module):
-    data1 = {'@action': 'new', 'name': name, 'module': module}
-    rv = client.post('/channels', data=data1, follow_redirects=True)
-    assert rv.status_code == 200
-    assert name in rv.data.decode()
+def prefill_db(client, name, module):
+    chan = Channel(name=name, id=-1, module=module, config='')
+    db.session.add(chan)
+    db.session.commit()
+    return chan
 
-def get_channel(client, name):
-    for i in range(1000):
-        channel = Channel.query.get(i)
-        if channel != None and channel.name == name:
-            return channel
-
-def delete_channel(client, id, name):
-    data = {'@action': 'delete'}
-    data['id'] = id
-    rv = client.post('/channels', data=data, follow_redirects=True)
-    assert rv.status_code == 200
 
 def test_valid_module(client):
     try:
@@ -94,38 +92,20 @@ def test_callback_wrong_state(client):
 def test_callback_state_not_fb(client):
     """ Received channel id is not a facebook channel -> redirected to channels """
     login(client, "admin")
-    create_channel(client, 'test_fb_mail', 'mail')
-    c = get_channel(client, 'test_fb_mail')
+    chan = prefill_db(client, 'test_fb_mail', 'superform.plugins.mail')
 
-    rv = client.get('/callback_fb?state=' + str(c.id) + '&code=42', follow_redirects=True)
+    rv = client.get('/callback_fb?state=' + str(chan.id) + '&code=42', follow_redirects=True)
     rv2 = client.get('/channels', follow_redirects=True)
     assert rv.status_code == 200
     assert rv2.status_code == 200
     assert rv.data == rv2.data
 
-    delete_channel(client, c.id, c.name)
 
-'''def test_callback_state_ok_wrong_code(client):
+def test_callback_state_ok_wrong_code(client):
     """ Received channel id is a facebook channel but invalid code -> redirected to channel's config page """
     login(client, "admin")
-    create_channel(client, 'test_fb', 'facebook')
-    c = get_channel(client, 'test_fb')
+    chan = prefill_db(client, 'test_fb', 'superform.plugins.facebook')
 
-    rv = client.get('/callback_fb?state='+str(c.id)+'&code=42', follow_redirects=True)
-    assert rv.status_code == 200
-    assert 'Unable to generate access_token' in rv.data.decode()
-
-    delete_channel(client, c.id, c.name)'''
-
-'''def test_get_url_for_token(client):
-    login(client, "admin")
-    create_channel(client, 'test_fb', 'facebook')
-    c = get_channel(client, 'test_fb')
-
-    rv = client.get('/configure/' + str(c.id), follow_redirects=True)
-    assert rv.status_code == 200
-    assert 'Configuration' in rv.data.decode()
-    assert 'access_token' in rv.data.decode()
-    #assert 'https.....' in in rv.data.decode()
-
-    delete_channel(client, c.id, c.name)'''
+    rv = client.get('/callback_fb?state='+str(chan.id)+'&code=42', follow_redirects=True)
+    channel_conf = Channel.query.get(chan.id).config
+    assert 'Unable to generate access_token' in channel_conf

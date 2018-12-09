@@ -99,7 +99,7 @@
                             </td>
                             <td>
                                 <a href="{{ url_for('publishings.rework_publishing',id=item.post_id,idc=item.channel_id) }}" class="btn btn-outline-primary" role="button">Rework</a>
-                                <a href="#" class="btn btn-outline-primary">Copy</a>
+                                <a href=""" class="btn btn-outline-primary">Copy</a>
                                 <a href="#" class="btn btn-outline-warning" role="button">Delete</a>
                             </td>
                         </tr>
@@ -185,8 +185,8 @@
                         </div>
                     </td>
                     <td>
-                        <a href="#" class="btn btn-outline-primary" role="button">Edit</a>
-                        <a href="#" class="btn btn-outline-primary">Copy</a>
+                        <a href="{{ url_for('posts.edit_post',post_id=item.id) }}" class="btn btn-outline-primary" role="button">Edit</a>
+                        <a href="{{ url_for('posts.copy_new_post',post_id=item.id) }}" class="btn btn-outline-primary">Copy</a>
                         <a href="#" class="btn btn-outline-warning" role="button">Delete</a>
                     </td>
                 </tr>

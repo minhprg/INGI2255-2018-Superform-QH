@@ -17,6 +17,7 @@ setup(
         'PyRSS2Gen',
         'pytest',
         'python3-saml',
+        'selenium'
         'sqlalchemy',
     ],
 )

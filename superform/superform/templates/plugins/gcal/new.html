@@ -1,0 +1,14 @@
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="{{ chan.name }}_timefrompost">Publication Time</label><br>
+            <input id="{{ chan.name }}_timefrompost" name="{{ chan.name }}_timefrompost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="{{ chan.name }}_timeuntilpost">Publication Until</label><br>
+            <input id="{{ chan.name }}_timeuntilpost" name="{{ chan.name }}_timeuntilpost" type="time" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+        </div>
+    </div>
+</div>

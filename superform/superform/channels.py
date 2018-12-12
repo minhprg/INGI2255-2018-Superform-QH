@@ -12,8 +12,8 @@ import ast
 channels_page = Blueprint('channels', __name__)
 
 
-'''Check the current config and validity of the channel'''
 def check_config_and_validity(plugin, c_conf):
+    '''Check the current config and validity of the channel'''
     config_json = json.loads(c_conf)
     for field in plugin.CONFIG_FIELDS:
         if field not in config_json:
@@ -55,10 +55,11 @@ def channel_list():
             name = request.form.get('name')
             channel.name = name
             db.session.commit()
-
-    channels = Channel.query.all()
-    return render_template("channels.html", channels=channels,
-                           modules=get_modules_names(current_app.config["PLUGINS"].keys()))
+        return redirect(url_for("channels.channel_list"))
+    else:
+        channels = Channel.query.all()
+        return render_template("channels.html", channels=channels,
+                               modules=get_modules_names(current_app.config["PLUGINS"].keys()))
 
 
 @channels_page.route("/configure/<int:id>", methods=['GET', 'POST'])

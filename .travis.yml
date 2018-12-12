@@ -26,9 +26,11 @@ before_script:
   - (ictv-webapp 0.0.0.0:8000 --config superform/tests/ictv-server/ictv_config.yaml &) && sleep 7
   - python superform/tests/ictv-server/server-setup.py
 script:
+  - cp superform/config.test.json superform/config.json
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)<<<<< HEAD
   - cp /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.test.json /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.json
   - export PYTHONPATH=/home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform
   - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py --ignore=superform/selenium/test_ictv.py --cov-config ../.coveragerc --cov=superform
-    # - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py --ignore=superform/selenium/test_ictv.py
 after_success:
   - coveralls
+  

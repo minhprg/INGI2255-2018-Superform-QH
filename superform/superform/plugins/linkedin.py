@@ -4,28 +4,29 @@ from flask import url_for, current_app, render_template,redirect
 
 FIELDS_UNAVAILABLE = ['Publication Date', 'Publication Until', 'Title']
 
-CONFIG_FIELDS = ["access_token","Page Id"]
+CONFIG_FIELDS = ["access_token","page"]
 
 def render_specific_config_page(c, config_fields):
     """Render a specific template to configure a LinkedIn channel"""
-    return render_template("channel_configure_linkedIn.html", channel=c, config_fields=config_fields,
-                           url_token=createRequestCodeLinkedIn(current_app.config["LINKEDIN_API_KEY"],str(c.id)))
+    return render_template("channel_configure_facebook.html", channel=c, config_fields=config_fields,
+                           url_token=createRequestCodeLinkedIn(current_app.config["LINKEDIN_API_KEY"],str(c.id)),
+                           pages=get_list_user_pages(c.config_dict.get("access_token")))
 
 def run(publishing, channel_config):
     json_data = json.loads(channel_config)
-    if 'Page Id' not in json_data:
+    if 'page' not in json_data:
         print("Invalid page id")
         # TODO should add log here
         return
-    page_id = json_data['Page Id']
+    page_id = json_data['page']
     if 'access_token' not in json_data:
         print("Invalid acces_token.")
         # TODO should add log here
         return
     access_token = json_data['access_token']
+    page=get_page_from_id(access_token,page_id)
     headers = {'Authorization': 'Bearer ' + access_token, 'Host': 'api.linkedin.com', 'Connection': 'Keep-Alive',
                'x-li-format': 'json', "Content-Type": "application/json"}
-
     if publishing.link_url == "" and publishing.image_url == "":
         data = {"comment": publishing.description, "visibility": {"code": "anyone"}}
     else:
@@ -41,7 +42,7 @@ def run(publishing, channel_config):
                              data=data)
     if response.status_code != 201:
         print("Linked In publish failed")
-    return response
+    return
 
 def createRequestCodeLinkedIn(app_key,state):
     canvas_url = url_for('linkedin_callback.callback_In', _external=True)
@@ -66,3 +67,28 @@ def check_validity(channel_config):
             #TODO invalid token
             return "Error : Invalid Access-Token."
         return "Error : 401."
+
+
+def get_page_from_id(acc_tok, page_id):
+    """Return the dictionary corresponding to the page with id page_id"""
+    if page_id == 0:
+        return None
+    try:
+        response=requests.get("https://api.linkedin.com/v1/companies?format=json&is-company-admin=true&oauth2_access_token=" + acc_tok)
+        json_data = json.loads(response.content)
+        for page in json_data['values']:
+            if page['id'] == page_id:
+                return page
+        return None
+    except Exception:
+        return None
+
+def get_list_user_pages(acc_tok):
+    """Return a list of dictionaries representing the LinkedIn pages of the user."""
+    try:
+        response = requests.get(
+            "https://api.linkedin.com/v1/companies?format=json&is-company-admin=true&oauth2_access_token=" + acc_tok)
+        json_data = json.loads(response.content)
+        return json_data['values']
+    except Exception:
+        return [{'id': '0', 'name': 'Unable to load user pages'}]

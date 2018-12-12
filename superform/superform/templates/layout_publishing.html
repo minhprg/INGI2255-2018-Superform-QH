@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
     <h1>{% block sub_title %} {% endblock %}</h1>
+    <h2>Channel: {{ chan.name }}</h2>
     {% if session.logged_in %}
         {% if error_message %}
             <div class="alert alert-danger" role="alert">

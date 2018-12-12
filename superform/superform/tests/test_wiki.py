@@ -69,7 +69,7 @@ def test_format_text():
 
 def simple_app(environ, start_response):
     """Simplest possible WSGI application"""
-    response = "b'(:title test-wiki:)This is a test description feed'"
+    response = "b'(:title test wiki:)This is a test description feed'"
     status = '200 OK'
     assert environ['PATH_INFO'] == '/News/testwiki-1-1'
     response_body = "Hello World!\n"

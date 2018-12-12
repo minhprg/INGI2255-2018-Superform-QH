@@ -1,13 +1,11 @@
-import logging
-
-from superform.non_validation import get_moderation
-from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter, StatusCode
-from superform.models import db, Publishing, Channel, Moderation, Post, User, State
+import datetime
 from flask import Blueprint, redirect, render_template, request, url_for
+import logging
 
 from superform import channels
 from superform.models import db, Publishing, Channel, Moderation, Post, User, State
-from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
+from superform.non_validation import get_moderation
+from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter, StatusCode
 
 logging.basicConfig(level=logging.DEBUG)
 pub_page = Blueprint('publishings', __name__)
@@ -38,6 +36,24 @@ def create_a_publishing(post, chn, form):
     db.session.add(pub)
     db.session.commit()
     return pub
+
+
+def edit_a_publishing(post, chn, form):
+    pub = db.session.query(Publishing).filter(Publishing.post_id == post.id).filter(Publishing.channel_id == chn.id).first() # ici ca renvoie None quand on modifie un publishing d'un channel qui n'existait pas encore: normal...
+    if(pub is None):
+        return create_a_publishing(post,chn,form)
+    else:
+        chan = str(chn.name)
+        pub.title = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
+        pub.description = form.get(chan + '_descriptionpost') if form.get(
+            chan + '_descriptionpost') is not None else post.description
+        pub.link_url = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+        pub.image_url = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
+        pub.date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
+        pub.date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
+
+        db.session.commit()
+        return pub
 
 
 @pub_page.route('/moderate/<int:id>/<string:idc>', methods=["GET"])

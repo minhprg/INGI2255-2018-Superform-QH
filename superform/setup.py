@@ -18,6 +18,7 @@ setup(
         'pytest',
         'pytest-localserver',
         'python3-saml',
+        'selenium',
         'sqlalchemy',
     ],
 )

@@ -87,7 +87,7 @@ def moderate_publishing(id, idc):
             return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until, chan=c, mod=mod)
         else:
             return render_template('moderate_publishing.html', pub=pub, error_message=error_msg, time_from=time_from,
-                                   time_until=time_until, chan=c, mod=mod)
+                                   time_until=time_until, chan=c, mod=mod, chan_not_conf=True)
 
 
 @pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])

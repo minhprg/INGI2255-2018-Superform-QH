@@ -21,7 +21,7 @@
     <span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="You must write a feedback to the author if you refuse his/her post.">
         <button id="refuse-button" class="btn btn-danger" style="pointer-events: all" formaction="{{ url_for('non-validation.refuse_publishing', id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit" disabled>Refuse</button>
     </span>
-    <button id="publish-button" class="btn btn-success" formaction="{{ url_for('non-validation.validate_publishing', id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit" {% if error_message %} disabled {% endif %}>Publish</button>
+    <button id="publish-button" class="btn btn-success" formaction="{{ url_for('non-validation.validate_publishing', id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit" {% if chan_not_conf %} disabled {% endif %}>Publish</button>
 {% endblock %}
 {% block scripts %}
     <script>

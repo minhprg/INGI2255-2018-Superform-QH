@@ -117,7 +117,7 @@ def validate_publishing(id, idc):
         time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_publishing.html', pub=pub, chan=c,
+        return render_template('moderate_publishing.html', pub=pub, chan=c, chan_not_conf=True,
                                error_message=error_msg, time_until=time_until, time_from=time_from)
 
     commit_pub(pub, State.VALIDATED.value)

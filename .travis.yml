@@ -1,4 +1,5 @@
 language: python
+cache: pip
 python:
   #- "3.5"
   - "3.6"
@@ -10,6 +11,8 @@ before_install:
 install:
   - pip install Flask
   - SETUP_ENV=travis python superform/setup.py install
+  - pip3 install python-coveralls
+  - pip3 install pytest-cov
   - pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV.git
   - pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV-plugins.git
 # command to run tests
@@ -20,9 +23,12 @@ before_script:
   - cat superform/tests/ictv-server/hack2.py>> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/app.py
   - ictv-setup-database --config superform/tests/ictv-server/ictv_config.yaml
     # ugly hack but otherwise the server is not up when the tests are launched
-  - (ictv-webapp 0.0.0.0:8000 --config superform/tests/ictv-server/ictv_config.yaml &) && sleep 15
+  - (ictv-webapp 0.0.0.0:8000 --config superform/tests/ictv-server/ictv_config.yaml &) && sleep 7
   - python superform/tests/ictv-server/server-setup.py
 script:
   - cp /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.test.json /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.json
   - export PYTHONPATH=/home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform
-  - pytest -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py --ignore=superform/selenium/test_ictv.py
+  - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py --ignore=superform/selenium/test_ictv.py --cov-config ../.coveragerc --cov=superform
+    # - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py --ignore=superform/selenium/test_ictv.py
+after_success:
+  - coveralls

@@ -121,15 +121,23 @@ def validate_publishing(id, idc):
                                error_message=error_msg, time_until=time_until, time_from=time_from)
 
     commit_pub(pub, State.VALIDATED.value)
-    plug_exitcode = plugin.run(pub, c_conf)
+    try:
+        plug_exitcode = plugin.run(pub, c_conf)
 
-    if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR:
+        if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR:
+            time_until = str_time_converter(pub.date_until)
+            time_from = str_time_converter(pub.date_from)
+            pub.date_from = str_converter(pub.date_from)
+            pub.date_until = str_converter(pub.date_until)
+            return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
+                                   error_message=plug_exitcode[1], chan=c)
+    except:
         time_until = str_time_converter(pub.date_until)
         time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
-                               error_message=plug_exitcode[1], chan=c)
+        return render_template('moderate_publishing.html', pub=pub, chan=c, time_until=time_until, time_from=time_from,
+                               error_msg="An error occurred while publishing, please contact an admin.")
 
     db.session.commit()
 
@@ -176,12 +184,6 @@ def view_feedback(id, idc):
         return redirect(url_for('index', messages='This publication has not yet been moderated'))
 
     mod = get_moderation(pub)
-    """
-    if mod:
-        message = mod[0].message
-    else:
-        message = ""
-    """
 
     time_until = str_time_converter(pub.date_until)
     time_from = str_time_converter(pub.date_from)
@@ -210,12 +212,7 @@ def rework_publishing(id, idc):
         return redirect(url_for('index'))
 
     mod = get_moderation(pub)
-    """
-    if mod:
-        message = mod[0].message
-    else:
-        message = ""
-    """
+
     time_until = str_time_converter(pub.date_until)
     time_from = str_time_converter(pub.date_from)
     pub.date_from = str_converter(pub.date_from)
@@ -240,7 +237,6 @@ def validate_rework_publishing(id, idc):
     db.session.add(new_post)
     db.session.commit()
 
-    print("new_post.id", new_post.id, file=sys.stderr)
     new_pub = Publishing(post_id=new_post.id, channel_id=pub.channel_id, state=pub.state, title=pub.title,
                          date_until=pub.date_until, date_from=pub.date_from)
 

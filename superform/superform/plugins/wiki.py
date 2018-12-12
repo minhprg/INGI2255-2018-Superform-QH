@@ -16,7 +16,7 @@ def run(publishing, channel_config):
     password = json_data['password']
     base_url = json_data['base_url']
     formatted_title = format_title(publishing.title)
-    url = 'http://' + base_url + '/News/' + formatted_title
+    url = base_url + '/News/' + formatted_title
     formatted_text = format_text(publishing.title, publishing.description)
     user = db.session.query(Post).filter(Post.id == publishing.post_id).filter(Post.user_id)
     response = requests.post(url, data={'n': 'News.' + formatted_title, 'text': formatted_text, 'action': 'edit',

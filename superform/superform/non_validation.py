@@ -123,7 +123,7 @@ def validate_publishing(id, idc):
     commit_pub(pub, State.VALIDATED.value)
     plug_exitcode = plugin.run(pub, c_conf)
 
-    if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR.value:
+    if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR:
         time_until = str_time_converter(pub.date_until)
         time_from = str_time_converter(pub.date_from)
         pub.date_from = str_converter(pub.date_from)

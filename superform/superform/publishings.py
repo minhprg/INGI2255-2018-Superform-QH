@@ -1,11 +1,11 @@
-import datetime
-from flask import Blueprint, redirect, render_template, request, url_for
 import logging
 
+from flask import Blueprint, redirect, render_template, request, url_for
+
 from superform import channels
-from superform.models import db, Publishing, Channel, Moderation, Post, User, State
+from superform.models import db, Publishing, Channel, State
 from superform.non_validation import get_moderation
-from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter, StatusCode
+from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
 
 logging.basicConfig(level=logging.DEBUG)
 pub_page = Blueprint('publishings', __name__)
@@ -29,7 +29,7 @@ def create_a_publishing(post, chn, form):
     if date_until and time_until:
         date_until = date_until.replace(hour=time_until.hour, minute=time_until.minute)
 
-    pub = Publishing(post_id=post.id, channel_id=chn.id, state=0, title=title_post, description=descr_post,
+    pub = Publishing(post_id=post.id, channel_id=chn.id, state=State.NOTVALIDATED.value, title=title_post, description=descr_post,
                      link_url=link_post, image_url=image_post,
                      date_from=date_from, date_until=date_until, rss_feed=rss_feed)
 
@@ -102,6 +102,6 @@ def archive_publishing(id, idc):
     """
     # then treat the publish part
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
-    pub.update({Publishing.state: 2})
+    pub.update({Publishing.state: State.PUBLISHED.value})
     db.session.commit()
     return redirect(url_for('index'))

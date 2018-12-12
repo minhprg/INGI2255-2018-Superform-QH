@@ -34,6 +34,6 @@ def run(publishing,channel_config):
     except SMTPException as e:
         #TODO should add log here
         print(e)
-        return StatusCode.ERROR.value, e.__str__(), None
+        return StatusCode.ERROR, e.__str__(), None
 
-    return StatusCode.OK.value, None, None
+    return StatusCode.OK, None, None

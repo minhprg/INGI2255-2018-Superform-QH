@@ -25,16 +25,16 @@ def run(publishing, channel_config):
     print(response.status_code, file=sys.stderr)
     if response.status_code != 200:
         print(response.reason, file=sys.stderr)
-        return StatusCode.ERROR.value, 'News not published', None
+        return StatusCode.ERROR, 'News not published', None
 
     # Fetch the page and check that it exists
     response = requests.get(url)
     print(response.status_code, file=sys.stderr)
     if response.status_code != 200:
         print(response.reason, file=sys.stderr)
-        return StatusCode.ERROR.value, 'News not published', None
+        return StatusCode.ERROR, 'News not published', None
 
-    return StatusCode.OK.value, None, None
+    return StatusCode.OK, None, None
 
 
 def format_text(title, description):

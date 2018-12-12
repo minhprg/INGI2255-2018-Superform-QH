@@ -161,7 +161,7 @@ def test_non_valid_publishing():
 
     response = rss.run(pub, conf)
     assert type(response) is tuple
-    assert response[0] == StatusCode.ERROR.value
+    assert response[0] == StatusCode.ERROR
     assert response[2] is None
 
     file = Path(path)

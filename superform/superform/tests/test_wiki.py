@@ -95,6 +95,6 @@ def test_wiki_post(client, testserver):
 
     status_code, _, _ = wiki.run(pub, conf)
 
-    assert status_code == StatusCode.OK.value
+    assert status_code == StatusCode.OK
 
 

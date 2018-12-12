@@ -16,6 +16,7 @@ setup(
         'pyopenssl',
         'PyRSS2Gen',
         'pytest',
+        'pytest-localserver',
         'python3-saml',
         'sqlalchemy',
     ],

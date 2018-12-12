@@ -29,7 +29,8 @@ def create_a_post(form):
     db.session.commit()
     return p
 
-def modify_a_post(form,post_id):
+
+def modify_a_post(form, post_id):
     post = db.session.query(Post).filter(Post.id == post_id).first()
     post.user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     post.title = form.get('titlepost')
@@ -138,6 +139,7 @@ def edit_post(post_id):
         modify_a_post(request.form, post_id)
         return redirect(url_for('index'))
 
+
 @posts_page.route('/publish/edit/<int:post_id>', methods=['POST'])
 @login_required()
 def publish_from_edit_post(post_id):
@@ -158,7 +160,6 @@ def publish_from_edit_post(post_id):
 
     db.session.commit()
     return redirect(url_for('index'))
-
 
 
 @posts_page.route('/publish', methods=['POST'])
@@ -189,6 +190,8 @@ def records():
     """
     This methods is called for the creation of the Records page
     """
+    # FIXME Essayez de suivre le pattern PRG (post-redirect-get) pour éviter des misbehaviors
+    # FIXME en cas de rechargement de la page
     # Check if there is any publishing to pass as archived
     publishings = db.session.query(Publishing).filter(Publishing.state == 1)\
         .filter(Publishing.date_until <= datetime.datetime.now())

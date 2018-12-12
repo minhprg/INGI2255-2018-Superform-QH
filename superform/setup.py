@@ -18,6 +18,5 @@ setup(
         'oauth2client',
         'facebook-sdk',
         'selenium',
-        'python-coveralls'
     ],
 )

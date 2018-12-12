@@ -137,7 +137,7 @@ def validate_publishing(id, idc):
         pub.date_from = str_converter(pub.date_from)
         pub.date_until = str_converter(pub.date_until)
         return render_template('moderate_publishing.html', pub=pub, chan=c, time_until=time_until, time_from=time_from,
-                               error_msg="An error occurred while publishing, please contact an admin.")
+                               error_message="An error occurred while publishing, please contact an admin.")
 
     db.session.commit()
 

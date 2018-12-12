@@ -58,7 +58,7 @@ def login(client, login):
 def test_format_title():
     title = 'my-super, title, with ;lot <of \/fails \\like \nthis ?or @this &and %that'
 
-    assert format_title(title) == 'my-supertitlewithlotoffailslikethisorthisandthat'
+    assert format_title(title) == 'mysupertitlewithlotoffailslikethisorthisandthat'
 
 
 def test_format_text():
@@ -71,7 +71,7 @@ def simple_app(environ, start_response):
     """Simplest possible WSGI application"""
     response = "b'(:title test-wiki:)This is a test description feed'"
     status = '200 OK'
-    assert environ['PATH_INFO'] == '/News/test-wiki-1-1'
+    assert environ['PATH_INFO'] == '/News/testwiki-1-1'
     response_body = "Hello World!\n"
     response_headers = [('Content-type', 'text/plain'),
                         ('Content-Length', str(len(response_body)))]
@@ -88,7 +88,7 @@ def simple_app(environ, start_response):
 def test_wiki_post(client, testserver):
     login(client, 'myself')
 
-    pub = Publishing(title="test-wiki", description="This is a test description feed", link_url="www.facebook.com",
+    pub = Publishing(title="test wiki", description="This is a test description feed", link_url="www.facebook.com",
                      channel_id=1, post_id=1)
 
     conf = "{\"username\": \"myself\", \"password\": \"myself\", \"base_url\": \"" + testserver.url + "\"}"

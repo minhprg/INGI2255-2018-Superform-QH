@@ -42,7 +42,7 @@ def format_text(title, description):
 
 def format_title(title):
     import re
-    delimiters = " ", ",", ";", ".", "\\", "/", "<", ">", "@", "?", "=", "+", "%", "*", "`", "\"", "\n", "&", "#", "_"
+    delimiters = "-", " ", ",", ";", ".", "\\", "/", "<", ">", "@", "?", "=", "+", "%", "*", "`", "\"", "\n", "&", "#", "_"
     pattern = '|'.join(map(re.escape, delimiters))
     split = re.split(pattern, title)
     formatted_title = ""

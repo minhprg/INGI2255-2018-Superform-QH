@@ -2,12 +2,13 @@ import datetime
 from flask import Blueprint, url_for, request, redirect, session, render_template
 
 from superform.users import channels_available_for_user
-from superform.utils import login_required, datetime_converter, str_converter, get_instance_from_module_path
-from superform.models import db, Channel, Post, Publishing, User, State
+
+from superform.models import db, Channel, Post, Publishing, State, User
 from superform.publishings import create_a_publishing, edit_a_publishing
+from superform.utils import login_required, datetime_converter, time_converter, str_converter, get_instance_from_module_path
+
 
 posts_page = Blueprint('posts', __name__)
-
 
 
 def create_a_post(form):
@@ -16,10 +17,14 @@ def create_a_post(form):
     descr_post = form.get('descriptionpost')
     link_post = form.get('linkurlpost')
     image_post = form.get('imagepost')
+    rss_feed = form.get("linkrssfeedpost")
+
     date_from = datetime_converter(form.get('datefrompost'))
+
     date_until = datetime_converter(form.get('dateuntilpost'))
+
     p = Post(user_id=user_id, title=title_post, description=descr_post, link_url=link_post, image_url=image_post,
-             date_from=date_from, date_until=date_until)
+             date_from=date_from, date_until=date_until, rss_feed=rss_feed)
     db.session.add(p)
     db.session.commit()
     return p

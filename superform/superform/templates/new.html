@@ -68,9 +68,9 @@
                                 <label for="publishpost">{% if new %}Publish{% else %}Modify in{% endif %}</label>
                                 {% if l_chan|length == 0 %}
                                     {% if new %}
-                                        <p>No channels available for this user</p>
+                                        <p>No channel available for this user</p>
                                     {% else %}
-                                        <p>No editable channels for this post</p>
+                                        <p>No editable channel for this post</p>
                                     {% endif %}
                                 {% else %}
                                     {% for chan in l_chan %}
@@ -147,6 +147,9 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        {% set module_name = chan.module.split('.')[2].lower() %}
+                                        {% set template = 'plugins/' + module_name + '/new.html' %}
+                                        {% include template ignore missing %}
 
                                     </div>
                                 </div>
@@ -299,7 +302,7 @@
                 );
             }
             else if (datefrom.localeCompare(dateuntil) > 0) {
-                console.log("Datefrom is later than dateun  til (" + datefrom + " > " + dateuntil + ")");
+                console.log("Datefrom is later than dateuntil (" + datefrom + " > " + dateuntil + ")");
                 publishable = false;
                 $("label[for=\"dateuntilpost\"]").append(
                     '<a href="#" data-toggle="tooltip" title="This date schould be later than the previous one">' +
@@ -375,6 +378,11 @@
                 $('#li_'+nameC).hide();
             }
         });
+        {% for chan in l_chan %}
+            {% set module_name = chan.module.split('.')[2].lower() %}
+            {% set template = 'plugins/' + module_name + '/new.js'%}
+            {% include template ignore missing %}
+        {% endfor %}
     </script>
 
 {% endblock %}

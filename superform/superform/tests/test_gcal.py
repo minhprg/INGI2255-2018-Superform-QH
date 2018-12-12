@@ -13,10 +13,19 @@ chan_id_1 = -1  # Should be created
 chan_id_2 = -1  # Shouldn't be created
 
 
+def clear_data(session):
+    meta = db.metadata
+    for table in reversed(meta.sorted_tables):
+        session.execute(table.delete())
+    session.commit()
+
+
 @pytest.fixture
 def client():
     app.app_context().push()
-    db_fd, app.config['DATABASE'] = tempfile.mkstemp()
+
+    db_fd, database = tempfile.mkstemp()
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///"+database+".db"
     app.config['TESTING'] = True
     client = app.test_client()
 
@@ -25,8 +34,9 @@ def client():
 
     yield client
 
+    clear_data(db.session)
     os.close(db_fd)
-    os.unlink(app.config['DATABASE'])
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///superform.db"
 
 
 def login(client, login):
@@ -74,6 +84,7 @@ def test_new_channel_as_admin(client):
 
 def test_new_channel_no_admin(client):
     global chan_id_1, chan_id_2
+    test_new_channel_as_admin(client)
     login(client, "alterego")
 
     # Create a test channel
@@ -94,6 +105,7 @@ def test_new_channel_no_admin(client):
 
 def test_new_publish_gcal(client):
     global chan_id_1, chan_id_2
+    test_new_channel_as_admin(client)
     login(client, "myself")
 
     chan = db.session.query(Channel).filter(Channel.id == chan_id_1).first()
@@ -146,6 +158,7 @@ def test_new_publish_gcal(client):
 
 def test_delete_channel_no_admin(client):
     global chan_id_1, chan_id_2
+    test_new_channel_as_admin(client)
     login(client, "alterego")
 
     client.post("/channels", data={'@action': 'delete', 'id': chan_id_1})

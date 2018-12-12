@@ -14,6 +14,7 @@ def clear_data(session):
         session.execute(table.delete())
     session.commit()
 
+
 @pytest.fixture
 def client():
     app.app_context().push()

@@ -9,7 +9,8 @@ CONFIG_FIELDS = ["access_token","page"]
 def render_specific_config_page(c, config_fields):
     """Render a specific template to configure a LinkedIn channel"""
     return render_template("channel_configure_facebook.html", channel=c, config_fields=config_fields,
-                           url_token=createRequestCodeLinkedIn(current_app.config["LINKEDIN_API_KEY"],str(c.id)),pages=get_list_user_pages(c.config_dict.get("access_token")))
+                           url_token=createRequestCodeLinkedIn(current_app.config["LINKEDIN_API_KEY"],str(c.id)),
+                           pages=get_list_user_pages(c.config_dict.get("access_token")))
 
 def run(publishing, channel_config):
     json_data = json.loads(channel_config)

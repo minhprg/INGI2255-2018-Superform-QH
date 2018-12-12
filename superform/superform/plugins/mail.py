@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from smtplib import SMTPException
 from flask import current_app
 import json
+from superform.utils import StatusCode
 
 #FIELDS_UNAVAILABLE = ['Title','Description']
 FIELDS_UNAVAILABLE = []
@@ -33,3 +34,6 @@ def run(publishing,channel_config):
     except SMTPException as e:
         #TODO should add log here
         print(e)
+        return StatusCode.ERROR, e.__str__(), None
+
+    return StatusCode.OK, None, None

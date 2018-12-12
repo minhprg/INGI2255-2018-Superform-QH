@@ -36,6 +36,7 @@ class Post(db.Model):
     title = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text)
     link_url = db.Column(db.Text)
+    rss_feed = db.Column(db.Text)
     image_url = db.Column(db.Text)
     date_from = db.Column(db.DateTime)
     date_until = db.Column(db.DateTime)
@@ -64,10 +65,11 @@ class Post(db.Model):
 class Moderation(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
     channel_id = db.Column(db.Integer, db.ForeignKey("channel.id"), nullable=False)
-    user_id = db.Column(db.Text, db.ForeignKey("user.id"), nullable=False)
+    moderator_id = db.Column(db.Text, db.ForeignKey("user.id"))
     message = db.Column(db.Text)
+    parent_post_id = db.Column(db.Integer)
 
-    __table_args__ = (db.PrimaryKeyConstraint('post_id', 'channel_id', 'user_id'),)
+    __table_args__ = (db.PrimaryKeyConstraint('post_id', 'channel_id'),)
 
 
 class Publishing(db.Model):
@@ -77,6 +79,7 @@ class Publishing(db.Model):
     title = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text)
     link_url = db.Column(db.Text)
+    rss_feed = db.Column(db.Text)
     image_url = db.Column(db.Text)
     date_from = db.Column(db.DateTime)
     date_until = db.Column(db.DateTime)
@@ -121,4 +124,3 @@ class Authorization(db.Model):
 class Permission(Enum):
     AUTHOR = 1
     MODERATOR = 2
-

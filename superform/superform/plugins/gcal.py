@@ -43,14 +43,14 @@ def run(publishing,channel_config):
         credentials = get_credentials()
 
         if not credentials or credentials.invalid:
-            return respond_redirect_to_auth_server()
+            return "", respond_redirect_to_auth_server()
         else:
             insert_in_gcal(credentials)
-            return redirect(url_for('index'))
+            return
 
     except Exception as e:
         print(e)
-        return redirect(url_for('index'))
+        return "Can't publish"
 
 
 def get_credentials():

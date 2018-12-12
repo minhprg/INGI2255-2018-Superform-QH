@@ -1,4 +1,4 @@
-[![Coverage Status](https://coveralls.io/repos/github/bnothomb/INGI2255-2018-Superform-QH/badge.svg?branch=coveralls)](https://coveralls.io/github/bnothomb/INGI2255-2018-Superform-QH?branch=coveralls)
+[![Coverage Status](https://coveralls.io/repos/github/bnothomb/INGI2255-2018-Superform-QH/badge.svg?branch=coveralls)](https://coveralls.io/github/bnothomb/INGI2255-2018-Superform-QH?branch=master)
 [![Build Status](https://travis-ci.org/bnothomb/INGI2255-2018-Superform-QH.svg?branch=master)](https://travis-ci.org/bnothomb/INGI2255-2018-Superform-QH)
 # SuperForm
 

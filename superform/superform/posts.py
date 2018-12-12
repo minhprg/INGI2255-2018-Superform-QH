@@ -3,12 +3,10 @@ from flask import Blueprint, url_for, request, redirect, session, render_templat
 from superform.users import channels_available_for_user
 
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, get_instance_from_module_path
-from superform.models import db, Post, Publishing, Channel
+from superform.models import db, Post, Publishing, Channel, State
 import datetime
 from superform.publishings import create_a_publishing
 
-
-from re import sub
 
 posts_page = Blueprint('posts', __name__)
 
@@ -82,10 +80,10 @@ def new_post():
         m = elem.module
 
         clas = get_instance_from_module_path(m)
-        unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
-        setattr(elem, "unavailablefields", unaivalable_fields)
+        unavailable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
+        setattr(elem, "unavailablefields", unavailable_fields)
 
-        if 'ictv_data_form' in unaivalable_fields:
+        if 'ictv_data_form' in unavailable_fields:
             ictv_chans.append(elem)
 
     if request.method == "GET":
@@ -112,11 +110,16 @@ def copy_new_post(post_id):
     """
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
+    ictv_chans = []
+
     for elem in list_of_channels:
         m = elem.module
         clas = get_instance_from_module_path(m)
         unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
         setattr(elem, "unavailablefields", unavailable_fields)
+
+        if 'ictv_data_form' in unavailable_fields:
+            ictv_chans.append(elem)
 
     # Query the data from the original post
     original_post = db.session.query(Post).filter(Post.id == post_id).first()
@@ -124,9 +127,14 @@ def copy_new_post(post_id):
                 link_url=original_post.link_url, image_url=original_post.image_url, date_from=original_post.date_from,
                 date_until=original_post.date_until)
     if request.method == "GET":
+        ictv_data = None
+        if len(ictv_chans) != 0:
+            from plugins.ictv import process_ictv_channels
+            ictv_data = process_ictv_channels(ictv_chans)
+
         post.date_from = str_converter(post.date_from)
         post.date_until = str_converter(post.date_until)
-        return render_template('new.html', l_chan=list_of_channels, post=post, new=True)
+        return render_template('new.html', l_chan=list_of_channels, ictv_data=ictv_data, post=post, new=True)
     else:
         create_a_post(request.form)
         return redirect(url_for('index'))
@@ -144,7 +152,7 @@ def publish_from_new_post():
             if elem.startswith("chan_option_"):
                 def substr(elem):
                     import re
-                    return re.sub('^chan\_option\_', '', elem)
+                    return re.sub("^chan\_option\_", '', elem)
 
                 c = Channel.query.get(substr(elem))
                 # for each selected channel options
@@ -161,11 +169,6 @@ def records():
     """
     This methods is called for the creation of the Records page
     """
-    # Check if there is any publishing to pass as archived
-    publishings = db.session.query(Publishing).filter(Publishing.state == 1)\
-        .filter(Publishing.date_until <= datetime.datetime.now())
-    publishings.update({Publishing.state: 2})
-    db.session.commit()
 
     # Check if a user is an admin
     admin = session.get("admin", False) if session.get("logged_in", False) else False
@@ -186,14 +189,16 @@ def records():
     list_of_channels = channels_available_for_user(user_id)
 
     # Query all the archived publishings
-    archives = db.session.query(Publishing).filter(Publishing.state == 2)
+    archives = db.session.query(Publishing)\
+        .filter(Publishing.state >= 1)\
+        .filter(Publishing.date_until <= str(datetime.datetime.now())[0:19])
 
     # Take all archives and format the dates entries
     records = []
     for a in archives:
         allowed = False
         for channel in list_of_channels:
-            if channel.name == a.channel_id:
+            if channel.id == a.channel_id:
                 allowed = True
                 break
 

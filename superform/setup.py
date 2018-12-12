@@ -17,6 +17,7 @@ setup(
         'google-api-python-client',
         'oauth2client',
         'facebook-sdk',
-        'selenium'
+        'selenium',
+        'python-coveralls'
     ],
 )

@@ -6,7 +6,7 @@ import requests
 from superform import db, Post
 from superform.utils import StatusCode
 
-FIELDS_UNAVAILABLE = ["date_from", "date_until", "image"]
+FIELDS_UNAVAILABLE = ["image"]
 CONFIG_FIELDS = ["username", "password", "base_url"]
 
 

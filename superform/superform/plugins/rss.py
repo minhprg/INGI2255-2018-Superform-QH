@@ -10,7 +10,7 @@ from lxml import etree
 
 from superform.utils import StatusCode
 
-FIELDS_UNAVAILABLE = ["date_from", "date_until", "image"]
+FIELDS_UNAVAILABLE = ["image"]
 CONFIG_FIELDS = ["feed_title", "feed_description"]
 SERVER_URL = "localhost:5000/rss/"
 rss_feeds = {}

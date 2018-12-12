@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
-{% block title %}New Post{% endblock %}
+{% block title %}{% if new %}New Post{% else %}Edit Post{% endif %}{% endblock %}
 {% block content %}
-    <h1>New Post</h1>
+    <h1>{% if new %}New Post{% else %}Edit Post{% endif %}</h1>
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="nav-link active" data-toggle="tab" href="#home">General</a>
@@ -11,6 +11,13 @@
                 <a class="nav-link" data-toggle="tab" href="#menu{{ chan.id }}">{{ chan.name }}</a>
             </li>
         {% endfor %}
+        {% if not new %}
+            {% for chan1 in l_chan_not %}
+                <li class="nav-item" id="li_{{ chan1.name }}" style="display:none;">
+                    <a class="nav-link" data-toggle="tab" href="#menu{{ chan1.id }}">{{ chan1.name }}</a>
+                </li>
+            {% endfor %}
+        {% endif %}
     </ul>
     {% if session.logged_in %}
         <p>{{ user }}</p>
@@ -42,15 +49,13 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="datefrompost">Publication Date</label><br>
-                                                <input id="datefrompost" name="datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
-                                                <input id="timefrompost" name="timefrompost" type="time"  class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
+                                                <input id="datefrompost" name="datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="dateuntilpost">Publication Until</label><br>
-                                                <input id="dateuntilpost" name="dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}" >
-                                                <input id="timeuntilpost" name="timeuntilpost" type="time"  class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
+                                                <input id="dateuntilpost" name="dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
                                             </div>
                                         </div>
                                     </div>
@@ -60,9 +65,13 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="publishpost">Publish</label>
+                                <label for="publishpost">{% if new %}Publish{% else %}Modify in{% endif %}</label>
                                 {% if l_chan|length == 0 %}
-                                    <p>No channel available for this user</p>
+                                    {% if new %}
+                                        <p>No channel available for this user</p>
+                                    {% else %}
+                                        <p>No editable channel for this post</p>
+                                    {% endif %}
                                 {% else %}
                                     {% for chan in l_chan %}
                                         <div class="form-check">
@@ -73,6 +82,22 @@
                                     {% endfor %}
                                 {% endif %}
                             </div>
+                            {% if not new %}
+                                <div class="form-group">
+                                    <label for="publishpost2">New Channels</label>
+                                    {% if l_chan_not|length == 0 %}
+                                        <p>No new channels available</p>
+                                    {% else %}
+                                        {% for chan in l_chan_not %}
+                                            <div class="form-check">
+                                                <label class="form-check-label">
+                                                    <input id="chan_option_{{ chan.id }}" data-namechan="{{ chan.name }}" data-unavailablefields="{{ chan.unavailablefields }}" name="chan_option_{{ chan.id }}" type="checkbox" class="form-check-input checkbox" value="{{ chan.id }}">{{ chan.name }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
 
                             <div class="card">
                                 <div class="card-header">Status</div>
@@ -113,14 +138,12 @@
                                                 <div class="form-group">
                                                     <label for="{{ chan.name }}_datefrompost">Publication Date</label><br>
                                                     <input id="{{ chan.name }}_datefrompost" name="{{ chan.name }}_datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
-                                                    <input id="{{ chan.name }}_timefrompost" name="{{ chan.name }}_timefrompost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="{{ chan.name }}_dateuntilpost">Publication Until</label><br>
                                                     <input id="{{ chan.name }}_dateuntilpost" name="{{ chan.name }}_dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
-                                                    <input id="{{ chan.name }}_timeuntilpost" name="{{ chan.name }}_timeuntilpost" type="time" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}" >
                                                 </div>
                                             </div>
                                         </div>
@@ -145,19 +168,81 @@
                                     <div class="card-header">Status</div>
                                     <div class="card-body">Content</div>
                                 </div>
-
-
                             </div>
-
                         </div>
-
-
                     </div>
                 {% endfor %}
+                {% if not new %}
+                    {% for chan1 in l_chan_not %}
+                        <div class="tab-pane container-fluid fade" id="menu{{ chan1.id }}">
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="{{ chan1.name }}_titlepost">Title</label><br>
+                                                <input type="text" name="{{ chan1.name }}_titlepost" id="{{ chan1.name }}_titlepost" class="form-control" value="{% if post %}{{ post.title }}{% endif %}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="{{ chan1.name }}_descriptionpost">Description</label><br>
+                                                <textarea class="form-control" rows="5" id="{{ chan1.name }}_descriptionpost" name="{{ chan1.name }}_descriptionpost">{% if post %}{{ post.description }}{% endif %}</textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="{{ chan1.name }}_linkurlpost">Link</label><br>
+                                                <input type="text" name="{{ chan1.name }}_linkurlpost" id="{{ chan1.name }}_linkurlpost" class="form-control" value="{% if post %}{{ post.link_url }}{% endif %}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="{{ chan1.name }}_imagepost">Image</label><br>
+                                                <input type="file" name="{{ chan1.name }}_imagepost" id="{{ chan1.name }}_imagepost" class="form-control" value="{% if post %}{{ post.image_url }}{% endif %}">
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ chan1.name }}_datefrompost">Publication Date</label><br>
+                                                        <input id="{{ chan1.name }}_datefrompost" name="{{ chan1.name }}_datefrompost" type="date" class="form-control" value="{% if post %}{{ post.date_from }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ chan1.name }}_dateuntilpost">Publication Until</label><br>
+                                                        <input id="{{ chan1.name }}_dateuntilpost" name="{{ chan1.name }}_dateuntilpost" type="date" class="form-control" value="{% if post %}{{ post.date_until }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="publishpost">Publish</label>
+                                        <div>
+                                            <label class="form-check-label">
+                                                {{ chan1.name }}
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="card">
+                                        <div class="card-header">Status</div>
+                                        <div class="card-body">Content</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
             </div>
             <div align="right" style="margin-top: 1rem; ">
-                <button class="btn btn-primary" formaction="{{ url_for('posts.new_post')}}" formmethod="post" type="submit">Save as draft</button>
-                <button id="publish-button" class="btn btn-success" formaction="{{ url_for('posts.publish_from_new_post')}}" formmethod="post" type="submit" disabled>Save & Publish</button>
+                {% if new %}
+                    <button class="btn btn-primary" formaction="{{ url_for('posts.new_post')}}" formmethod="post" type="submit">Save as draft</button>
+                    <button id="publish-button" class="btn btn-success" formaction="{{ url_for('posts.publish_from_new_post')}}" formmethod="post" type="submit" disabled>Save & Publish</button>
+                {% else %}
+                    <button class="btn btn-primary" formaction="{{ url_for('posts.edit_post', post_id=post.id)}}" formmethod="post" type="submit">Edit as draft</button>
+                    <button id="publish-button" class="btn btn-success" formaction="{{ url_for('posts.publish_from_edit_post',post_id=post.id)}}" formmethod="post" type="submit" disabled>Edit & Publish</button>
+                {% endif %}
                 <button class="btn btn-outline-primary" type="reset">Abort</button>
             </div>
 
@@ -174,19 +259,24 @@
         var dateuntil = $('#dateuntilpost').val();
         var datefrom = $('#datefrompost').val();
         today = getTodayDate();
+
         function getTodayDate() {
             var todayDate = new Date();
             var dd = todayDate.getDate();
             var mm = todayDate.getMonth();
             var yyyy = todayDate.getFullYear();
+
             if (dd < 10) dd = "0" + dd;
             if (mm < 10) mm = "0" + mm;
+
             return yyyy + "-" + mm + "-" + dd;
         }
+
         function checkIfPublishable() {
             var publishable = true;
             $("a", "label[for=\"dateuntilpost\"]").empty().remove();
             $("a", "label[for=\"datefrompost\"]").empty().remove();
+
             if (datefrom.localeCompare("") == 0) {
                 console.log("Datefrom = " + datefrom + " is invalid");
                 publishable = false;
@@ -223,12 +313,15 @@
                     '<i class="fas fa-exclamation-circle" style="color:red"></i></a>'
                 );
             }
+
             $('[data-toggle="tooltip"]').tooltip();
+
             var nbselected = $('input.checkbox:checked').length;
             if (nbselected == 0) {
                 console.log("No channel is currently selected");
                 publishable = false;
             }
+
             if (publishable) {
                 console.log("The post is publishable");
                 $("#publish-button").prop('disabled', false);
@@ -237,6 +330,7 @@
                 $("#publish-button").prop('disabled', true);
             }
         }
+
         // This manage if a channel is selected or not:
         //  it hides/shows a tab for a channel
         //  it adds an information bullet to unavailable fields for each channel
@@ -246,13 +340,12 @@
             $('#' + chan_name + '_linkurlpost').val(($('#linkurlpost')).val());
             $('#' + chan_name + '_imagepost').val(($('#imagepost')).val());
             $('#' + chan_name + '_datefrompost').val(datefrom = (($('#datefrompost')).val()));
-            $('#' + chan_name + '_timefrompost').val(($('#timefrompost')).val());
             $('#' + chan_name + '_dateuntilpost').val(dateuntil = (($('#dateuntilpost')).val()));
-            $('#' + chan_name + '_timeuntilpost').val(($('#timeuntilpost')).val());
             checkIfPublishable();
         }
         $('input.checkbox').change(function () {
             checkIfPublishable();
+
             var nameC = $(this).attr('data-namechan');
             var fields = $(this).attr('data-unavailablefields');
             var split = fields.split(',');
@@ -264,7 +357,6 @@
                     var field_id = $('#'+split[i].toLowerCase()+'post').attr('id');
                     $("input[id='" + nameC + "_" + field_id + "']").prop('disabled', true);
                     $("textarea[id='" + nameC + "_" + field_id + "']").prop('disabled', true);
-
 
                     $("label[for='" + nameC + "_" + field_id + "']").append(
                         '<a href="#" data-toggle="popover" title="Unavailable field" data-content="This field is unavailable for channel '

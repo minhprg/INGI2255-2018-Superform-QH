@@ -1,11 +1,11 @@
+import datetime
 from flask import Blueprint, url_for, request, redirect, session, render_template
 
 from superform.users import channels_available_for_user
 
+from superform.models import db, Channel, Post, Publishing, State, User
+from superform.publishings import create_a_publishing, edit_a_publishing
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, get_instance_from_module_path
-from superform.models import db, Post, Publishing, Channel
-import datetime
-from superform.publishings import create_a_publishing
 
 
 posts_page = Blueprint('posts', __name__)
@@ -20,18 +20,26 @@ def create_a_post(form):
     rss_feed = form.get("linkrssfeedpost")
 
     date_from = datetime_converter(form.get('datefrompost'))
-    time_from = time_converter(form.get('timefrompost'))
-    date_from = date_from.replace(hour=time_from.hour, minute=time_from.minute)
 
     date_until = datetime_converter(form.get('dateuntilpost'))
-    time_until = time_converter(form.get('timeuntilpost'))
-    date_until = date_until.replace(hour=time_until.hour, minute=time_until.minute)
 
     p = Post(user_id=user_id, title=title_post, description=descr_post, link_url=link_post, image_url=image_post,
              date_from=date_from, date_until=date_until, rss_feed=rss_feed)
     db.session.add(p)
     db.session.commit()
     return p
+
+def modify_a_post(form,post_id):
+    post = db.session.query(Post).filter(Post.id == post_id).first()
+    post.user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
+    post.title = form.get('titlepost')
+    post.description = form.get('descriptionpost')
+    post.link_url = form.get('linkurlpost')
+    post.image_url = form.get('imagepost')
+    post.date_from = datetime_converter(form.get('datefrompost'))
+    post.date_until = datetime_converter(form.get('dateuntilpost'))
+    db.session.commit()
+    return post
 
 
 @posts_page.route('/new', methods=['GET', 'POST'])
@@ -46,7 +54,7 @@ def new_post():
         setattr(elem, "unavailablefields", unaivalable_fields)
 
     if request.method == "GET":
-        return render_template('new.html', l_chan=list_of_channels)
+        return render_template('new.html', l_chan=list_of_channels,new=True)
     else:
         create_a_post(request.form)
     return redirect(url_for('index'))
@@ -81,6 +89,76 @@ def copy_new_post(post_id):
     else:
         create_a_post(request.form)
         return redirect(url_for('index'))
+
+
+@posts_page.route('/edit/<int:post_id>', methods=['GET', 'POST'])
+@login_required()
+def edit_post(post_id):
+    """
+    This method allow the editing the content of a post (defined by his post_id) and opens the new post tab with all the information
+    about the post in it
+    :param post_id: id of the post to be edited
+    :return:
+    """
+    user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
+    list_of_channels = channels_available_for_user(user_id)
+    for elem in list_of_channels:
+        m = elem.module
+        clas = get_instance_from_module_path(m)
+        unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
+        setattr(elem, "unavailablefields", unavailable_fields)
+
+    # Query the data from the post
+    post = db.session.query(Post).filter(Post.id == post_id).first()
+    # Query the publishing of the post
+    list_publishing = db.session.query(Publishing).filter(Publishing.post_id == post_id)
+
+    # Get list of channels with publishing not yet publish or validated
+    # and list of channels with not yet publishing
+    list_chan_id_selected = []
+    list_already_pub = []
+    for pub in list_publishing:
+        list_chan_id_selected.append(pub.channel_id)
+        if pub.state == State.PUBLISHED.value or pub.state == State.VALIDATED.value:
+            list_already_pub.append(pub.channel_id)
+    list_chan_selected = []
+    list_chan_not_selected = []
+    for chan in list_of_channels:
+        if list_chan_id_selected.__contains__(chan.id):
+            if not list_already_pub.__contains__(chan.id):
+                list_chan_selected.append(chan)
+        else:
+            list_chan_not_selected.append(chan)
+
+    if request.method == "GET":
+        post.date_from = str_converter(post.date_from)
+        post.date_until = str_converter(post.date_until)
+        return render_template('new.html', l_chan=list_chan_selected, post=post, new=False, l_chan_not=list_chan_not_selected)
+    else:
+        modify_a_post(request.form, post_id)
+        return redirect(url_for('index'))
+
+@posts_page.route('/publish/edit/<int:post_id>', methods=['POST'])
+@login_required()
+def publish_from_edit_post(post_id):
+    # First edit the post
+    p = modify_a_post(request.form,post_id)
+    # Then treat the publish part
+    if request.method == "POST":
+        for elem in request.form:
+            if elem.startswith("chan_option_"):
+                def substr(elem):
+                    import re
+                    return re.sub('^chan\_option\_', '', elem)
+
+                c = Channel.query.get(substr(elem))
+                # for each selected channel options
+                # edit the publication
+                pub = edit_a_publishing(p, c, request.form)
+
+    db.session.commit()
+    return redirect(url_for('index'))
+
 
 
 @posts_page.route('/publish', methods=['POST'])

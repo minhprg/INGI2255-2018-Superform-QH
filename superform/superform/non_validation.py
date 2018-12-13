@@ -146,7 +146,7 @@ def validate_publishing(id, idc):
         flash("An error occurred while publishing, please contact an admin.", category='error')
         return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
 
-    if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR:
+    if type(plug_exitcode) is tuple and len(plug_exitcode) >= 1 and plug_exitcode[0] == StatusCode.ERROR:
         flash(plug_exitcode[1], category='error')
         return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
 
@@ -161,8 +161,12 @@ def validate_publishing(id, idc):
         mod[-1].moderator_id = session.get("user_id", "")
         db.session.commit()
 
-    if type(plug_exitcode) is tuple:
+    if type(plug_exitcode) is tuple and len(plug_exitcode) >= 2:
+        message = plug_exitcode[1]
+        if message:
+            flash(message, category='success') # FIXME maybe rather in 'info' category?
         plug_exitcode = plug_exitcode[2]
+    flash("The publishing has successfully been published.", category='success')
     if not plug_exitcode:
         return redirect(url_for('index'))
     else:

@@ -180,6 +180,7 @@ def test_selenium_moderate_publishing(driver):
     time.sleep(comfort_delay)
     time.sleep(5)
 
+
 def test_selenium_delete_channel(driver):
     channels_link = driver.find_element_by_link_text('Channels')
     assert channels_link

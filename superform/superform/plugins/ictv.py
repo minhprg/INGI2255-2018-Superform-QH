@@ -180,7 +180,7 @@ def generate_ictv_dropdown(chan_name, templates):
     ret = '<div class="form-group chan_names" id="' + button_id + '">\n<meta id="chan_name" data-chan_name="' + \
           chan_name + '">\n'
     ret += '<p>Slide type : </p>'
-    ret += '<select class="form-control" onchange="updateICTVForm(this)">'
+    ret += '<select id="slide-selector" class="form-control" onchange="updateICTVForm(this)">'
     for index, temp in enumerate(templates):
         ret += '<option value="' + temp + '">' + templates[temp]["description"] + '</option>'
 

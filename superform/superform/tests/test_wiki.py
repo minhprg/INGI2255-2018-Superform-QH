@@ -70,6 +70,8 @@ def test_format_text():
 def simple_app(environ, start_response):
     """Simplest possible WSGI application"""
     response = "b'(:title test wiki:)This is a test description feed'"
+    username = "b'myself'"
+    password = "b'myself'"
     status = '200 OK'
     assert environ['PATH_INFO'] == '/News/testwiki-1-1'
     response_body = "Hello World!\n"
@@ -79,8 +81,13 @@ def simple_app(environ, start_response):
         resp = environ['wsgi.input'].read(int(environ['CONTENT_LENGTH']))
         d = parse_qs(resp)
         for item in d.items():
-            if str(item[0]) == "b'text'":
-                assert str(item[1][0]) == response
+            if str(item[0]) == "b'text'" and str(item[1][0]) != response:
+                status = '500'
+            elif str(item[0]) == "b'authid'" and str(item[1][0]) != username:
+                status = '500'
+            elif str(item[0]) == "b'authpw'" and str(item[1][0]) != password:
+                status = '500'
+
     start_response(status, response_headers)
     return [response_body.encode()]
 
@@ -98,3 +105,57 @@ def test_wiki_post(client, testserver):
     assert status_code == StatusCode.OK
 
 
+def test_wiki_post_bad_username(client, testserver):
+    login(client, "myself")
+
+    pub = Publishing(title="test wiki", description="This is a test description feed", link_url="www.facebook.com",
+                     channel_id=1, post_id=1)
+
+    conf = "{\"username\": \"bad\", \"password\": \"myself\", \"base_url\": \"" + testserver.url + "\"}"
+
+    status_code, error_message, _ = wiki.run(pub, conf)
+
+    assert status_code == StatusCode.ERROR
+    assert error_message == "Bad username or password"
+
+
+def test_wiki_bad_base_url(client):
+    login(client, "myself")
+
+    pub = Publishing(title="test wiki", description="This is a test description feed", link_url="www.facebook.com",
+                     channel_id=1, post_id=1)
+
+    conf = "{\"username\": \"myself\", \"password\": \"bad\", \"base_url\": \"server.down\"}"
+
+    status_code, error_message, _ = wiki.run(pub, conf)
+
+    assert status_code == StatusCode.ERROR
+    assert error_message == "Wrong base_url, please check the format again"
+
+
+def test_wiki_server_down(client):
+    login(client, "myself")
+
+    pub = Publishing(title="test wiki", description="This is a test description feed", link_url="www.facebook.com",
+                     channel_id=1, post_id=1)
+
+    conf = "{\"username\": \"myself\", \"password\": \"bad\", \"base_url\": \"http://server.down\"}"
+
+    status_code, error_message, _ = wiki.run(pub, conf)
+
+    assert status_code == StatusCode.ERROR
+    assert error_message == "Couldn't connect to server"
+
+
+def test_wiki_post_bad_password(client, testserver):
+    login(client, "myself")
+
+    pub = Publishing(title="test wiki", description="This is a test description feed", link_url="www.facebook.com",
+                     channel_id=1, post_id=1)
+
+    conf = "{\"username\": \"myself\", \"password\": \"bad\", \"base_url\": \"" + testserver.url + "\"}"
+
+    status_code, error_message, _ = wiki.run(pub, conf)
+
+    assert status_code == StatusCode.ERROR
+    assert error_message == "Bad username or password"

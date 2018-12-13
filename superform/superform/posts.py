@@ -126,11 +126,15 @@ def edit_post(post_id):
     """
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
+    ictv_chans = []
     for elem in list_of_channels:
         m = elem.module
         clas = get_instance_from_module_path(m)
         unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
         setattr(elem, "unavailablefields", unavailable_fields)
+
+        if 'ictv_data_form' in unavailable_fields:
+            ictv_chans.append(elem)
 
     # Query the data from the post
     post = db.session.query(Post).filter(Post.id == post_id).first()
@@ -155,9 +159,14 @@ def edit_post(post_id):
             list_chan_not_selected.append(chan)
 
     if request.method == "GET":
+        ictv_data = None
+        if len(ictv_chans) != 0:
+            from plugins.ictv import process_ictv_channels
+            ictv_data = process_ictv_channels(ictv_chans)
+
         post.date_from = str_converter(post.date_from)
         post.date_until = str_converter(post.date_until)
-        return render_template('new.html', l_chan=list_chan_selected, post=post, new=False,
+        return render_template('new.html', l_chan=list_chan_selected, ictv_data=ictv_data, post=post, new=False,
                                l_chan_not=list_chan_not_selected)
     else:
         modify_a_post(request.form, post_id)

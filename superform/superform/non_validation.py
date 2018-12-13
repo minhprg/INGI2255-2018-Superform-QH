@@ -10,7 +10,7 @@ from superform.utils import str_converter, datetime_converter, time_converter, l
 val_page = Blueprint('non-validation', __name__)
 
 
-def commit_pub(pub, state):
+def update_pub(pub, state):
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
     pub.title = request.form.get('titlepost')
@@ -112,7 +112,7 @@ def validate_publishing(id, idc):
         flash(error_msg, category='error')
         return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
 
-    commit_pub(pub, State.VALIDATED.value)
+    update_pub(pub, State.VALIDATED.value)
     try:
         plug_exitcode = plugin.run(pub, c_conf)
     except:
@@ -228,7 +228,7 @@ def validate_rework_publishing(id, idc):
     db.session.add(new_pub)
     db.session.commit()
 
-    commit_pub(new_pub, State.NOTVALIDATED.value)
+    update_pub(new_pub, State.NOTVALIDATED.value)
     db.session.commit()
 
     create_a_moderation(request.form, new_post.id, new_pub.channel_id, parent_post_id=id)

@@ -160,12 +160,12 @@ def generate_ictv_dropdown_control(chan_name):
     :param chan_name: the name of the channel that requires the dropdown
     :return: the JS control code of the dropdown specific to the *chan_name* channel
     """
-
-    code = '$("#' + chan_name + '_ictv_slide_choice_button").click(function () {' \
-        'var name = $("#' + chan_name + '_ictv_slide_choice_button input:radio:checked").val();\n' \
-        '$(".' + chan_name + '_ictv_slide_choice").hide();\n' \
-        '$("#' + chan_name + '_ictv_form_"+name).show();\n' \
-        '});'
+    code = 'function updateICTVForm(select) {' \
+           '    console.log(select);' \
+           '    var name = select.options[select.selectedIndex].value;' \
+           '    $(".' + chan_name + '_ictv_slide_choice").hide();' \
+           '    $("#' + chan_name + '_ictv_form_" + name).show();' \
+           '};'
     return code
 
 
@@ -179,19 +179,12 @@ def generate_ictv_dropdown(chan_name, templates):
     button_id = chan_name + '_ictv_slide_choice_button'
     ret = '<div class="form-group chan_names" id="' + button_id + '">\n<meta id="chan_name" data-chan_name="' + \
           chan_name + '">\n'
-    ret = ret + '\t<button class="dropdown-toggle" type="button" data-toggle="dropdown" ' \
-                '>Slide Layout<span class="caret"></span></button>\n'
-    ret = ret + '\t<ul class="dropdown-menu">\n'
+    ret += '<p>Slide type : </p>'
+    ret += '<select class="form-control" onchange="updateICTVForm(this)">'
     for index, temp in enumerate(templates):
-        input_id = chan_name + '_ictv_slide_type_' + temp
-        input_name = chan_name + '_ictv_slide_type'
-        ret = ret + '\t\t<li>\n\t\t\t<div class = "form-check">\n'
-        ret = ret + '\t\t\t\t<input class="form-check-input" type="radio" name="' + input_name + \
-                    '"id="' + input_id + '" value="' + temp + '" ' + ('checked' if index == 0 else '') + '>\n'
-        ret = ret + '\t\t\t\t<label class="form-check-label" for="' + input_id + \
-                    '">' + templates[temp]["description"] + '</label>\n\t\t\t</div>\n\t\t</li>\n'
+        ret += '<option value="' + temp + '">' + templates[temp]["description"] + '</option>'
 
-    ret = ret + '\t</ul>\n</div>\n'
+    ret += '</select></div>'
 
     return ret
 

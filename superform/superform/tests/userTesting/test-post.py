@@ -168,6 +168,34 @@ class Post(unittest.TestCase):
         assert prevAT != driver.find_element(By.NAME, 'access_token').get_attribute('value')
         driver.find_element(By.XPATH, "/html/body/div/form/button").click()
 
+    def test_configure_li(self):
+        driver = self.driver
+
+        driver.get("https://www.linkedin.com/")
+        if EC.title_contains("Logg In"):
+            driver.find_element(By.NAME, "session_key").send_keys("spam001@hotmail.be")
+            pwd = driver.find_element(By.NAME, "session_password")
+            pwd.send_keys("test1234")
+            pwd.submit()
+
+        driver.get("https://127.0.0.1:5000/login")
+
+        try:
+            WebDriverWait(driver, 1).until(EC.title_contains("TestShib"))
+            driver.find_element(By.NAME, "j_username").send_keys("myself")
+            pwd = driver.find_element(By.NAME, "j_password")
+            pwd.send_keys("myself")
+            pwd.submit()
+        except:
+            driver.get("https://127.0.0.1:5000/login?name=myself")
+
+        driver.get("https://127.0.0.1:5000/channels")
+
+        driver.find_element(By.XPATH, "/html/body/div/table/tbody//tr[contains(.,'linkedin')]/td[3]/div/a").click()
+        prevAT = driver.find_element(By.NAME, 'access_token').get_attribute('value')
+        driver.find_element(By.LINK_TEXT, "Get Access-Token").click()
+        assert prevAT != driver.find_element(By.NAME, 'access_token').get_attribute('value')
+        driver.find_element(By.XPATH, "/html/body/div/form/button").click()
 
     def tearDown(self):
         self.driver.close()

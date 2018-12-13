@@ -1,5 +1,4 @@
 import datetime
-import sys
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
@@ -53,7 +52,6 @@ def get_moderation(pub):
     if len(mod) > 0:
         new_mod.append(mod[0])
         while new_mod[0] and new_mod[0].parent_post_id:
-            print(new_mod[0].parent_post_id, file=sys.stderr)
             parent_mod = db.session.query(Moderation).filter(Moderation.post_id == new_mod[0].parent_post_id).first()
             new_mod.insert(0, parent_mod)
 

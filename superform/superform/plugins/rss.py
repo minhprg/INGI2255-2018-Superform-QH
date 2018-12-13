@@ -17,6 +17,11 @@ rss_feeds = {}
 
 
 def add_rss_feed(rss_feed, link):
+    """
+    Add all the posts of link (rssfeed) to rss_feed
+    :param rss_feed: rss feed to publish on
+    :param link: rss feed that has the posts
+    """
     feed = feedparser.parse(link)
     for item in feed['items']:
         title = item['title']
@@ -37,6 +42,13 @@ def add_rss_feed(rss_feed, link):
 
 
 def create_initial_feed(feed_url, feed_title="Superform's RSS feed", feed_description="The RSS feed of Superform"):
+    """
+    Create the initial rss feed
+    :param feed_url: the feed url
+    :param feed_title: the feed title
+    :param feed_description: the feed description
+    :return: return a PyRSS2Gen.RSS2 object (rss feed object) with the initial feed
+    """
 
     rss = PyRSS2Gen.RSS2(
         title=feed_title,
@@ -49,6 +61,11 @@ def create_initial_feed(feed_url, feed_title="Superform's RSS feed", feed_descri
 
 
 def import_xml_to_rss_feed(rss_feed, xml_path):
+    """
+    import a xml file to the rss feed
+    :param rss_feed: the rss feed
+    :param xml_path: the path to the xml file
+    """
     tree = etree.parse(xml_path)
 
     title = list()
@@ -91,7 +108,6 @@ def import_xml_to_rss_feed(rss_feed, xml_path):
 
 
 def run(publishing, channel_config):
-
     global rss_feeds
 
     json_data = json.loads(channel_config)

@@ -8,6 +8,11 @@ feed_viewer_page = Blueprint('rssfeed', __name__)
 
 @feed_viewer_page.route('/rss/<string:feed_url>', methods=["GET"])
 def get_rss_feed(feed_url):
+    """
+    Get the rss feed
+    :param feed_url: the url of the rss feed
+    :return: response to the request
+    """
     rssfeed_path = os.path.dirname(__file__)
     if '.xml' not in feed_url:
         feed_url += '.xml'

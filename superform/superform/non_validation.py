@@ -11,6 +11,11 @@ val_page = Blueprint('non-validation', __name__)
 
 
 def update_pub(pub, state):
+    """
+    Update the publication with the new values in the form
+    :param pub: the publication to update
+    :param state: the new state of the publication
+    """
     pub.date_from = str_converter(pub.date_from)
     pub.date_until = str_converter(pub.date_until)
     pub.title = request.form.get('titlepost')
@@ -31,6 +36,13 @@ def update_pub(pub, state):
 
 
 def create_a_moderation(form, id, idc, parent_post_id=None):
+    """
+    Create a new moderation and add it to the database
+    :param form: the actual form
+    :param id: post id
+    :param idc: channel id
+    :param parent_post_id: post id of the previous post (in case of a rework)
+    """
     message = form.get('commentpub')
 
     if not parent_post_id:
@@ -43,6 +55,11 @@ def create_a_moderation(form, id, idc, parent_post_id=None):
 
 
 def get_moderation(pub):
+    """
+    get the moderations of the publishing
+    :param pub: the publishing from whom we want to get the moderations
+    :return: a list of moderations
+    """
     pub.date_until = pub.date_until if type(pub.date_until) == datetime.datetime else datetime_converter(pub.date_until)
     pub.date_from = pub.date_from if type(pub.date_from) == datetime.datetime else datetime_converter(pub.date_from)
     mod = [mod for _, _, _, mod in
@@ -65,6 +82,8 @@ def refuse_publishing(id, idc):
     """
     Refuse a publishing. The publishing is sent back to the author with the specified comment.
     Note that the changes the moderator may have done on the publishing itself will be lost.
+    :param id: post id
+    :param idc: channel id
     """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
@@ -96,6 +115,13 @@ def refuse_publishing(id, idc):
 @val_page.route('/moderate/<int:id>/<string:idc>/validate_publishing', methods=["POST"])
 @login_required()
 def validate_publishing(id, idc):
+    """
+    Validate a publishing, the changes made by the moderator will be saved and published. Create a new moderation for
+    this publishing.
+    :param id: post id
+    :param idc: channel id
+    :return: redirect to the index if everything went well else display an error message
+    """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     if pub.state != State.NOTVALIDATED.value:
         flash("This publication has already been moderated", category='info')
@@ -145,6 +171,12 @@ def validate_publishing(id, idc):
 @val_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
 def view_publishing(id, idc):
+    """
+    View a publishing that has not yet been moderated with post_id = id and channel_id = idc
+    :param id: post id
+    :param idc: channel id
+    :return: the actual publishing
+    """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
 
@@ -160,6 +192,12 @@ def view_publishing(id, idc):
 @val_page.route('/feedback/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
 def view_feedback(id, idc):
+    """
+    View the feedbacks and the publishing of a publishing that has already been moderated and accepted
+    :param id: post id
+    :param idc: channel id
+    :return: the publishing with the feedbacks or an error message if the publishing hasn't yet been moderated
+    """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
@@ -181,12 +219,24 @@ def view_feedback(id, idc):
 @val_page.route('/rework/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
 @login_required()
 def abort_rework_publishing(id, idc):
+    """
+    Abort the rework of a publishing.
+    :param id: post id
+    :param idc: channel id
+    :return: redirect to the index
+    """
     return redirect(url_for('index'))
 
 
 @val_page.route('/rework/<int:id>/<string:idc>', methods=["GET"])
 @login_required()
 def rework_publishing(id, idc):
+    """
+    Rework a publishing that has been refused by a moderator
+    :param id: post id
+    :param idc: channel id
+    :return: display an error message if the publishing hasn't been refused else render rework_publishing.html
+    """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
 
@@ -209,6 +259,12 @@ def rework_publishing(id, idc):
 @val_page.route('/rework/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
 @login_required()
 def validate_rework_publishing(id, idc):
+    """
+    Validate the modifications applied to the publishing
+    :param id: post id
+    :param idc: channel id
+    :return: an error message if the publishing has already been reworked else redirect to the index
+    """
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     post = db.session.query(Post).filter(Post.id == id).first()
     # Only pubs that have yet to be moderated can be accepted

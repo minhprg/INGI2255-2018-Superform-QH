@@ -37,10 +37,21 @@ def run(publishing, channel_config):
 
 
 def format_text(title, description):
+    """
+    format the title and description to the pmwiki format
+    :param title: title of the publishing
+    :param description: description of the publishing
+    :return: return the formatted title and description
+    """
     return '(:title ' + title + ':)' + description
 
 
 def format_title(title):
+    """
+    Format the title to fit the url
+    :param title: title
+    :return: formatted title
+    """
     import re
     delimiters = "-", " ", ",", ";", ".", "\\", "/", "<", ">", "@", "?", "=", "+", "%", "*", "`", "\"", "\n", "&", "#", "_"
     pattern = '|'.join(map(re.escape, delimiters))

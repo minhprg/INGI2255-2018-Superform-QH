@@ -3,7 +3,7 @@ import logging
 from flask import Blueprint, redirect, render_template, request, url_for
 
 from superform import channels
-from superform.models import db, Publishing, Channel, State
+from superform.models import db, Publishing, Channel, State, Moderation, Post
 from superform.non_validation import get_moderation
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
 
@@ -13,10 +13,19 @@ pub_page = Blueprint('publishings', __name__)
 
 def create_a_publishing(post, chn, form):
     chan = str(chn.name)
+
+    plug_name = chn.module
+    from importlib import import_module
+    plug = import_module(plug_name)
+
+    if 'forge_link_url' in dir(plug):
+        link_post = plug.forge_link_url(chan, form)
+    else:
+        link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
-    link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
     rss_feed = form.get(chan + '_linkrssfeedpost') if form.get(chan + '_linkrssfeedpost') is not None else post.rss_feed
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
     date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
@@ -40,7 +49,7 @@ def create_a_publishing(post, chn, form):
 
 def edit_a_publishing(post, chn, form):
     pub = db.session.query(Publishing).filter(Publishing.post_id == post.id).filter(Publishing.channel_id == chn.id).first() # ici ca renvoie None quand on modifie un publishing d'un channel qui n'existait pas encore: normal...
-    if(pub is None):
+    if pub is None:
         return create_a_publishing(post,chn,form)
     else:
         chan = str(chn.name)
@@ -89,182 +98,6 @@ def moderate_publishing(id, idc):
             return render_template('moderate_publishing.html', pub=pub, error_message=error_msg, time_from=time_from,
                                    time_until=time_until, chan=c, mod=mod, chan_not_conf=True)
 
-
-@pub_page.route('/moderate/<int:id>/<string:idc>/refuse_publishing', methods=["POST"])
-@login_required()
-def refuse_publishing(id, idc):
-    """
-    Refuse a publishing. The publishing is sent back to the author with the specified comment.
-    Note that the changes the moderator may have done on the publishing itself will be lost.
-    """
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
-    if pub.state != State.NOTVALIDATED.value:
-        return redirect(url_for('index', messages="This publication has already been moderated"))
-
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-
-    error_msg = channels.check_config_and_validity(plugin, c_conf)
-    if error_msg is not None:
-        return render_template('moderate_publishing.html', pub=pub,
-                               error_message=error_msg)
-
-    pub.date_from = str_converter(pub.date_from)
-    pub.date_until = str_converter(pub.date_until)
-
-    if request.form.get('commentpub') == "":
-        return render_template('moderate_publishing.html', pub=pub,
-                               error_message="You must give a feedback to the author")
-
-    pub.date_from = datetime_converter(pub.date_from)
-    pub.date_until = datetime_converter(pub.date_until)
-
-    mod = get_moderation(pub)
-
-    if len(mod) == 0:
-        create_a_moderation(request.form, id, idc)
-    else:
-        mod[0].message = request.form.get('commentpub')
-        db.session.commit()
-
-    # Only publishings that have yet to be moderated can be refused.
-    if pub.state == State.NOTVALIDATED.value:
-        pub.state = State.REFUSED.value
-        db.session.commit()
-
-    return redirect(url_for('index'))
-
-
-@pub_page.route('/moderate/<int:id>/<string:idc>/validate_publishing', methods=["POST"])
-@login_required()
-def validate_publishing(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-    if pub.state != State.NOTVALIDATED.value:
-        return redirect(url_for('index', messages="This publication has already been moderated"))
-
-    c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-    plugin_name = c.module
-    c_conf = c.config
-    from importlib import import_module
-    plugin = import_module(plugin_name)
-
-    error_msg = channels.check_config_and_validity(plugin, c_conf)
-    if error_msg is None:
-        commit_pub(pub, State.VALIDATED.value)
-    else:
-        return render_template('moderate_publishing.html', pub=pub,
-                               error_message=error_msg)
-
-    mod = get_moderation(pub)
-
-    if len(mod) == 0:
-        create_a_moderation(request.form, id, idc)
-    else:
-        mod[0].message = request.form.get('commentpub')
-        db.session.commit()
-
-    ret, url = plugin.run(pub, c_conf)
-    if url:
-        return url
-    elif not ret:
-        return redirect(url_for('index'))
-    else:
-        pub.state = State.NOTVALIDATED.value
-        db.session.commit()
-        return redirect(url_for('index', messages=ret))
-
-
-@pub_page.route('/publishing/<int:id>/<string:idc>', methods=["GET"])
-@login_required()
-def view_publishing(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
-    pub.date_until = str_converter(pub.date_until)
-    pub.date_from = str_converter(pub.date_from)
-
-    if request.method == "GET":
-        return render_template('show_message.html', pub=pub)
-
-
-@pub_page.route('/feedback/<int:id>/<string:idc>', methods=["GET"])
-@login_required()
-def view_feedback(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
-    # Only publishing that have yet to be moderated can be viewed
-    if pub.state == State.NOTVALIDATED.value:
-        return redirect(url_for('index', messages='This publication has not yet been moderated'))
-
-    mod = get_moderation(pub)
-    if mod:
-        message = mod[0].message
-    else:
-        message = ""
-
-    pub.date_until = str_converter(pub.date_until)
-    pub.date_from = str_converter(pub.date_from)
-
-    if request.method == "GET":
-        return render_template('show_message.html', pub=pub, mod=message)
-
-
-@pub_page.route('/edit/<int:id>/<string:idc>/abort_edit_publishing', methods=["POST"])
-@login_required()
-def abort_rework_publishing(id, idc):
-    return redirect(url_for('index'))
-
-
-@pub_page.route('/edit/<int:id>/<string:idc>', methods=["GET"])
-@login_required()
-def rework_publishing(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-
-    # Only refused publishings can be reworked
-    # NOTE We could also allow unmoderated publishings to be reworked, but this overlaps the "editing" feature.
-    if pub.state != State.REFUSED.value:
-        return redirect(url_for('index'))
-
-    mod = get_moderation(pub)
-    if mod:
-        message = mod[0].message
-    else:
-        message = ""
-    pub.date_from = str_converter(pub.date_from)
-    pub.date_until = str_converter(pub.date_until)
-
-    if request.method == "GET":
-        return render_template('rework_publishing.html', pub=pub, mod=message)
-
-
-@pub_page.route('/edit/<int:id>/<string:idc>/validate_edit_publishing', methods=["POST"])
-@login_required()
-def validate_rework_publishing(id, idc):
-    pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
-    post = db.session.query(Post).filter(Post.id == id).first()
-    # Only pubs that have yet to be moderated can be accepted
-    if pub.state == State.VALIDATED.value:
-        return redirect(url_for('index', messages='This publication has already been reworked'))
-
-    new_post = Post(user_id=post.user_id, title=post.title, description=post.description,
-                    date_created=post.date_created, link_url=post.link_url, image_url=post.image_url,
-                    date_from=post.date_from, date_until=post.date_until, source=post.source)
-    db.session.add(new_post)
-    db.session.commit()
-
-    new_pub = Publishing(post_id=new_post.id, channel_id=pub.channel_id, state=pub.state, title=pub.title,
-                         date_until=pub.date_until, date_from=pub.date_from)
-
-    pub.state = State.OUTDATED.value
-    db.session.add(new_pub)
-    db.session.commit()
-
-    commit_pub(new_pub, State.NOTVALIDATED.value)
-    return redirect(url_for('index'))
 
 @pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])
 @login_required()

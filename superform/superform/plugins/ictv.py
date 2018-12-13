@@ -1,6 +1,7 @@
 import json
 from requests import get, post, exceptions
 import datetime
+from superform.utils import StatusCode
 
 FIELDS_UNAVAILABLE = ['ictv_data_form']
 
@@ -36,7 +37,7 @@ class IctvServerConnection(IctvException):
         client_msg = ''
         if 'msg' in kwargs:
             client_msg = kwargs['msg']
-        self.msg = '<p>Bad auhtentication : Superform cannot contact the ICTV server !</p>\n\n'
+        self.msg = '<p>Superform cannot contact the ICTV server !</p>\n\n'
         if error_code == 403:
             self.msg += 'Please, check the following points :\n' \
                         '\t* Is the channel id given in the configuration the one from the ICTV server ?\n' \
@@ -276,7 +277,10 @@ def generate_slide(chan_conf, pub):
         Raise IctvServerConnection, IctvChannelConfiguration
     """
     slides_templates = get_ictv_templates(str(pub.channel_id), chan_conf)
-    slide_content = slides_templates[slide_type]
+    if slide_type != '':
+        slide_content = slides_templates[slide_type]
+    else:
+        raise IctvServerConnection(400, msg='slide')
 
     """ Copy extra data from ICTV specific form into the slide template """
     slide_data = {media_type: url for media_type, url in (media.split(':::') for media in splited_url[:-1])}
@@ -290,6 +294,8 @@ def generate_slide(chan_conf, pub):
     slide_content['title-1'] = {'text': pub.title}
     slide_content['text-1'] = {'text': pub.description}
     slide_content['subtitle-1'] = {'text': ''}
+    slide_content.pop('name', None)
+    slide_content.pop('description', None)
 
     return {'content': slide_content, 'template': 'template-' + slide_type, 'duration': -1}
 
@@ -319,7 +325,7 @@ def run(pub, chan_conf):
     try:
         slide = generate_slide(chan_conf, pub)
     except (IctvServerConnection, IctvChannelConfiguration) as e:
-        return e.popup()
+        return StatusCode.ERROR, e.popup(), None
 
     capsule = generate_capsule(pub)
 
@@ -334,8 +340,8 @@ def run(pub, chan_conf):
         slide_url = capsules_url + '/' + str(capsule_id) + '/slides'
         slide_request = post(slide_url, json=slide, headers=request_args['headers'])
         if slide_request.status_code == 201:
-            return None
+            return StatusCode.OK, None, None
         else:
-            return IctvServerConnection(slide_request.status_code, msg='slide').popup()
+            return StatusCode.ERROR, IctvServerConnection(slide_request.status_code, msg='slide').popup(), None
     else:
-        return IctvServerConnection(capsule_request.status_code, msg='capsule').popup()
+        return StatusCode.ERROR, IctvServerConnection(capsule_request.status_code, msg='capsule').popup(), None

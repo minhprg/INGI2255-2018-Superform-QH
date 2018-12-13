@@ -31,39 +31,6 @@ def create_a_post(form):
     return p
 
 
-def create_a_publishing(post, chn, form):
-    chan = str(chn.name)
-
-    plug_name = chn.module
-    from importlib import import_module
-    plug = import_module(plug_name)
-
-    if 'forge_link_url' in dir(plug):
-        link_post = plug.forge_link_url(chan, form)
-    else:
-        link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
-
-    title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
-    descr_post = form.get(chan + '_descriptionpost') if form.get(
-        chan + '_descriptionpost') is not None else post.description
-    image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
-    date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
-    time_from = time_converter(form.get(chan + '_timefrompost')) if form.get(chan + '_timefrompost') is not None else None
-    if date_from and time_from:
-        date_from = date_from.replace(hour=time_from.hour, minute=time_from.minute)
-
-    date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
-    time_until = time_converter(form.get(chan + '_timeuntilpost')) if form.get(chan + '_timeuntilpost') is not None else None
-    if date_until and time_until:
-        date_until = date_until.replace(hour=time_until.hour, minute=time_until.minute)
-
-    pub = Publishing(post_id=post.id, channel_id=chn.id, state=0, title=title_post, description=descr_post,
-                     link_url=link_post, image_url=image_post,
-                     date_from=date_from, date_until=date_until)
-
-    db.session.add(pub)
-
-
 def modify_a_post(form,post_id):
     post = db.session.query(Post).filter(Post.id == post_id).first()
     post.user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
@@ -190,10 +157,12 @@ def edit_post(post_id):
     if request.method == "GET":
         post.date_from = str_converter(post.date_from)
         post.date_until = str_converter(post.date_until)
-        return render_template('new.html', l_chan=list_chan_selected, post=post, new=False, l_chan_not=list_chan_not_selected)
+        return render_template('new.html', l_chan=list_chan_selected, post=post, new=False,
+                               l_chan_not=list_chan_not_selected)
     else:
         modify_a_post(request.form, post_id)
         return redirect(url_for('index'))
+
 
 @posts_page.route('/publish/edit/<int:post_id>', methods=['POST'])
 @login_required()
@@ -215,7 +184,6 @@ def publish_from_edit_post(post_id):
 
     db.session.commit()
     return redirect(url_for('index'))
-
 
 
 @posts_page.route('/publish', methods=['POST'])

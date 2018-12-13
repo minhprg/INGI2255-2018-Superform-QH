@@ -53,11 +53,14 @@ def new_post():
         unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
         setattr(elem, "unavailablefields", unaivalable_fields)
 
-    if request.method == "GET":
-        return render_template('new.html', l_chan=list_of_channels,new=True)
+    if request.method == 'GET':
+        return render_template('new.html', l_chan=list_of_channels, new=True)
     else:
+        # Save as draft
+        # FIXME Maybe refactor the code so that this part is not too confusing?
         create_a_post(request.form)
-    return redirect(url_for('index'))
+        flash("The post was successfully saved as draft", category='success')
+        return redirect(url_for('index'))
 
 
 @posts_page.route('/new/<int:post_id>', methods=['GET', 'POST'])

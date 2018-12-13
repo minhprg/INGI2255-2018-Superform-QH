@@ -1,5 +1,5 @@
 import datetime
-from flask import Blueprint, url_for, request, redirect, session, render_template
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from superform.users import channels_available_for_user
 
@@ -91,6 +91,7 @@ def copy_new_post(post_id):
         return render_template('new.html', l_chan=list_of_channels, post=post, new=True)
     else:
         create_a_post(request.form)
+        flash("The post was successfully copied.", category='success')
         return redirect(url_for('index'))
 
 
@@ -139,6 +140,7 @@ def edit_post(post_id):
         return render_template('new.html', l_chan=list_chan_selected, post=post, new=False, l_chan_not=list_chan_not_selected)
     else:
         modify_a_post(request.form, post_id)
+        flash("The post was successfully edited.", category='success')
         return redirect(url_for('index'))
 
 
@@ -161,6 +163,7 @@ def publish_from_edit_post(post_id):
                 pub = edit_a_publishing(p, c, request.form)
 
     db.session.commit()
+    flash("The post was successfully submitted.", category='success')
     return redirect(url_for('index'))
 
 
@@ -183,6 +186,7 @@ def publish_from_new_post():
                 pub = create_a_publishing(p, c, request.form)
 
     db.session.commit()
+    flash("The post was successfully submitted.", category='success')
     return redirect(url_for('index'))
 
 

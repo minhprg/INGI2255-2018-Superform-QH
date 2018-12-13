@@ -109,6 +109,7 @@ def refuse_publishing(id, idc):
         pub.state = State.REFUSED.value
         db.session.commit()
 
+    flash("The publishing has successfully been refused.", category='success')
     return redirect(url_for('index'))
 
 
@@ -226,6 +227,7 @@ def abort_rework_publishing(id, idc):
     :param idc: channel id
     :return: redirect to the index
     """
+    flash("The rework has been aborted.", category='success')
     return redirect(url_for('index'))
 
 
@@ -244,6 +246,7 @@ def rework_publishing(id, idc):
     # Only refused publishings can be reworked
     # NOTE We could also allow unmoderated publishings to be reworked, but this overlaps the "editing" feature.
     if pub.state != State.REFUSED.value:
+        flash('This publication has not been refused and cannot be reworked.', category='info')
         return redirect(url_for('index'))
 
     mod = get_moderation(pub)
@@ -271,6 +274,7 @@ def validate_rework_publishing(id, idc):
     # Only pubs that have yet to be moderated can be accepted
     if pub.state == State.VALIDATED.value:
         flash("This publication has already been reworked.", category='error')
+        return redirect(url_for('index'))
 
     new_post = Post(user_id=post.user_id, title=pub.title, description=pub.description,
                     date_created=post.date_created, link_url=pub.link_url, image_url=pub.image_url,
@@ -289,4 +293,5 @@ def validate_rework_publishing(id, idc):
     db.session.commit()
 
     create_a_moderation(request.form, new_post.id, new_pub.channel_id, parent_post_id=id)
+    flash("The rework has been submitted.", category='success')
     return redirect(url_for('index'))

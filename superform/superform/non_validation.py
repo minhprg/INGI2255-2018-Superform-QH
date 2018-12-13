@@ -1,7 +1,7 @@
 import datetime
 import sys
 
-from flask import Blueprint, request, redirect, url_for, render_template, session
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from superform import channels
 from superform.models import db, Moderation, Post, Channel, User, Publishing, State
@@ -70,16 +70,12 @@ def refuse_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
 
     if pub.state != State.NOTVALIDATED.value:
-        return redirect(url_for('index', messages="This publication has already been moderated"))
+        flash("This publication has already been moderated", category='info')
+        return redirect(url_for('index'))
 
     if request.form.get('commentpub') == "":
-        chan = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
-        time_until = str_time_converter(pub.date_until)
-        time_from = str_time_converter(pub.date_from)
-        pub.date_from = str_converter(pub.date_from)
-        pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
-                               error_message="You must give a feedback to the author", chan=chan)
+        flash("You must give a feedback to the author", category='error')
+        return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
 
     mod = get_moderation(pub)
 
@@ -103,7 +99,8 @@ def refuse_publishing(id, idc):
 def validate_publishing(id, idc):
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc).first()
     if pub.state != State.NOTVALIDATED.value:
-        return redirect(url_for('index', messages="This publication has already been moderated"))
+        flash("This publication has already been moderated", category='info')
+        return redirect(url_for('index'))
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
     plugin_name = c.module
@@ -113,31 +110,19 @@ def validate_publishing(id, idc):
 
     error_msg = channels.check_config_and_validity(plugin, c_conf)
     if error_msg is not None:
-        time_until = str_time_converter(pub.date_until)
-        time_from = str_time_converter(pub.date_from)
-        pub.date_from = str_converter(pub.date_from)
-        pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_publishing.html', pub=pub, chan=c, chan_not_conf=True,
-                               error_message=error_msg, time_until=time_until, time_from=time_from)
+        flash(error_msg, category='error')
+        return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
 
     commit_pub(pub, State.VALIDATED.value)
     try:
         plug_exitcode = plugin.run(pub, c_conf)
-
-        if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR:
-            time_until = str_time_converter(pub.date_until)
-            time_from = str_time_converter(pub.date_from)
-            pub.date_from = str_converter(pub.date_from)
-            pub.date_until = str_converter(pub.date_until)
-            return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
-                                   error_message=plug_exitcode[1], chan=c)
     except:
-        time_until = str_time_converter(pub.date_until)
-        time_from = str_time_converter(pub.date_from)
-        pub.date_from = str_converter(pub.date_from)
-        pub.date_until = str_converter(pub.date_until)
-        return render_template('moderate_publishing.html', pub=pub, chan=c, time_until=time_until, time_from=time_from,
-                               error_message="An error occurred while publishing, please contact an admin.")
+        flash("An error occurred while publishing, please contact an admin.", category='error')
+        return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
+
+    if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR:
+        flash(plug_exitcode[1], category='error')
+        return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
 
     db.session.commit()
 

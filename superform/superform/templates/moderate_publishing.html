@@ -2,6 +2,9 @@
 {% block title %}Moderate{% endblock %}
 {% block sub_title %} Moderate this publication {% endblock %}
 {% block messages %}
+    {% include "display_messages.html" %}
+{% endblock %}
+{% block moderation_messages %}
     <div class="form-group">
         <label for="commentpub"> <b>Previous feedback</b> </label><br>
         {% for m in mod %}

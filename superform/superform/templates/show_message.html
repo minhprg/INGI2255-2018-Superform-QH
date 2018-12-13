@@ -4,11 +4,13 @@
 {% block moderation_messages %}
     <label for="feedbackpub"><b>Feedback</b></label>
     {% for m in mod %}
-        <div class="card">
-            <div class="card-body">
-                {{ m.message }}
+        {% if m.message %}
+            <div class="card">
+                <div class="card-body">
+                    {{ m.message }}
+                </div>
             </div>
-        </div>
+        {% endif %}
     {% endfor %}
 {% endblock %}
 {% block scripts %}

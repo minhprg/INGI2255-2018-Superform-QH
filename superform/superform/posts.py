@@ -17,14 +17,13 @@ def create_a_post(form):
     descr_post = form.get('descriptionpost')
     link_post = form.get('linkurlpost')
     image_post = form.get('imagepost')
-    rss_feed = form.get("linkrssfeedpost")
 
     date_from = datetime_converter(form.get('datefrompost'))
 
     date_until = datetime_converter(form.get('dateuntilpost'))
 
     p = Post(user_id=user_id, title=title_post, description=descr_post, link_url=link_post, image_url=image_post,
-             date_from=date_from, date_until=date_until, rss_feed=rss_feed)
+             date_from=date_from, date_until=date_until)
     db.session.add(p)
     db.session.commit()
     return p

@@ -17,6 +17,7 @@ def commit_pub(pub, state):
     pub.description = request.form.get('descrpost')
     pub.link_url = request.form.get('linkurlpost')
     pub.image_url = request.form.get('imagepost')
+    pub.rss_feed = request.form.get('linkrssfeedpost')
 
     pub.date_from = datetime_converter(request.form.get('datefrompost'))
     time_from = time_converter(request.form.get('timefrompost')) if request.form.get('timefrompost') is not None else time_converter("0:0")
@@ -216,12 +217,12 @@ def validate_rework_publishing(id, idc):
 
     new_post = Post(user_id=post.user_id, title=pub.title, description=pub.description,
                     date_created=post.date_created, link_url=pub.link_url, image_url=pub.image_url,
-                    date_from=pub.date_from, date_until=pub.date_until, source=post.source)
+                    date_from=pub.date_from, date_until=pub.date_until)
     db.session.add(new_post)
     db.session.commit()
 
     new_pub = Publishing(post_id=new_post.id, channel_id=pub.channel_id, state=pub.state, title=pub.title,
-                         date_until=pub.date_until, date_from=pub.date_from)
+                         date_until=pub.date_until, date_from=pub.date_from, rss_feed=pub.rss_feed)
 
     pub.state = State.OUTDATED.value
     db.session.add(new_pub)

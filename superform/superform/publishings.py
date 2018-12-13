@@ -17,7 +17,7 @@ def create_a_publishing(post, chn, form):
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
     link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
-    rss_feed = form.get(chan + '_linkrssfeedpost') if form.get(chan + '_linkrssfeedpost') is not None else post.rss_feed
+    rss_feed = form.get(chan + '_linkrssfeedpost')
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
     date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
     time_from = time_converter(form.get(chan + '_timefrompost')) if form.get(chan + '_timefrompost') is not None else None
@@ -51,7 +51,7 @@ def edit_a_publishing(post, chn, form):
         pub.image_url = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
         pub.date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
         pub.date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
-
+        pub.rss_feed = form.get(chan + '_linkrssfeedpost')
         db.session.commit()
         return pub
 

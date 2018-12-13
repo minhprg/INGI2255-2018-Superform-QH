@@ -13,8 +13,13 @@
             <thead>
                 <tr>
                     <th>
-                        Channel
+                        #
                     </th>
+                    {% if my_publishings %}
+                        <th>
+                            Channel
+                        </th>
+                    {% endif %}
                     <th>
                         Subject
                     </th>
@@ -28,6 +33,9 @@
                 {% for item in my_publishings %}
                     {% if item.state == state %}
                     <tr>
+                        <td>
+                            {{ item.post_id }}
+                        </td>
                         <td>
                             {{ item.channel.name }}
                         </td>
@@ -52,6 +60,21 @@
                         </td>
                     </tr>
                     {% endif %}
+                {% endfor %}
+                {% for post in posts %}
+                    <tr>
+                        <td>
+                            {{ post.id }}
+                        </td>
+                        <td>
+                            {{ post.title }}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('posts.edit_post',post_id=post.id) }}" class="btn btn-outline-primary" role="button">Edit</a>
+                            <a href="{{ url_for('posts.copy_new_post',post_id=post.id) }}" class="btn btn-outline-primary">Copy</a>
+                            <a href="#" class="btn btn-outline-warning" role="button">Delete</a>
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
@@ -79,7 +102,9 @@
     <script src="{{ url_for('static', filename='js/dataTables.bootstrap4.min.js') }}" crossorigin="anonymous"></script>
     <script type="text/javascript" class="init">
         $(document).ready(function() {
-            $('#publishing-table').DataTable();
+            $('#publishing-table').DataTable({
+                "order": [[0, 'desc']]
+            });
         } );
     </script>
 

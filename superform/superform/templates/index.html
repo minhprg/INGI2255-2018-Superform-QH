@@ -205,6 +205,9 @@
                 {% endfor %}
             </tbody>
             </table>
+            <div class="d-flex flex-row-reverse">
+                <a href="{{ url_for('lists.all_posts') }}" class="btn btn-outline-primary " role="button"> See more</a>
+            </div>
         </div>
       </div>
     {% else %}

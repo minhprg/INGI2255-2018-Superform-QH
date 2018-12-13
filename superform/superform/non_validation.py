@@ -30,7 +30,7 @@ def commit_pub(pub, state):
 
 
 def create_a_moderation(form, id, idc, parent_post_id=None):
-    message = form.get('commentpub') if form.get('commentpub') is not None else ""
+    message = form.get('commentpub')
 
     if not parent_post_id:
         mod = Moderation(moderator_id=session.get("user_id", ""), post_id=id, channel_id=int(idc), message=message)

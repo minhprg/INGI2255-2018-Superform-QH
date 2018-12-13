@@ -2,16 +2,8 @@
 {% block title %} Feedback {% endblock %}
 {% block sub_title %} Feedback for your publication {% endblock %}
 {% block moderation_messages %}
-    <label for="feedbackpub"><b>Feedback</b></label>
-    {% for m in mod %}
-        {% if m.message %}
-            <div class="card">
-                <div class="card-body">
-                    {{ m.message }}
-                </div>
-            </div>
-        {% endif %}
-    {% endfor %}
+    <div style="font-weight: bold">Feedback(s)</div>
+    {% include "display_moderation_messages.html" %}
 {% endblock %}
 {% block scripts %}
     <script>

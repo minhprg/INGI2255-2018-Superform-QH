@@ -5,15 +5,9 @@
     {% include "display_messages.html" %}
 {% endblock %}
 {% block moderation_messages %}
-    <div class="form-group">
-        <label for="commentpub"> <b>Previous feedback</b> </label><br>
-        {% for m in mod %}
-            <div class="card">
-                <div class="card-body">
-                    {{ m.message }}
-                </div>
-            </div>
-        {% endfor %}
+    <div style="font-weight: bold">Previous Feedback(s)</div>
+    {% include "display_moderation_messages.html" %}
+    <div>
         <label for="commentpub"><b>New feedback</b></label><br>
         <textarea class="form-control" rows="20" id="commentpub" name="commentpub"></textarea>
     </div>

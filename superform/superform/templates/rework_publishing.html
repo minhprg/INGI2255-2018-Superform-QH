@@ -6,13 +6,6 @@
     <button class="btn btn-success" formaction="{{ url_for('non-validation.validate_rework_publishing', id=pub.post_id, idc=pub.channel_id)}}" formmethod="post" type="submit">Submit</button>
 {% endblock %}
 {% block moderation_messages %}
-    <label for="feedbackpub"><b>Feedback</b></label>
-    {% for m in mod %}
-        <div class="card">
-            <div class="card-body">
-                {{ m.message }}
-            </div>
-        </div>
-    {% endfor %}
-
+    <div style="font-weight: bold">Feedback(s)</div>
+    {% include "display_moderation_messages.html" %}
 {% endblock %}

@@ -203,7 +203,8 @@ def view_feedback(id, idc):
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
     # Only publishing that have yet to be moderated can be viewed
     if pub.state == State.NOTVALIDATED.value:
-        return redirect(url_for('index', messages='This publication has not yet been moderated'))
+        flash('This publication has not yet been moderated.', category='info')
+        return redirect(url_for('index'))
 
     mod = get_moderation(pub)
 
@@ -269,7 +270,7 @@ def validate_rework_publishing(id, idc):
     post = db.session.query(Post).filter(Post.id == id).first()
     # Only pubs that have yet to be moderated can be accepted
     if pub.state == State.VALIDATED.value:
-        return redirect(url_for('index', messages='This publication has already been reworked'))
+        flash("This publication has already been reworked.", category='error')
 
     new_post = Post(user_id=post.user_id, title=pub.title, description=pub.description,
                     date_created=post.date_created, link_url=pub.link_url, image_url=pub.image_url,

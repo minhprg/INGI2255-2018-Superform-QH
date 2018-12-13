@@ -12,8 +12,7 @@ from superform.authorizations import authorizations_page
 from superform.channels import channels_page
 from superform.posts import posts_page
 from superform.rssfeed import feed_viewer_page
-from superform.users import get_moderate_channels_for_user, is_moderator, channels_available_for_user
-from superform.users import get_moderate_channels_for_user, is_moderator
+from superform.users import is_moderator
 from superform.plugins._linkedin_callback import linkedin_page
 from superform.plugins._facebook_callback import facebook_page
 
@@ -79,13 +78,9 @@ def index():
                 db.session.delete(post)
                 db.session.commit()
 
-    error_messages = ""
-    if 'messages' in request.args:
-        error_messages = request.args['messages']
-
     return render_template("index.html", user=user, posts=user_posts, publishings=moderable_pubs_per_chan,
                            my_refused_publishings=my_refused_pubs, my_accepted_publishings=my_accepted_pubs,
-                           error_message=error_messages, states=State)
+                           states=State)
 
 
 @app.errorhandler(403)

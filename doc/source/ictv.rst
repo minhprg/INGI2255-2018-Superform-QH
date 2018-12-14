@@ -1,7 +1,23 @@
+.. role:: bash(code)
+   :language: bash
+
 .. include:: links.rst
+
 
 ICTV Plugin
 ===========
+
+
+Channel configuration
+---------------------
+
+There are only 3 fields required in order to have a working ICTV channel:
+
+- :bash:`ictv_server_fqdn` : the fully qualified domain name of the server running the ICTV instance. (Currently only tested with local instance at 0.0.0.0:8000)
+
+- :bash:`ictv_channel_id` : the channel id on the ICTV instance
+
+- :bash:`ictv_api_key` : the key configured on the ICTV instance channel. It's used as authentication method when sending data to ICTV.
 
 How to setup local testing ICTV server ?
 ----------------------------------------
@@ -13,9 +29,6 @@ virtualenv
 ~~~~~~~~~~
 
 It's just recommended to use a virtualenv_ in order to keep your distro clean.
-
-.. role:: bash(code)
-   :language: bash
 
 Here is the simplier way to use virtualenv :
 
@@ -38,6 +51,7 @@ Once the virtualenv_ is created and activated, you can `install ictv`_ using pip
 The `minimal development configuration file`_ is also given.
 
 Just follow the instructions on the given pages in order to get the ICTV instance up.
+
 
 Configuration
 ~~~~~~~~~~~~~

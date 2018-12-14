@@ -1,7 +1,6 @@
 language: python
 cache: pip
 python:
-  #- "3.5"
   - "3.6"
 before_install:
 - sudo apt-get update -qq
@@ -20,15 +19,15 @@ before_script:
   # configure ictv
   - cd superform/
   - cat superform/tests/ictv-server/hack1.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/pages/channel_page.py
-  - cat superform/tests/ictv-server/hack2.py>> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/app.py
+  - cat superform/tests/ictv-server/hack2.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/app.py
   - ictv-setup-database --config superform/tests/ictv-server/ictv_config.yaml
     # ugly hack but otherwise the server is not up when the tests are launched
-  - (ictv-webapp 0.0.0.0:8000 --config superform/tests/ictv-server/ictv_config.yaml &) && sleep 7
+  - (ictv-webapp 0.0.0.0:8000 --config superform/tests/ictv-server/ictv_config.yaml &) && sleep 5
   - python superform/tests/ictv-server/server-setup.py
 script:
-  - cp /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.test.json /home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform/superform/config.json
-  - export PYTHONPATH=/home/travis/build/bnothomb/INGI2255-2018-Superform-QH/superform
-  - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py --ignore=superform/selenium/test_ictv.py --cov-config ../.coveragerc --cov=superform
-    # - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/tests/test_nonval.py --ignore=superform/selenium/test_ictv.py
+  - cp superform/config.test.json superform/config.json
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
+  - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/selenium/test_ictv.py --ignore=superform/tests/test_wiki.py --cov-config ../.coveragerc --cov=superform
 after_success:
   - coveralls
+  

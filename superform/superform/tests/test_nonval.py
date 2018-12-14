@@ -34,11 +34,11 @@ def get_moderation(client, post, chan, pub):
 
 
 def get_rework_publishing(client, post, chan, pub):
-    return client.get('/edit/' + str(post.id) + '/' + str(chan.id), data=dict(pub=pub), follow_redirects=True)
+    return client.get('/rework/' + str(post.id) + '/' + str(chan.id), data=dict(pub=pub), follow_redirects=True)
 
 
 def post_abort_rework_publishing(client, post, chan):
-    return client.post('/edit/' + str(post.id) + '/' + str(chan.id) + '/abort_edit_publishing', follow_redirects=True)
+    return client.post('/rework/' + str(post.id) + '/' + str(chan.id) + '/abort_edit_publishing', follow_redirects=True)
 
 
 def get_view_feedback(client, post, chan):
@@ -50,7 +50,7 @@ def get_view_publishing(client, post, chan):
 
 
 def post_validate_rework_publishing(client, pub, chan):
-    return client.post('/edit/' + str(pub.post_id) + '/' + str(chan.id) + '/validate_edit_publishing',
+    return client.post('/rework/' + str(pub.post_id) + '/' + str(chan.id) + '/validate_edit_publishing',
                        data=dict(titlepost=pub.title, descrpost=pub.description, linkurlpost=pub.link_url,
                                  imagepost=pub.image_url, datefrompost=str_converter(pub.date_from),
                                  dateuntilpost=str_converter(pub.date_until)), follow_redirects=True)

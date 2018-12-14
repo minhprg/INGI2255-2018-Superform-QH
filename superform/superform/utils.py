@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from functools import wraps
 from flask import render_template, session, current_app
 
@@ -49,3 +50,9 @@ def get_module_full_name(module_name):
     for m in current_app.config["PLUGINS"].keys():
         if m.split('.')[2] == module_name:
             return m
+
+
+class StatusCode(Enum):
+    OK = 0
+    ERROR = 1
+    URL = 2

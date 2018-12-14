@@ -1,9 +1,9 @@
 import logging
 
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from superform import channels
-from superform.models import db, Publishing, Channel, State, Moderation, Post
+from superform.models import db, Publishing, Channel, State
 from superform.non_validation import get_moderation
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
 
@@ -26,7 +26,7 @@ def create_a_publishing(post, chn, form):
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
-    rss_feed = form.get(chan + '_linkrssfeedpost') if form.get(chan + '_linkrssfeedpost') is not None else post.rss_feed
+    rss_feed = form.get(chan + '_linkrssfeedpost')
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
     date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
     time_from = time_converter(form.get(chan + '_timefrompost')) if form.get(chan + '_timefrompost') is not None else None
@@ -60,7 +60,7 @@ def edit_a_publishing(post, chn, form):
         pub.image_url = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
         pub.date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
         pub.date_until = datetime_converter(form.get(chan + '_dateuntilpost')) if form.get(chan + '_dateuntilpost') is not None else post.date_until
-
+        pub.rss_feed = form.get(chan + '_linkrssfeedpost')
         db.session.commit()
         return pub
 
@@ -72,7 +72,8 @@ def moderate_publishing(id, idc):
 
     # Only publishing that have yet to be moderated can be viewed
     if pub.state != State.NOTVALIDATED.value:
-        return redirect(url_for('index', messages="This publication has already been moderated"))
+        flash("This publication has already been moderated", category='info')
+        return redirect(url_for('index'))
 
     c = db.session.query(Channel).filter(Channel.id == pub.channel_id).first()
 
@@ -92,11 +93,13 @@ def moderate_publishing(id, idc):
 
     if request.method == "GET":
         error_msg = channels.check_config_and_validity(plugin, c_conf)
-        if error_msg is None:
-            return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until, chan=c, mod=mod)
+        if error_msg is not None:
+            flash(error_msg, category='error')
+            chan_not_conf = True
         else:
-            return render_template('moderate_publishing.html', pub=pub, error_message=error_msg, time_from=time_from,
-                                   time_until=time_until, chan=c, mod=mod, chan_not_conf=True)
+            chan_not_conf = False
+        return render_template('moderate_publishing.html', pub=pub, chan=c, mod=mod, chan_not_conf=chan_not_conf,
+                               time_from=time_from, time_until=time_until)
 
 
 @pub_page.route('/archive/<int:id>/<string:idc>', methods=["GET"])
@@ -109,6 +112,7 @@ def archive_publishing(id, idc):
     :param idc: the id of the channel
     :return: redirect to the index page
     """
+    # FIXME ce n'est pas très propre d'utiliser un 'GET' pour une action qui mériterait un 'POST'
     # then treat the publish part
     pub = db.session.query(Publishing).filter(Publishing.post_id == id, Publishing.channel_id == idc)
     pub.update({Publishing.state: State.PUBLISHED.value})

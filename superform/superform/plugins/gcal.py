@@ -1,4 +1,4 @@
-from flask import make_response, redirect, url_for, current_app
+from flask import make_response, redirect, url_for
 import json
 from googleapiclient.discovery import build
 from httplib2 import Http
@@ -6,6 +6,7 @@ from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.file import Storage
 import os
+from superform.utils import StatusCode
 
 FIELDS_UNAVAILABLE = ['Image_url','Link_url']
 
@@ -16,10 +17,8 @@ SCOPES = 'https://www.googleapis.com/auth/calendar'
 flow = None
 client_id = None
 calendarId = None
-event = {}
 start = {}
 end = {}
-service = None
 
 
 def run(publishing,channel_config):
@@ -30,6 +29,7 @@ def run(publishing,channel_config):
     client_id = json_data['clientID']
     client_secret = json_data['clientSecret']
 
+    event = {}
     event['summary'] = publishing.title
     event['description'] = publishing.description
 
@@ -43,14 +43,13 @@ def run(publishing,channel_config):
         credentials = get_credentials()
 
         if not credentials or credentials.invalid:
-            return "", respond_redirect_to_auth_server()
+            return StatusCode.URL, None, None, respond_redirect_to_auth_server()
         else:
-            insert_in_gcal(credentials)
-            return
+            return insert_in_gcal(credentials,event)
 
     except Exception as e:
         print(e)
-        return "Can't publish"
+        return StatusCode.ERROR, str(e), None
 
 
 def get_credentials():
@@ -94,8 +93,7 @@ def respond_redirect_to_auth_server():
     return response
 
 
-def insert_in_gcal(credentials):
-    global event, service
+def insert_in_gcal(credentials, event):
     try:
         service = build('calendar', 'v3', http=credentials.authorize(Http()))
         # Call the Calendar API
@@ -109,11 +107,12 @@ def insert_in_gcal(credentials):
 
         event = service.events().insert(calendarId=calendarId, body=event).execute()
         print('Event created: %s' % (event.get('htmlLink')))
+        return StatusCode.OK, None, None
 
     except AccessTokenRefreshError:
         # This may happen when access tokens expire. Redirect the browser to
         # the authorization server
-        respond_redirect_to_auth_server()
+        return StatusCode.URL, None, None, respond_redirect_to_auth_server()
 
 
 def confirm(code):

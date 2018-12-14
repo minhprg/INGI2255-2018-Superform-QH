@@ -13,6 +13,7 @@ post_title = "A nice post title"
 post_description = "A huuuuge description, because we love it this way"
 post_publication_date = datetime.date.today()
 post_publication_until = datetime.date.today() + datetime.timedelta(1)
+ictv_template = "text-image"
 
 comfort_delay = 0.3
 waiting_delay = 1
@@ -143,19 +144,20 @@ def test_selenium_new_post_ictv(driver):
     assert ictv_channel_tab
     ictv_channel_tab.click()
     time.sleep(comfort_delay)
-    ictv_slide_type_select = Select(driver.find_element_by_id("slide-selector"))
+    ictv_slide_type_select = Select(driver.find_element_by_id(channel_name + "_slide-selector"))
     assert ictv_slide_type_select
     ictv_slide_type_select.select_by_index(1)
+    ictv_slide_type_select.select_by_value(ictv_template)
     time.sleep(comfort_delay)
-    ictv_input_1 = driver.find_element_by_id(channel_name + '_data_image-text_logo-1')
+    ictv_input_1 = driver.find_element_by_id(channel_name + '_data_' + ictv_template + '_logo-1')
     assert ictv_input_1
     ictv_input_1.send_keys("http://thecatapi.com/api/images/get")
     time.sleep(comfort_delay)
-    ictv_input_2 = driver.find_element_by_id(channel_name + '_data_image-text_logo-2')
+    ictv_input_2 = driver.find_element_by_id(channel_name + '_data_' + ictv_template + '_logo-2')
     assert ictv_input_2
     ictv_input_2.send_keys("http://thecatapi.com/api/images/get")
     time.sleep(comfort_delay)
-    ictv_input_3 = driver.find_element_by_id(channel_name + '_data_image-text_image-1')
+    ictv_input_3 = driver.find_element_by_id(channel_name + '_data_' + ictv_template + '_image-1')
     assert ictv_input_3
     ictv_input_3.send_keys("http://thecatapi.com/api/images/get")
     time.sleep(comfort_delay)

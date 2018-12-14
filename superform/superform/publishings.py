@@ -1,6 +1,6 @@
 import logging
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from superform import channels
 from superform.models import db, Publishing, Channel, State
@@ -13,6 +13,16 @@ pub_page = Blueprint('publishings', __name__)
 
 def create_a_publishing(post, chn, form):
     chan = str(chn.name)
+
+    plug_name = chn.module
+    from importlib import import_module
+    plug = import_module(plug_name)
+
+    if 'forge_link_url' in dir(plug):
+        link_post = plug.forge_link_url(chan, form)
+    else:
+        link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description

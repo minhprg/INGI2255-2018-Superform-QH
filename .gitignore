@@ -12,3 +12,4 @@ __pycache__/
 superform.xml
 
 /superform/superform/plugins/gcal/*
+doc/build

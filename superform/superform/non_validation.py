@@ -140,15 +140,21 @@ def validate_publishing(id, idc):
         return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
 
     update_pub(pub, State.VALIDATED.value)
+
     try:
         plug_exitcode = plugin.run(pub, c_conf)
-    except:
+    except Exception as e:
         flash("An error occurred while publishing, please contact an admin.", category='error')
+        import sys
+        print(str(e), file=sys.stderr)
         return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
 
     if type(plug_exitcode) is tuple and len(plug_exitcode) >= 1 and plug_exitcode[0] == StatusCode.ERROR:
         flash(plug_exitcode[1], category='error')
         return redirect(url_for('publishings.moderate_publishing', id=id, idc=idc))
+
+    if type(plug_exitcode) is tuple and len(plug_exitcode) >= 4 and plug_exitcode[0] == StatusCode.URL:
+        return plug_exitcode[3]
 
     db.session.commit()
 

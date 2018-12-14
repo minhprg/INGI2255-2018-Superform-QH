@@ -55,3 +55,4 @@ def get_module_full_name(module_name):
 class StatusCode(Enum):
     OK = 0
     ERROR = 1
+    URL = 2

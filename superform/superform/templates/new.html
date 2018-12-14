@@ -115,24 +115,27 @@
 
                         <div class="row">
                             <div class="col-md-8">
+
+                                <div class="form-group">
+                                    <label for="{{ chan.name }}_titlepost">Title</label><br>
+                                    <input type="text" name="{{ chan.name }}_titlepost" id="{{ chan.name }}_titlepost" class="form-control" value="{% if post %}{{ post.title }}{% endif %}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ chan.name }}_descriptionpost">Description</label><br>
+                                    <textarea class="form-control" rows="5" id="{{ chan.name }}_descriptionpost" name="{{ chan.name }}_descriptionpost">{% if post %}{{ post.description }}{% endif %}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ chan.name }}_linkurlpost">Link</label><br>
+                                    <input type="text" name="{{ chan.name }}_linkurlpost" id="{{ chan.name }}_linkurlpost" class="form-control" value="{% if post %}{{ post.link_url }}{% endif %}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ chan.name }}_imagepost">Image</label><br>
+                                    <input type="file" name="{{ chan.name }}_imagepost" id="{{ chan.name }}_imagepost" class="form-control" value="{% if post %}{{ post.image_url }}{% endif %}">
+                                </div>
+
                                 <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_titlepost">Title</label><br>
-                                            <input type="text" name="{{ chan.name }}_titlepost" id="{{ chan.name }}_titlepost" class="form-control" value="{% if post %}{{ post.title }}{% endif %}">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_descriptionpost">Description</label><br>
-                                            <textarea class="form-control" rows="5" id="{{ chan.name }}_descriptionpost" name="{{ chan.name }}_descriptionpost">{% if post %}{{ post.description }}{% endif %}</textarea>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_linkurlpost">Link</label><br>
-                                            <input type="text" name="{{ chan.name }}_linkurlpost" id="{{ chan.name }}_linkurlpost" class="form-control" value="{% if post %}{{ post.link_url }}{% endif %}">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="{{ chan.name }}_imagepost">Image</label><br>
-                                            <input type="file" name="{{ chan.name }}_imagepost" id="{{ chan.name }}_imagepost" class="form-control" value="{% if post %}{{ post.image_url }}{% endif %}">
-                                        </div>
+                                    <div class="col-md-6">
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
@@ -147,12 +150,12 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        {% set module_name = chan.module.split('.')[2].lower() %}
-                                        {% set template = 'plugins/' + module_name + '/new.html' %}
-                                        {% include template ignore missing %}
-
                                     </div>
                                 </div>
+
+                                {% set module_name = chan.module.split('.')[2].lower() %}
+                                {% set template = 'plugins/' + module_name + '/new.html' %}
+                                {% include template ignore missing %}
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -250,7 +253,6 @@
     {% else %}
         Your are not logged in.
     {% endif %}
-
 
 {% endblock %}
 

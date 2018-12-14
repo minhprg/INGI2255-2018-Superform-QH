@@ -6,6 +6,7 @@ from superform.users import channels_available_for_user
 from superform.models import db, Channel, Post, Publishing, State, User
 from superform.publishings import create_a_publishing, edit_a_publishing
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, get_instance_from_module_path
+import datetime
 
 
 posts_page = Blueprint('posts', __name__)
@@ -47,14 +48,26 @@ def modify_a_post(form, post_id):
 def new_post():
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
+
+    ictv_chans = []
+
     for elem in list_of_channels:
         m = elem.module
-        clas = get_instance_from_module_path(m)
-        unaivalable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
-        setattr(elem, "unavailablefields", unaivalable_fields)
 
-    if request.method == 'GET':
-        return render_template('new.html', l_chan=list_of_channels, new=True)
+        clas = get_instance_from_module_path(m)
+        unavailable_fields = ','.join(clas.FIELDS_UNAVAILABLE)
+        setattr(elem, "unavailablefields", unavailable_fields)
+
+        if 'ictv_data_form' in unavailable_fields:
+            ictv_chans.append(elem)
+
+    if request.method == "GET":
+        ictv_data = None
+        if len(ictv_chans) != 0:
+            from plugins.ictv import process_ictv_channels
+            ictv_data = process_ictv_channels(ictv_chans)
+
+        return render_template('new.html', l_chan=list_of_channels, ictv_data=ictv_data, new=True)
     else:
         # Save as draft
         # FIXME Maybe refactor the code so that this part is not too confusing?
@@ -74,11 +87,17 @@ def copy_new_post(post_id):
     """
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
+
+    ictv_chans = []
+
     for elem in list_of_channels:
         m = elem.module
         clas = get_instance_from_module_path(m)
         unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
         setattr(elem, "unavailablefields", unavailable_fields)
+
+        if 'ictv_data_form' in unavailable_fields:
+            ictv_chans.append(elem)
 
     # Query the data from the original post
     original_post = db.session.query(Post).filter(Post.id == post_id).first()
@@ -86,9 +105,14 @@ def copy_new_post(post_id):
                 link_url=original_post.link_url, image_url=original_post.image_url, date_from=original_post.date_from,
                 date_until=original_post.date_until)
     if request.method == "GET":
+        ictv_data = None
+        if len(ictv_chans) != 0:
+            from plugins.ictv import process_ictv_channels
+            ictv_data = process_ictv_channels(ictv_chans)
+
         post.date_from = str_converter(post.date_from)
         post.date_until = str_converter(post.date_until)
-        return render_template('new.html', l_chan=list_of_channels, post=post, new=True)
+        return render_template('new.html', l_chan=list_of_channels, ictv_data=ictv_data, post=post, new=True)
     else:
         create_a_post(request.form)
         flash("The post was successfully copied.", category='success')
@@ -106,11 +130,17 @@ def edit_post(post_id):
     """
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
+
+    ictv_chans = []
+
     for elem in list_of_channels:
         m = elem.module
         clas = get_instance_from_module_path(m)
         unavailable_fields = '.'.join(clas.FIELDS_UNAVAILABLE)
         setattr(elem, "unavailablefields", unavailable_fields)
+
+        if 'ictv_data_form' in unavailable_fields:
+            ictv_chans.append(elem)
 
     # Query the data from the post
     post = db.session.query(Post).filter(Post.id == post_id).first()
@@ -135,9 +165,15 @@ def edit_post(post_id):
             list_chan_not_selected.append(chan)
 
     if request.method == "GET":
+        ictv_data = None
+        if len(ictv_chans) != 0:
+            from plugins.ictv import process_ictv_channels
+            ictv_data = process_ictv_channels(ictv_chans)
+
         post.date_from = str_converter(post.date_from)
         post.date_until = str_converter(post.date_until)
-        return render_template('new.html', l_chan=list_chan_selected, post=post, new=False, l_chan_not=list_chan_not_selected)
+        return render_template('new.html', l_chan=list_chan_selected, ictv_data=ictv_data, post=post, new=False,
+                               l_chan_not=list_chan_not_selected)
     else:
         modify_a_post(request.form, post_id)
         flash("The post was successfully edited.", category='success')
@@ -172,13 +208,14 @@ def publish_from_edit_post(post_id):
 def publish_from_new_post():
     # First create the post
     p = create_a_post(request.form)
+
     # then treat the publish part
     if request.method == "POST":
         for elem in request.form:
             if elem.startswith("chan_option_"):
                 def substr(elem):
                     import re
-                    return re.sub('^chan\_option\_', '', elem)
+                    return re.sub("^chan\_option\_", '', elem)
 
                 c = Channel.query.get(substr(elem))
                 # for each selected channel options
@@ -223,14 +260,16 @@ def records():
     list_of_channels = channels_available_for_user(user_id)
 
     # Query all the archived publishings
-    archives = db.session.query(Publishing).filter(Publishing.state == 2)
+    archives = db.session.query(Publishing)\
+        .filter(Publishing.state >= 1)\
+        .filter(Publishing.date_until <= str(datetime.datetime.now())[0:19])
 
     # Take all archives and format the dates entries
     records = []
     for a in archives:
         allowed = False
         for channel in list_of_channels:
-            if channel.name == a.channel_id:
+            if channel.id == a.channel_id:
                 allowed = True
                 break
 

@@ -146,7 +146,6 @@ def test_selenium_new_post_ictv(driver):
     time.sleep(comfort_delay)
     ictv_slide_type_select = Select(driver.find_element_by_id(channel_name + "_slide-selector"))
     assert ictv_slide_type_select
-    ictv_slide_type_select.select_by_index(1)
     ictv_slide_type_select.select_by_value(ictv_template)
     time.sleep(comfort_delay)
     ictv_input_1 = driver.find_element_by_id(channel_name + '_data_' + ictv_template + '_logo-1')

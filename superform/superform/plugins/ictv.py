@@ -2,6 +2,7 @@ import json
 from requests import get, post, exceptions
 import datetime
 from superform.utils import StatusCode
+from time import time
 
 FIELDS_UNAVAILABLE = ['ictv_data_form']
 
@@ -307,7 +308,7 @@ def generate_capsule(pub):
     :param pub: the publication
     :return: the JSON capsule
     """
-    capsule = {'name': pub.title, 'theme': 'ictv', 'validity':
+    capsule = {'name': pub.title + '-' + str(time()), 'theme': 'ictv', 'validity':
                [int(get_epoch(pub.date_from)), int(get_epoch(pub.date_until))]}
     return capsule
 

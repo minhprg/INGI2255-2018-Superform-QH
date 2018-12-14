@@ -1,17 +1,33 @@
 language: python
+cache: pip
 python:
-  - "3.5"
   - "3.6"
 before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -qq libxmlsec1-dev pkg-config
+- sudo apt-get install curl
 # command to install dependencies
 install:
   - pip install Flask
   - SETUP_ENV=travis python superform/setup.py install
+  - pip3 install python-coveralls
+  - pip3 install pytest-cov
+  - pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV.git
+  - pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV-plugins.git
 # command to run tests
-before_script: cd superform/
+before_script: 
+  # configure ictv
+  - cd superform/
+  - cat superform/tests/ictv-server/hack1.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/pages/channel_page.py
+  - cat superform/tests/ictv-server/hack2.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/app.py
+  - ictv-setup-database --config superform/tests/ictv-server/ictv_config.yaml
+    # ugly hack but otherwise the server is not up when the tests are launched
+  - (ictv-webapp 0.0.0.0:8000 --config superform/tests/ictv-server/ictv_config.yaml &) && sleep 5
+  - python superform/tests/ictv-server/server-setup.py
 script:
   - cp superform/config.test.json superform/config.json
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
-  - pytest -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py
+  - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/selenium/test_ictv.py --ignore=superform/tests/test_wiki.py --cov-config ../.coveragerc --cov=superform
+after_success:
+  - coveralls
+  

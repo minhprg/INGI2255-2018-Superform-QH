@@ -121,6 +121,7 @@ def validate_publishing(id, idc):
                                error_message=error_msg, time_until=time_until, time_from=time_from)
 
     commit_pub(pub, State.VALIDATED.value)
+
     try:
         plug_exitcode = plugin.run(pub, c_conf)
 
@@ -131,6 +132,8 @@ def validate_publishing(id, idc):
             pub.date_until = str_converter(pub.date_until)
             return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
                                    error_message=plug_exitcode[1], chan=c)
+        if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.URL:
+            return plug_exitcode[3]
     except:
         time_until = str_time_converter(pub.date_until)
         time_from = str_time_converter(pub.date_from)
@@ -233,7 +236,7 @@ def validate_rework_publishing(id, idc):
 
     new_post = Post(user_id=post.user_id, title=pub.title, description=pub.description,
                     date_created=post.date_created, link_url=pub.link_url, image_url=pub.image_url,
-                    date_from=pub.date_from, date_until=pub.date_until, source=post.source)
+                    date_from=pub.date_from, date_until=pub.date_until)
     db.session.add(new_post)
     db.session.commit()
 

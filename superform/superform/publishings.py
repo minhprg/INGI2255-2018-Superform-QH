@@ -3,7 +3,7 @@ import logging
 from flask import Blueprint, redirect, render_template, request, url_for
 
 from superform import channels
-from superform.models import db, Publishing, Channel, State
+from superform.models import db, Publishing, Channel, State, Moderation, Post
 from superform.non_validation import get_moderation
 from superform.utils import login_required, datetime_converter, time_converter, str_converter, str_time_converter
 
@@ -13,10 +13,19 @@ pub_page = Blueprint('publishings', __name__)
 
 def create_a_publishing(post, chn, form):
     chan = str(chn.name)
+
+    plug_name = chn.module
+    from importlib import import_module
+    plug = import_module(plug_name)
+
+    if 'forge_link_url' in dir(plug):
+        link_post = plug.forge_link_url(chan, form)
+    else:
+        link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
+
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
-    link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
     rss_feed = form.get(chan + '_linkrssfeedpost') if form.get(chan + '_linkrssfeedpost') is not None else post.rss_feed
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
     date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from
@@ -40,7 +49,7 @@ def create_a_publishing(post, chn, form):
 
 def edit_a_publishing(post, chn, form):
     pub = db.session.query(Publishing).filter(Publishing.post_id == post.id).filter(Publishing.channel_id == chn.id).first() # ici ca renvoie None quand on modifie un publishing d'un channel qui n'existait pas encore: normal...
-    if(pub is None):
+    if pub is None:
         return create_a_publishing(post,chn,form)
     else:
         chan = str(chn.name)

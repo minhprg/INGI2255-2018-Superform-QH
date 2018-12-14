@@ -3,14 +3,11 @@
     <h1>{% block sub_title %} {% endblock %}</h1>
     <h2>Channel: {{ chan.name }}</h2>
     {% if session.logged_in %}
-        {% if error_message %}
-            <div class="alert alert-danger" role="alert">
-                {{ error_message }}
-            </div>
-        {% endif %}
+        {{ error_message|safe }}
         <form method="POST" action="">
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-12">
+                    {{ ictv_error|safe }}
                     <div class="form-group">
                         <label for="titlepost">Title</label><br>
                         <input type="text" name="titlepost" id="titlepost" class="form-control" value="{{ pub.title }}">

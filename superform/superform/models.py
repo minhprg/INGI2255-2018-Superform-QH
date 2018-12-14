@@ -40,7 +40,7 @@ class Post(db.Model):
     image_url = db.Column(db.Text)
     date_from = db.Column(db.DateTime)
     date_until = db.Column(db.DateTime)
-    source = db.Column(db.Text)
+    # source = db.Column(db.Text)
 
     publishings = db.relationship("Publishing", backref="post", lazy=True)
     moderation = db.relationship("Moderation", backref="post", lazy=True)

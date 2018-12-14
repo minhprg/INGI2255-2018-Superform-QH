@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/bnothomb/INGI2255-2018-Superform-QH/badge.svg?branch=coveralls)](https://coveralls.io/github/bnothomb/INGI2255-2018-Superform-QH?branch=coveralls)
+[![Build Status](https://travis-ci.org/bnothomb/INGI2255-2018-Superform-QH.svg?branch=master)](https://travis-ci.org/bnothomb/INGI2255-2018-Superform-QH)
 # SuperForm
 
 
@@ -65,3 +67,4 @@ Nicolas Detienne - @NDetienne
 Anthony Gego - @anthonygego
 
 Ludovic Taffin - @Drumor/@ltaffin
+

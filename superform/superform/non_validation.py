@@ -125,14 +125,14 @@ def validate_publishing(id, idc):
     try:
         plug_exitcode = plugin.run(pub, c_conf)
 
-        if type(plug_exitcode) is tuple and plug_exitcode[0].value == StatusCode.ERROR.value:
+        if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.ERROR:
             time_until = str_time_converter(pub.date_until)
             time_from = str_time_converter(pub.date_from)
             pub.date_from = str_converter(pub.date_from)
             pub.date_until = str_converter(pub.date_until)
             return render_template('moderate_publishing.html', pub=pub, time_from=time_from, time_until=time_until,
                                    error_message=plug_exitcode[1], chan=c)
-        if type(plug_exitcode) is tuple and plug_exitcode[0].value == StatusCode.URL.value:
+        if type(plug_exitcode) is tuple and plug_exitcode[0] == StatusCode.URL:
             return plug_exitcode[3]
     except:
         time_until = str_time_converter(pub.date_until)

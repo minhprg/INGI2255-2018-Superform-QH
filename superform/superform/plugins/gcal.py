@@ -6,7 +6,7 @@ from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.file import Storage
 import os
-from utils import StatusCode
+from superform.utils import StatusCode
 
 FIELDS_UNAVAILABLE = ['Image_url','Link_url']
 

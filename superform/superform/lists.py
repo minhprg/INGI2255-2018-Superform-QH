@@ -8,6 +8,11 @@ from superform.utils import login_required
 lists_page = Blueprint('lists', __name__)
 
 
+def get_all_posts(user):
+    posts = db.session.query(Post).filter(Post.user_id == user.id).order_by(desc(Post.id))
+    return posts
+
+
 def get_publications(user):
     if user is None:
         return []
@@ -31,7 +36,7 @@ def get_publications_to_moderate(user):
     return moderable_pubs_per_chan
 
 
-@lists_page.route('/my_refused_publishings')
+@lists_page.route('/my_refused_publishings', methods=['GET'])
 @login_required()
 def refused_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
@@ -39,7 +44,7 @@ def refused_publishings():
                            state=State.REFUSED.value, states=State)
 
 
-@lists_page.route('/my_accepted_publishings')
+@lists_page.route('/my_accepted_publishings', methods=['GET'])
 @login_required()
 def accepted_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
@@ -47,7 +52,7 @@ def accepted_publishings():
                            state=State.VALIDATED.value, states=State)
 
 
-@lists_page.route('/my_unmoderated_publishings')
+@lists_page.route('/my_unmoderated_publishings', methods=['GET'])
 @login_required()
 def unmoderated_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
@@ -55,10 +60,17 @@ def unmoderated_publishings():
                            my_publishings=get_publications(user), state=State.NOTVALIDATED.value, states=State)
 
 
-@lists_page.route('/unmoderated_publishings')
+@lists_page.route('/unmoderated_publishings', methods=['GET'])
 @login_required()
 def moderator_unmoderated_publishings():
     user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
     return render_template("lists.html", title="Unmoderated publishings", user=user,
                            my_publishings=get_publications_to_moderate(user), state=State.NOTVALIDATED.value,
                            to_moderate=True, states=State)
+
+
+@lists_page.route('/posts', methods=["GET"])
+@login_required()
+def all_posts():
+    user = User.query.get(session.get("user_id", "")) if session.get("logged_in", False) else None
+    return render_template("lists.html", title="All my posts", user=user, posts=get_all_posts(user))

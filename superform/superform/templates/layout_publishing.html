@@ -3,10 +3,9 @@
     <h1>{% block sub_title %} {% endblock %}</h1>
     <h2>Channel: {{ chan.name }}</h2>
     {% if session.logged_in %}
-        {{ error_message|safe }}
         <form method="POST" action="">
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-8">
                     {{ ictv_error|safe }}
                     <div class="form-group">
                         <label for="titlepost">Title</label><br>
@@ -43,7 +42,7 @@
                     {% include template ignore missing %}
                 </div>
                 <div class="col-md-4">
-                    {% block messages %} {% endblock %}
+                    {% block moderation_messages %} {% endblock %}
                 </div>
             </div>
             {% block button %}{% endblock %}

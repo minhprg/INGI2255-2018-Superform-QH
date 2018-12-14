@@ -1,5 +1,5 @@
 import datetime
-from flask import Blueprint, url_for, request, redirect, session, render_template
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from superform.users import channels_available_for_user
 
@@ -18,20 +18,19 @@ def create_a_post(form):
     descr_post = form.get('descriptionpost')
     link_post = form.get('linkurlpost')
     image_post = form.get('imagepost')
-    rss_feed = form.get("linkrssfeedpost")
 
     date_from = datetime_converter(form.get('datefrompost'))
 
     date_until = datetime_converter(form.get('dateuntilpost'))
 
     p = Post(user_id=user_id, title=title_post, description=descr_post, link_url=link_post, image_url=image_post,
-             date_from=date_from, date_until=date_until, rss_feed=rss_feed)
+             date_from=date_from, date_until=date_until)
     db.session.add(p)
     db.session.commit()
     return p
 
 
-def modify_a_post(form,post_id):
+def modify_a_post(form, post_id):
     post = db.session.query(Post).filter(Post.id == post_id).first()
     post.user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     post.title = form.get('titlepost')
@@ -42,6 +41,7 @@ def modify_a_post(form,post_id):
     post.date_until = datetime_converter(form.get('dateuntilpost'))
     db.session.commit()
     return post
+
 
 @posts_page.route('/new', methods=['GET', 'POST'])
 @login_required()
@@ -69,9 +69,11 @@ def new_post():
 
         return render_template('new.html', l_chan=list_of_channels, ictv_data=ictv_data, new=True)
     else:
+        # Save as draft
+        # FIXME Maybe refactor the code so that this part is not too confusing?
         create_a_post(request.form)
-
-    return redirect(url_for('index'))
+        flash("The post was successfully saved as draft", category='success')
+        return redirect(url_for('index'))
 
 
 @posts_page.route('/new/<int:post_id>', methods=['GET', 'POST'])
@@ -85,6 +87,7 @@ def copy_new_post(post_id):
     """
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
+
     ictv_chans = []
 
     for elem in list_of_channels:
@@ -112,6 +115,7 @@ def copy_new_post(post_id):
         return render_template('new.html', l_chan=list_of_channels, ictv_data=ictv_data, post=post, new=True)
     else:
         create_a_post(request.form)
+        flash("The post was successfully copied.", category='success')
         return redirect(url_for('index'))
 
 
@@ -126,7 +130,9 @@ def edit_post(post_id):
     """
     user_id = session.get("user_id", "") if session.get("logged_in", False) else -1
     list_of_channels = channels_available_for_user(user_id)
+
     ictv_chans = []
+
     for elem in list_of_channels:
         m = elem.module
         clas = get_instance_from_module_path(m)
@@ -170,6 +176,7 @@ def edit_post(post_id):
                                l_chan_not=list_chan_not_selected)
     else:
         modify_a_post(request.form, post_id)
+        flash("The post was successfully edited.", category='success')
         return redirect(url_for('index'))
 
 
@@ -192,6 +199,7 @@ def publish_from_edit_post(post_id):
                 pub = edit_a_publishing(p, c, request.form)
 
     db.session.commit()
+    flash("The post was successfully submitted.", category='success')
     return redirect(url_for('index'))
 
 
@@ -215,6 +223,7 @@ def publish_from_new_post():
                 pub = create_a_publishing(p, c, request.form)
 
     db.session.commit()
+    flash("The post was successfully submitted.", category='success')
     return redirect(url_for('index'))
 
 
@@ -224,6 +233,13 @@ def records():
     """
     This methods is called for the creation of the Records page
     """
+    # FIXME Essayez de suivre le pattern PRG (post-redirect-get) pour éviter des misbehaviors
+    # FIXME en cas de rechargement de la page
+    # Check if there is any publishing to pass as archived
+    publishings = db.session.query(Publishing).filter(Publishing.state == 1)\
+        .filter(Publishing.date_until <= datetime.datetime.now())
+    publishings.update({Publishing.state: 2})
+    db.session.commit()
 
     # Check if a user is an admin
     admin = session.get("admin", False) if session.get("logged_in", False) else False

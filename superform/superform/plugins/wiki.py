@@ -23,10 +23,12 @@ def run(publishing, channel_config):
         response = requests.post(url, data={'n': 'News.' + formatted_title + '-' + str(publishing.post_id) + '-' + str(publishing.channel_id), 'text': formatted_text, 'action': 'edit',
                                             'post': '1', 'author': user, 'authid': username, 'authpw': password})
     except requests.exceptions.ConnectionError:
-        return StatusCode.ERROR, "Server is down", None
+        return StatusCode.ERROR, "Couldn't connect to server", None
+    except requests.exceptions.MissingSchema:
+        return StatusCode.ERROR, "Wrong base_url, please check the format again", None
 
     if response.status_code != 200:
-        return StatusCode.ERROR, 'News not published', None
+        return StatusCode.ERROR, 'Bad username or password', None
 
     # Fetch the page and check that it exists
     response = requests.get(url)
@@ -37,10 +39,21 @@ def run(publishing, channel_config):
 
 
 def format_text(title, description):
+    """
+    format the title and description to the pmwiki format
+    :param title: title of the publishing
+    :param description: description of the publishing
+    :return: return the formatted title and description
+    """
     return '(:title ' + title + ':)' + description
 
 
 def format_title(title):
+    """
+    Format the title to fit the url
+    :param title: title
+    :return: formatted title
+    """
     import re
     delimiters = "-", " ", ",", ";", ".", "\\", "/", "<", ">", "@", "?", "=", "+", "%", "*", "`", "\"", "\n", "&", "#", "_"
     pattern = '|'.join(map(re.escape, delimiters))

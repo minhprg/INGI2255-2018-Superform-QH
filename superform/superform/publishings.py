@@ -26,7 +26,6 @@ def create_a_publishing(post, chn, form):
     title_post = form.get(chan + '_titlepost') if (form.get(chan + '_titlepost') is not None) else post.title
     descr_post = form.get(chan + '_descriptionpost') if form.get(
         chan + '_descriptionpost') is not None else post.description
-    link_post = form.get(chan + '_linkurlpost') if form.get(chan + '_linkurlpost') is not None else post.link_url
     rss_feed = form.get(chan + '_linkrssfeedpost')
     image_post = form.get(chan + '_imagepost') if form.get(chan + '_imagepost') is not None else post.image_url
     date_from = datetime_converter(form.get(chan + '_datefrompost')) if form.get(chan + '_datefrompost') is not None else post.date_from

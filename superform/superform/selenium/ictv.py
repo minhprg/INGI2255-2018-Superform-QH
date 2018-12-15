@@ -9,13 +9,13 @@ channel_server_fqdn = "0.0.0.0:8000"
 channel_ictv_id = "1"
 channel_api_key = "azertyuiop"
 
-post_title = "A nice post title"
+post_title = "A nice post title 2"
 post_description = "A huuuuge description, because we love it this way"
 post_publication_date = datetime.date.today()
 post_publication_until = datetime.date.today() + datetime.timedelta(1)
 ictv_template = "text-image"
 
-comfort_delay = 0.3
+comfort_delay = 0.5
 waiting_delay = 1
 
 
@@ -179,7 +179,26 @@ def test_selenium_moderate_publishing(driver):
     assert submit_button
     submit_button.click()
     time.sleep(comfort_delay)
-    time.sleep(5)
+
+
+def test_selenium_view_publishing(driver):
+    my_pub_link = driver.find_element_by_link_text('My publishings')
+    assert my_pub_link
+    my_pub_link.click()
+    time.sleep(comfort_delay)
+    acc_pub_link = driver.find_element_by_link_text('Accepted publishings')
+    assert acc_pub_link
+    acc_pub_link.click()
+    time.sleep(waiting_delay)
+    assert driver.page_source.__contains__(post_title)
+    detail_button = driver.find_element_by_link_text('View feedback')
+    assert detail_button
+    detail_button.click()
+    time.sleep(waiting_delay)
+    detail_title = driver.find_element_by_xpath('//input[@id="titlepost"]')
+    assert detail_title
+    assert driver.page_source.__contains__(post_title)
+    time.sleep(comfort_delay)
 
 
 def test_selenium_delete_channel(driver):
@@ -211,6 +230,7 @@ def test_selenium_logout(driver):
 
 
 driver = webdriver.Firefox()
+time.sleep(10)
 test_selenium_open_superform(driver)
 test_selenium_auth(driver)
 test_selenium_new_ictv_channel(driver)
@@ -218,6 +238,7 @@ test_selenium_conf_ictv_channel(driver)
 test_selenium_add_moderator(driver)
 test_selenium_new_post_ictv(driver)
 test_selenium_moderate_publishing(driver)
+test_selenium_view_publishing(driver)
 test_selenium_delete_channel(driver)
 test_selenium_logout(driver)
 driver.close()

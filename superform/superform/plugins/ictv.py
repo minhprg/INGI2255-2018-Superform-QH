@@ -26,8 +26,11 @@ class IctvException(Exception):
         Generate HTML code for ICTV error messages
         :return: the encapsulation of the error message
         """
-        return '<div class="alert alert-danger">\n \
-                \t<strong>ERROR</strong>\n' + self.msg + '\n</div>\n'
+        txt = ''
+        #txt += '<div class="alert alert-danger">\n'
+        txt += '\t<strong>ERROR</strong>\n' + self.msg + '\n'
+        #txt += '</div>\n'
+        return txt
 
 
 class IctvServerConnection(IctvException):
@@ -38,12 +41,13 @@ class IctvServerConnection(IctvException):
         client_msg = ''
         if 'msg' in kwargs:
             client_msg = kwargs['msg']
-        self.msg = '<p>Superform cannot contact the ICTV server !</p>\n\n'
+        self.msg = ''
         if error_code == 403:
-            self.msg += 'Please, check the following points :\n' \
+            self.msg += '<p>Superform cannot contact the ICTV server !</p>\n\n'
+            self.msg += '<p>Please, check the following points :\n' \
                         '\t* Is the channel id given in the configuration the one from the ICTV server ?\n' \
                         '\t* Is the REST API enabled on the channel of the ICTV server ?\n' \
-                        '\t* Are the API keys matching ?\n'
+                        '\t* Are the API keys matching ?\n</p>'
         elif error_code == 400:
             self.msg += '<p>The ' + client_msg + ' was misformed. Please correct the data and retry.</p>\n' \
                         '<p>If the error persists, take contact with an administrator.</p>'

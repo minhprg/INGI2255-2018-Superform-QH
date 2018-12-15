@@ -18,7 +18,7 @@ install:
 before_script: 
   # configure ictv
   - cd superform/
-  - cat superform/tests/ictv-server/hack1.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/pages/channel_page.py
+  - cat superform/tests/ictv-server/hack1.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/pages/channels_page.py
   - cat superform/tests/ictv-server/hack2.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/app.py
   - ictv-setup-database --config superform/tests/ictv-server/ictv_config.yaml
     # ugly hack but otherwise the server is not up when the tests are launched

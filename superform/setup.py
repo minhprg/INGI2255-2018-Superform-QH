@@ -17,7 +17,6 @@ setup(
         'pyopenssl',
         'PyRSS2Gen',
         'pytest',
-        'facebook-sdk',
         'pytest-localserver',
         'python3-saml',
         'selenium',

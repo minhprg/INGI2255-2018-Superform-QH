@@ -3,9 +3,14 @@ cache: pip
 python:
   - "3.6"
 before_install:
-- sudo apt-get update -qq
-- sudo apt-get install -qq libxmlsec1-dev pkg-config
-- sudo apt-get install curl
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libxmlsec1-dev pkg-config
+  - sudo apt-get install curl
+  - sudo apt-get install wget
+env:
+  - MOZ_HEADLESS=1
+addons:
+  firefox: latest
 # command to install dependencies
 install:
   - pip install Flask
@@ -16,18 +21,25 @@ install:
   - pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV-plugins.git
 # command to run tests
 before_script: 
+  - wget https://github.com/mozilla/geckodriver/releases/download/v0.23.0/geckodriver-v0.23.0-linux64.tar.gz
+  - tar -xf geckodriver-v0.23.0-linux64.tar.gz
+  - export PATH=$PATH:$(pwd)
+  - echo $PATH
   # configure ictv
   - cd superform/
-  - cat superform/tests/ictv-server/hack1.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/pages/channel_page.py
+  - cat superform/tests/ictv-server/hack1.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/pages/channels_page.py
   - cat superform/tests/ictv-server/hack2.py >> /home/travis/virtualenv/python3.6.3/lib/python3.6/site-packages/ictv/app.py
   - ictv-setup-database --config superform/tests/ictv-server/ictv_config.yaml
     # ugly hack but otherwise the server is not up when the tests are launched
   - (ictv-webapp 0.0.0.0:8000 --config superform/tests/ictv-server/ictv_config.yaml &) && sleep 5
   - python superform/tests/ictv-server/server-setup.py
-script:
   - cp superform/config.test.json superform/config.json
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
-  - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/selenium/test_ictv.py --cov-config ../.coveragerc --cov=superform
+  - (python superform/__init__.py &) && sleep 5
+script:
+  - py.test -ra --ignore=superform/tests/test_linkedin.py --ignore=superform/tests/test_facebook.py --ignore=superform/selenium/selenium_ictv.py --cov-config ../.coveragerc --cov=superform
+    # -  xvfb-run --server-args="-screen 0 1024x768x24" python superform/selenium/test_selenium_ictv.py
 after_success:
   - coveralls
   
+ 

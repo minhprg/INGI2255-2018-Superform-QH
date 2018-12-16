@@ -2,6 +2,7 @@ import json
 from requests import get, post, exceptions
 import datetime
 from superform.utils import StatusCode
+from time import time
 
 FIELDS_UNAVAILABLE = ['ictv_data_form']
 
@@ -25,8 +26,11 @@ class IctvException(Exception):
         Generate HTML code for ICTV error messages
         :return: the encapsulation of the error message
         """
-        return '<div class="alert alert-danger">\n \
-                \t<strong>ERROR</strong>\n' + self.msg + '\n</div>\n'
+        txt = ''
+        txt += '<div class="alert alert-danger">\n'
+        txt += '\t<strong>ERROR</strong>\n' + self.msg + '\n'
+        txt += '</div>\n'
+        return txt
 
 
 class IctvServerConnection(IctvException):
@@ -37,12 +41,13 @@ class IctvServerConnection(IctvException):
         client_msg = ''
         if 'msg' in kwargs:
             client_msg = kwargs['msg']
-        self.msg = '<p>Superform cannot contact the ICTV server !</p>\n\n'
+        self.msg = ''
         if error_code == 403:
-            self.msg += 'Please, check the following points :\n' \
+            self.msg += '<p>Superform cannot contact the ICTV server !</p>\n\n'
+            self.msg += '<p>Please, check the following points :\n' \
                         '\t* Is the channel id given in the configuration the one from the ICTV server ?\n' \
                         '\t* Is the REST API enabled on the channel of the ICTV server ?\n' \
-                        '\t* Are the API keys matching ?\n'
+                        '\t* Are the API keys matching ?\n</p>'
         elif error_code == 400:
             self.msg += '<p>The ' + client_msg + ' was misformed. Please correct the data and retry.</p>\n' \
                         '<p>If the error persists, take contact with an administrator.</p>'
@@ -141,15 +146,15 @@ def forge_link_url(chan, form):
     """
     from re import sub
     link_post = ''
-    slide_type = form.get(chan + '_ictv_slide_type')
+    slide_type = form.get(chan + '_slide-selector')
     if slide_type is not None:
         req = form.to_dict()
         for i in req:
             if chan + '_data_' + slide_type in i:
                 a = sub('^' + chan + '_data_' + slide_type + '_', '', i)
-                link_post = link_post + a + ":::" + req[i] + ','
+                link_post += a + ":::" + req[i] + ','
 
-        link_post = link_post + slide_type
+        link_post += slide_type
 
     return link_post
 
@@ -161,7 +166,6 @@ def generate_ictv_dropdown_control(chan_name):
     :return: the JS control code of the dropdown specific to the *chan_name* channel
     """
     code = 'function updateICTVForm(select) {' \
-           '    console.log(select);' \
            '    var name = select.options[select.selectedIndex].value;' \
            '    $(".' + chan_name + '_ictv_slide_choice").hide();' \
            '    $("#' + chan_name + '_ictv_form_" + name).show();' \
@@ -176,15 +180,15 @@ def generate_ictv_dropdown(chan_name, templates):
     :param templates: the list of the ictv templates proposed in the dropdown
     :return: the HTML code of the dropdown specific to the *chan_name* channel
     """
-    button_id = chan_name + '_ictv_slide_choice_button'
-    ret = '<div class="form-group chan_names" id="' + button_id + '">\n<meta id="chan_name" data-chan_name="' + \
-          chan_name + '">\n'
-    ret += '<p>Slide type : </p>'
-    ret += '<select class="form-control" onchange="updateICTVForm(this)">'
+    ret = ''
+    ret += '<div class="form-group">\n'
+    ret += '\t<label for="' + chan_name + '_slide-selector">Slide type : </label><br>\n'
+    ret += '\t<select id="' + chan_name + '_slide-selector" name="' + chan_name + '_slide-selector" class="form-control" onchange="updateICTVForm(this)">\n'
     for index, temp in enumerate(templates):
-        ret += '<option value="' + temp + '">' + templates[temp]["description"] + '</option>'
+        ret += '\t\t<option value="' + temp + '">' + templates[temp]["description"] + '</option>\n'
 
-    ret += '</select></div>'
+    ret += '\t</select>\n'
+    ret += '</div>\n'
 
     return ret
 
@@ -308,7 +312,7 @@ def generate_capsule(pub):
     :param pub: the publication
     :return: the JSON capsule
     """
-    capsule = {'name': pub.title, 'theme': 'ictv', 'validity':
+    capsule = {'name': pub.title + '-' + str(time()), 'theme': 'ictv', 'validity':
                [int(get_epoch(pub.date_from)), int(get_epoch(pub.date_until))]}
     return capsule
 

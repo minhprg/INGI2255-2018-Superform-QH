@@ -1,3 +1,3 @@
 
-urls += ('/hack/(\d+)', 'ictv.pages.channel_page.Hack',)
+urls += ('/hack/(\d+)', 'ictv.pages.channels_page.Hack',)
 

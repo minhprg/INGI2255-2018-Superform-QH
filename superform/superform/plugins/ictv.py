@@ -27,9 +27,9 @@ class IctvException(Exception):
         :return: the encapsulation of the error message
         """
         txt = ''
-        #txt += '<div class="alert alert-danger">\n'
+        txt += '<div class="alert alert-danger">\n'
         txt += '\t<strong>ERROR</strong>\n' + self.msg + '\n'
-        #txt += '</div>\n'
+        txt += '</div>\n'
         return txt
 
 

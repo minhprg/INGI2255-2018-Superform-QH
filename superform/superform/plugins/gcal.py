@@ -1,4 +1,4 @@
-from flask import make_response, redirect, url_for
+from flask import make_response, redirect, url_for, flash
 import json
 from googleapiclient.discovery import build
 from httplib2 import Http
@@ -6,6 +6,8 @@ from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.file import Storage
 import os
+
+from superform.models import db, State
 from superform.utils import StatusCode
 
 FIELDS_UNAVAILABLE = ['Image_url','Link_url']
@@ -17,25 +19,18 @@ SCOPES = 'https://www.googleapis.com/auth/calendar'
 flow = None
 client_id = None
 calendarId = None
-start = {}
-end = {}
+publishingGlobal = None
 
 
 def run(publishing,channel_config):
-    global flow, client_id, calendarId
+    global flow, client_id, calendarId, publishingGlobal
     json_data = json.loads(channel_config)
 
     calendarId = json_data['calendar id']
     client_id = json_data['clientID']
     client_secret = json_data['clientSecret']
 
-    event = {}
-    event['summary'] = publishing.title
-    event['description'] = publishing.description
-
-    start['dateTime'] = publishing.date_from.isoformat()
-
-    end['dateTime'] = publishing.date_until.isoformat()
+    publishingGlobal = publishing
 
     flow = OAuth2WebServerFlow(client_id, client_secret, SCOPES, redirect_uri= 'http://127.0.0.1:5000/return_gcal')
 
@@ -45,7 +40,7 @@ def run(publishing,channel_config):
         if not credentials or credentials.invalid:
             return StatusCode.URL, None, None, respond_redirect_to_auth_server()
         else:
-            return insert_in_gcal(credentials,event)
+            return insert_in_gcal(credentials)
 
     except Exception as e:
         print(e)
@@ -93,15 +88,23 @@ def respond_redirect_to_auth_server():
     return response
 
 
-def insert_in_gcal(credentials, event):
+def insert_in_gcal(credentials):
     try:
         service = build('calendar', 'v3', http=credentials.authorize(Http()))
         # Call the Calendar API
         setting = service.settings().get(setting='timezone').execute()
 
+        event = {}
+        event['summary'] = publishingGlobal.title
+        event['description'] = publishingGlobal.description
+
+        start = {}
+        start['dateTime'] = publishingGlobal.date_from.isoformat()
         start['timeZone'] = setting['value']
         event['start'] = start
 
+        end = {}
+        end['dateTime'] = publishingGlobal.date_until.isoformat()
         end['timeZone'] = setting['value']
         event['end'] = end
 
@@ -121,6 +124,14 @@ def confirm(code):
     # Call a helper function defined below to save these credentials.
     save_credentials(credentials)
 
-    insert_in_gcal(credentials)
-
-    return redirect(url_for('index'))
+    plug_exitcode = insert_in_gcal(credentials)
+    if plug_exitcode[0] == StatusCode.ERROR:
+        flash(plug_exitcode[1], category='error')
+        return redirect(url_for('publishings.moderate_publishing', id=id, idc=publishingGlobal.channel_id))
+    elif plug_exitcode[0] == StatusCode.URL:
+        return plug_exitcode[3]
+    else:
+        flash("The publishing has successfully been published.", category='success')
+        publishingGlobal.state = State.VALIDATED.value
+        db.session.commit()
+        return redirect(url_for('index'))
